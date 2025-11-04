@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-matte-black text-accent-beige font-sans;
+  }
+}
+
+@layer utilities {
+  .gradient-purple-brown {
+    background: linear-gradient(135deg, #5A2A83 0%, #7B4B27 100%);
+  }
+  
+  .glow-purple {
+    box-shadow: 0 0 20px rgba(90, 42, 131, 0.5);
+  }
+  
+  .glow-purple-strong {
+    box-shadow: 0 0 30px rgba(90, 42, 131, 0.8);
+  }
+}
+

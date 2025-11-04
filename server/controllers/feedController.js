@@ -1,0 +1,93 @@
+import Post from '../models/Post.js';
+
+export const getFeed = async (req, res) => {
+  try {
+    const posts = await Post.find()
+      .populate('user', 'username profileImage')
+      .sort({ createdAt: -1 })
+      .limit(20);
+
+    res.json(posts);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const createPost = async (req, res) => {
+  try {
+    const { caption, tags, category, mediaType } = req.body;
+    let mediaUrl = req.file ? req.file.path : req.body.mediaUrl;
+
+    // For text posts, use the text content as mediaUrl
+    if (mediaType === 'text' && req.body.mediaUrl) {
+      mediaUrl = req.body.mediaUrl;
+    }
+
+    if (!mediaUrl) {
+      return res.status(400).json({ message: 'Media URL or content is required' });
+    }
+
+    const post = await Post.create({
+      user: req.user._id,
+      mediaType: mediaType || 'video',
+      mediaUrl,
+      caption: mediaType === 'text' ? mediaUrl : (caption || ''),
+      tags: tags ? tags.split(',').map(t => t.trim()).filter(t => t) : [],
+      category: category || 'Other',
+    });
+
+    await post.populate('user', 'username profileImage');
+
+    res.status(201).json(post);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const likePost = async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    const isLiked = post.likes.includes(req.user._id);
+    if (isLiked) {
+      post.likes = post.likes.filter(id => id.toString() !== req.user._id.toString());
+    } else {
+      post.likes.push(req.user._id);
+    }
+
+    await post.save();
+    res.json(post);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const commentPost = async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text) {
+      return res.status(400).json({ message: 'Comment text is required' });
+    }
+
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    post.comments.push({
+      user: req.user._id,
+      text,
+    });
+
+    await post.save();
+    await post.populate('comments.user', 'username profileImage');
+
+    res.json(post);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+

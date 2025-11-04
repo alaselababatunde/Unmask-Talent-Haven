@@ -1,0 +1,19 @@
+{
+  "name": "uth-app",
+  "version": "1.0.0",
+  "description": "UTH – Unmask Talent Haven - A youth-centered creative platform",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=client\" \"npm run dev --workspace=server\"",
+    "build": "npm run build --workspace=client",
+    "start": "npm run start --workspace=server"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
+
