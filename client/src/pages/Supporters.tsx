@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import Navbar from '../components/Navbar';
 import { Users, DollarSign, Heart, MessageSquare, Trophy } from 'lucide-react';
@@ -19,6 +20,7 @@ interface Supporter {
 }
 
 const Supporters = () => {
+  const navigate = useNavigate();
   const { data: supporters = [], isLoading } = useQuery<Supporter[]>({
     queryKey: ['supporters'],
     queryFn: async () => {
@@ -26,6 +28,15 @@ const Supporters = () => {
       return response.data;
     },
   });
+
+  const handleSendThankYou = (supporterId: string) => {
+    // Navigate to chat - in a real implementation, this would open a chat with the supporter
+    navigate('/chat');
+    // Show a message that the feature is coming or navigate to chat
+    setTimeout(() => {
+      alert('Thank you message feature coming soon! For now, you can message supporters from the Chat page.');
+    }, 100);
+  };
 
   const totalAmount = supporters.reduce((sum, s) => sum + s.totalAmount, 0);
   const topSupporter = supporters[0];
@@ -160,7 +171,10 @@ const Supporters = () => {
                 </div>
 
                 {/* Send Thank You Button */}
-                <button className="mt-4 w-full py-3 bg-deep-purple/20 hover:bg-deep-purple/30 border border-deep-purple/30 hover:border-deep-purple text-accent-beige rounded-2xl font-semibold transition-all">
+                <button 
+                  onClick={() => handleSendThankYou(supporter.user._id)}
+                  className="mt-4 w-full py-3 bg-deep-purple/20 hover:bg-deep-purple/30 border border-deep-purple/30 hover:border-deep-purple text-accent-beige rounded-2xl font-semibold transition-all"
+                >
                   Send Thank You
                 </button>
               </div>

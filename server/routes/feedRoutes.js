@@ -7,13 +7,7 @@ const router = express.Router();
 
 router.get('/', getFeed);
 router.get('/search', searchContent);
-router.post('/', protect, (req, res, next) => {
-  // Only use multer for non-text posts
-  if (req.body.mediaType === 'text') {
-    return next();
-  }
-  upload.single('media')(req, res, next);
-}, createPost);
+router.post('/', protect, upload.single('media'), createPost);
 router.post('/:id/like', protect, likePost);
 router.post('/:id/comment', protect, commentPost);
 router.put('/:id', protect, updatePost);

@@ -20,15 +20,14 @@ const Upload = () => {
 
   const uploadMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const response = await api.post('/feed', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await api.post('/feed', formData);
       return response.data;
     },
     onSuccess: () => {
       navigate('/feed');
+    },
+    onError: (err: any) => {
+      setError(err.response?.data?.message || err.message || 'Upload failed. Please try again.');
     },
   });
 
@@ -66,7 +65,8 @@ const Upload = () => {
 
       await uploadMutation.mutateAsync(formData);
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Upload failed. Make sure you are signed in.');
+      // Error is handled by mutation onError
+      console.error('Upload error:', err);
     } finally {
       setUploading(false);
     }

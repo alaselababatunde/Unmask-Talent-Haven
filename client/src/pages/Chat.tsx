@@ -80,7 +80,10 @@ const Chat = () => {
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold text-accent-beige">Inbox</h1>
-            <button className="p-2 rounded-full bg-matte-black border border-deep-purple/30 hover:border-deep-purple text-accent-beige">
+            <button 
+              onClick={() => alert('Search feature coming soon!')}
+              className="p-2 rounded-full bg-matte-black border border-deep-purple/30 hover:border-deep-purple text-accent-beige"
+            >
               <Search size={20} />
             </button>
           </div>
@@ -88,7 +91,10 @@ const Chat = () => {
           {/* Stories/Status Updates */}
           <div className="mb-6">
             <div className="flex gap-3 overflow-x-auto pb-2">
-              <button className="flex flex-col items-center gap-2 min-w-[70px]">
+              <button 
+                onClick={() => alert('Create story feature coming soon!')}
+                className="flex flex-col items-center gap-2 min-w-[70px]"
+              >
                 <div className="w-16 h-16 rounded-full bg-deep-purple/20 border-2 border-dashed border-deep-purple/40 flex items-center justify-center">
                   <span className="text-deep-purple text-2xl">+</span>
                 </div>
@@ -113,7 +119,10 @@ const Chat = () => {
 
           {/* Activity/Notifications */}
           <div className="mb-4">
-            <button className="w-full flex items-center gap-3 p-3 bg-matte-black border border-deep-purple/20 rounded-2xl hover:bg-deep-purple/5 transition">
+            <button 
+              onClick={() => alert('View your new followers on your profile page!')}
+              className="w-full flex items-center gap-3 p-3 bg-matte-black border border-deep-purple/20 rounded-2xl hover:bg-deep-purple/5 transition"
+            >
               <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
                 <UsersIcon className="text-blue-400" size={20} />
               </div>
@@ -125,7 +134,10 @@ const Chat = () => {
           </div>
 
           <div className="mb-4">
-            <button className="w-full flex items-center gap-3 p-3 bg-matte-black border border-deep-purple/20 rounded-2xl hover:bg-deep-purple/5 transition">
+            <button 
+              onClick={() => alert('Activity feature coming soon!')}
+              className="w-full flex items-center gap-3 p-3 bg-matte-black border border-deep-purple/20 rounded-2xl hover:bg-deep-purple/5 transition"
+            >
               <div className="w-10 h-10 rounded-full bg-pink-500/20 flex items-center justify-center">
                 <MessageCircle className="text-pink-400" size={20} />
               </div>
