@@ -30,10 +30,16 @@ interface UserData {
 
 const Profile = () => {
   const { id } = useParams();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, login, signup } = useAuth();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [bio, setBio] = useState('');
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
 
   const userId = id || currentUser?.id;
 
@@ -57,6 +63,108 @@ const Profile = () => {
       console.error('Failed to update bio');
     }
   };
+
+  const handleAuthSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    setAuthLoading(true);
+    try {
+      if (authMode === 'login') {
+        await login(email, password);
+      } else {
+        await signup(username, email, password);
+      }
+      navigate('/feed');
+    } catch (err: any) {
+      setAuthError(err?.response?.data?.message || 'Authentication failed');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  if (!userId) {
+    return (
+      <div className="min-h-screen bg-matte-black pb-24">
+        <div className="max-w-md mx-auto px-4 pt-12">
+          <div className="bg-matte-black border border-deep-purple/30 rounded-2xl p-6">
+            <div className="flex justify-center mb-4">
+              <div className="inline-flex rounded-full overflow-hidden border border-deep-purple/30">
+                <button
+                  className={`px-4 py-2 text-sm font-semibold ${authMode === 'login' ? 'bg-deep-purple text-accent-beige' : 'text-accent-beige/80'}`}
+                  onClick={() => setAuthMode('login')}
+                >
+                  Login
+                </button>
+                <button
+                  className={`px-4 py-2 text-sm font-semibold ${authMode === 'signup' ? 'bg-deep-purple text-accent-beige' : 'text-accent-beige/80'}`}
+                  onClick={() => setAuthMode('signup')}
+                >
+                  Sign Up
+                </button>
+              </div>
+            </div>
+
+            <form onSubmit={handleAuthSubmit} className="space-y-4">
+              {authError && (
+                <div className="bg-red-500/20 border border-red-500 text-red-300 rounded-2xl p-3 text-sm">
+                  {authError}
+                </div>
+              )}
+
+              {authMode === 'signup' && (
+                <div>
+                  <label className="block text-accent-beige/80 mb-2 text-sm">Username</label>
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="w-full px-4 py-3 bg-matte-black border border-deep-purple/30 rounded-2xl text-accent-beige focus:outline-none focus:border-deep-purple"
+                    placeholder="username"
+                    required
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-accent-beige/80 mb-2 text-sm">Email</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-4 py-3 bg-matte-black border border-deep-purple/30 rounded-2xl text-accent-beige focus:outline-none focus:border-deep-purple"
+                  placeholder="your@email.com"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-accent-beige/80 mb-2 text-sm">Password</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-3 bg-matte-black border border-deep-purple/30 rounded-2xl text-accent-beige focus:outline-none focus:border-deep-purple"
+                  placeholder="••••••••"
+                  required
+                  minLength={authMode === 'signup' ? 6 : undefined}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={authLoading}
+                className="w-full py-3 bg-deep-purple hover:bg-deep-purple/80 text-accent-beige rounded-2xl font-semibold transition-all disabled:opacity-50"
+              >
+                {authLoading ? (authMode === 'login' ? 'Logging in...' : 'Creating account...') : (authMode === 'login' ? 'Login' : 'Sign Up')}
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <Navbar />
+      </div>
+    );
+  }
 
   if (!data) {
     return (
