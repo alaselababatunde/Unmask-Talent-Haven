@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '../api';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
-import { Edit, Trophy, Users, Heart, Video } from 'lucide-react';
+import { Edit, Trophy, Users, Heart, Video, MoreVertical } from 'lucide-react';
 import { useState } from 'react';
 
 interface UserData {
@@ -34,6 +34,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [bio, setBio] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -176,7 +177,7 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-matte-black pb-24">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto px-4 py-8 relative">
         {/* Profile Header */}
         <div className="bg-matte-black border border-deep-purple/30 rounded-2xl p-6 mb-6">
           <div className="flex items-start gap-6">
@@ -197,15 +198,58 @@ const Profile = () => {
               <div className="flex items-center justify-between mb-2">
                 <h1 className="text-2xl font-bold text-accent-beige">{data.user.username}</h1>
                 {isOwnProfile && (
-                <button
-                  onClick={() => {
-                    setIsEditing(!isEditing);
-                    setBio(data.user.bio || '');
-                  }}
-                  className="p-2 bg-deep-purple/20 hover:bg-deep-purple/30 rounded-full text-deep-purple transition-all"
-                >
-                  <Edit size={20} />
-                </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        setIsEditing(!isEditing);
+                        setBio(data.user.bio || '');
+                      }}
+                      className="p-2 bg-deep-purple/20 hover:bg-deep-purple/30 rounded-full text-deep-purple transition-all"
+                    >
+                      <Edit size={20} />
+                    </button>
+                    <div className="relative">
+                      <button
+                        onClick={() => setMenuOpen((v) => !v)}
+                        className="p-2 bg-deep-purple/20 hover:bg-deep-purple/30 rounded-full text-deep-purple transition-all"
+                        aria-haspopup="menu"
+                        aria-expanded={menuOpen}
+                      >
+                        <MoreVertical size={20} />
+                      </button>
+                      {menuOpen && (
+                        <div className="absolute right-0 mt-2 w-44 bg-matte-black border border-deep-purple/30 rounded-2xl shadow-xl z-10">
+                          <button
+                            onClick={() => {
+                              setMenuOpen(false);
+                              navigate('/balance');
+                            }}
+                            className="w-full text-left px-4 py-2 text-accent-beige/90 hover:bg-deep-purple/10 rounded-t-2xl"
+                          >
+                            Balance
+                          </button>
+                          <button
+                            onClick={() => {
+                              setMenuOpen(false);
+                              navigate('/live');
+                            }}
+                            className="w-full text-left px-4 py-2 text-accent-beige/90 hover:bg-deep-purple/10"
+                          >
+                            Live
+                          </button>
+                          <button
+                            onClick={() => {
+                              setMenuOpen(false);
+                              navigate('/settings');
+                            }}
+                            className="w-full text-left px-4 py-2 text-accent-beige/90 hover:bg-deep-purple/10 rounded-b-2xl"
+                          >
+                            Settings
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
 

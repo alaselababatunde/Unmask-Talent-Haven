@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, User, Github, Facebook } from 'lucide-react';
+import { Mail, Lock, User, Github, Facebook, ChevronDown, ChevronUp, CheckCircle2, XCircle } from 'lucide-react';
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 const Signup = () => {
@@ -12,6 +12,11 @@ const Signup = () => {
   const [loading, setLoading] = useState(false);
   const { signup } = useAuth();
   const navigate = useNavigate();
+  const [showReqs, setShowReqs] = useState(false);
+
+  const usernameOk = username.trim().length >= 3;
+  const emailOk = /.+@.+\..+/.test(email);
+  const passwordOk = password.length >= 6;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +39,33 @@ const Signup = () => {
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-accent-beige mb-2">UTH</h1>
           <p className="text-deep-purple/80 text-lg">Unmask Talent Haven</p>
+        </div>
+
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={() => setShowReqs(!showReqs)}
+            className="w-full flex items-center justify-between bg-matte-black border border-deep-purple/30 rounded-2xl px-4 py-3 text-accent-beige hover:border-deep-purple transition"
+          >
+            <span className="text-sm font-semibold">Sign up requirements</span>
+            {showReqs ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+          </button>
+          {showReqs && (
+            <div className="mt-2 rounded-2xl border border-deep-purple/30 p-4 bg-deep-purple/5 space-y-2">
+              <div className="flex items-center gap-2 text-sm">
+                {usernameOk ? <CheckCircle2 className="text-green-400" size={16} /> : <XCircle className="text-red-400" size={16} />}
+                <span className="text-accent-beige/80">Username at least 3 characters</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                {emailOk ? <CheckCircle2 className="text-green-400" size={16} /> : <XCircle className="text-red-400" size={16} />}
+                <span className="text-accent-beige/80">Valid email address</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                {passwordOk ? <CheckCircle2 className="text-green-400" size={16} /> : <XCircle className="text-red-400" size={16} />}
+                <span className="text-accent-beige/80">Password at least 6 characters</span>
+              </div>
+            </div>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">

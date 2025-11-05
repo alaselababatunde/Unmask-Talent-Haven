@@ -13,6 +13,7 @@ import Profile from './pages/Profile';
 import Supporters from './pages/Supporters';
 import Live from './pages/Live';
 import AuthCallback from './pages/AuthCallback';
+import Settings from './pages/Settings';
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ function App() {
             <Route path="/balance" element={<Balance />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/profile/:id?" element={<Profile />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="/supporters" element={<Supporters />} />
             <Route path="/live" element={<Live />} />
             <Route path="/" element={<Navigate to="/feed" replace />} />

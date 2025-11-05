@@ -1,17 +1,15 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Upload, Wallet, MessageCircle, User, Users, Radio } from 'lucide-react';
+import { Home, Plus, MessageCircle, User, Users } from 'lucide-react';
 
 const Navbar = () => {
   const location = useLocation();
 
   const navItems = [
     { icon: Home, label: 'Home', path: '/feed' },
-    { icon: Upload, label: 'Upload', path: '/upload' },
-    { icon: Wallet, label: 'Balance', path: '/balance' },
+    { icon: Users, label: 'Supporters', path: '/supporters' },
+    { icon: Plus, label: 'Create', path: '/upload' },
     { icon: MessageCircle, label: 'Chat', path: '/chat' },
     { icon: User, label: 'Profile', path: '/profile' },
-    { icon: Users, label: 'Supporters', path: '/supporters' },
-    { icon: Radio, label: 'Live', path: '/live' },
   ];
 
   return (
@@ -33,8 +31,8 @@ const Navbar = () => {
                     : 'text-accent-beige/60 hover:text-accent-beige hover:bg-deep-purple/5'
                 }`}
               >
-                <Icon size={20} />
-                <span className="text-xs font-medium">{item.label}</span>
+                <Icon size={item.label === 'Create' ? 28 : 20} />
+                <span className="text-xs font-medium">{item.label === 'Create' ? '' : item.label}</span>
               </Link>
             );
           })}
