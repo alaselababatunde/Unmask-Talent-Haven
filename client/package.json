@@ -19,6 +19,8 @@
   "devDependencies": {
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
+    "@types/webidl-conversions": "^7.0.3",
+    "@types/whatwg-url": "^11.0.5",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.16",
     "postcss": "^8.4.32",
@@ -27,4 +29,3 @@
     "vite": "^5.0.8"
   }
 }
-
