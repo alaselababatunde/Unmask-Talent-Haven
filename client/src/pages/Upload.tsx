@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import Navbar from '../components/Navbar';
-import { Upload as UploadIcon, Video, Music, FileText, SignLanguage, X } from 'lucide-react';
+import { Upload as UploadIcon, Video, Music, FileText, Languages, X } from 'lucide-react';
 
 const Upload = () => {
   const [mediaType, setMediaType] = useState<'video' | 'audio' | 'text' | 'sign-language'>('video');
@@ -85,7 +85,7 @@ const Upload = () => {
                 { type: 'video' as const, icon: Video, label: 'Video' },
                 { type: 'audio' as const, icon: Music, label: 'Audio' },
                 { type: 'text' as const, icon: FileText, label: 'Poetry' },
-                { type: 'sign-language' as const, icon: SignLanguage, label: 'Sign' },
+                { type: 'sign-language' as const, icon: Languages, label: 'Sign' },
               ].map(({ type, icon: Icon, label }) => (
                 <button
                   key={type}
@@ -138,7 +138,7 @@ const Upload = () => {
                   onChange={handleFileChange}
                   className="hidden"
                   id="file-upload"
-                  required={mediaType !== 'text'}
+                  required
                 />
                 <label
                   htmlFor="file-upload"

@@ -2,7 +2,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import api from '../api';
 import Navbar from '../components/Navbar';
-import { Wallet, TrendingUp, Users, DollarSign, ArrowRight } from 'lucide-react';
+import { Wallet, TrendingUp, Users, DollarSign } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface BalanceData {

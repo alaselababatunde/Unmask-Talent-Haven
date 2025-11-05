@@ -3,7 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '../api';
 import Navbar from '../components/Navbar';
 import ReactPlayer from 'react-player';
-import { Heart, MessageCircle, Share2, Play, Pause } from 'lucide-react';
+import { Heart, MessageCircle, Share2 } from 'lucide-react';
 
 interface Post {
   _id: string;
