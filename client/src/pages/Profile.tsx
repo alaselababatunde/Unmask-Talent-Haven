@@ -3,8 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import api from '../api';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
-import { Edit, Trophy, Users, Heart, Video, MoreVertical } from 'lucide-react';
-import { useState } from 'react';
+import { Edit, Trophy, Users, Heart, Video, MoreVertical, User, Image as ImageIcon } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 interface UserData {
   user: {
@@ -36,7 +36,14 @@ const Profile = () => {
   const { user: currentUser, login, signup } = useAuth();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
+  const [customizeOpen, setCustomizeOpen] = useState(false);
   const [bio, setBio] = useState('');
+  const [editFirstName, setEditFirstName] = useState('');
+  const [editLastName, setEditLastName] = useState('');
+  const [editUsername, setEditUsername] = useState('');
+  const [editBio, setEditBio] = useState('');
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [saving, setSaving] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
@@ -70,6 +77,38 @@ const Profile = () => {
       console.error('Failed to update bio');
     }
   };
+
+  const handleCustomizeSave = async () => {
+    if (!userId) return;
+    setSaving(true);
+    try {
+      const form = new FormData();
+      form.append('firstName', editFirstName);
+      form.append('lastName', editLastName);
+      form.append('username', editUsername);
+      form.append('bio', editBio);
+      if (avatarFile) form.append('profileImage', avatarFile);
+
+      await api.put(`/user/${userId}`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setCustomizeOpen(false);
+      refetch();
+    } catch (error) {
+      console.error('Failed to update profile');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  useEffect(() => {
+    if (data && customizeOpen) {
+      setEditFirstName(data.user.firstName || '');
+      setEditLastName(data.user.lastName || '');
+      setEditUsername(data.user.username || '');
+      setEditBio(data.user.bio || '');
+    }
+  }, [data, customizeOpen]);
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -286,6 +325,15 @@ const Profile = () => {
                           <button
                             onClick={() => {
                               setMenuOpen(false);
+                              setCustomizeOpen(true);
+                            }}
+                            className="w-full text-left px-4 py-2 text-accent-beige/90 hover:bg-deep-purple/10"
+                          >
+                            Customize Profile
+                          </button>
+                          <button
+                            onClick={() => {
+                              setMenuOpen(false);
                               navigate('/settings');
                             }}
                             className="w-full text-left px-4 py-2 text-accent-beige/90 hover:bg-deep-purple/10 rounded-b-2xl"
@@ -391,7 +439,7 @@ const Profile = () => {
               {data.posts.map((post) => (
                 <div
                   key={post._id}
-                  onClick={() => navigate(`/feed`)}
+                  onClick={() => navigate(`/feed?post=${post._id}`)}
                   className="aspect-square bg-matte-black border border-deep-purple/20 rounded-2xl overflow-hidden cursor-pointer hover:border-deep-purple transition-all group relative"
                 >
                   {post.mediaUrl && (
@@ -421,6 +469,96 @@ const Profile = () => {
           )}
         </div>
       </div>
+
+      {/* Customize Profile Modal */}
+      {customizeOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-matte-black border border-deep-purple/30 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-deep-purple/20 flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-accent-beige">Customize Profile</h2>
+              <button
+                onClick={() => setCustomizeOpen(false)}
+                className="text-accent-beige/60 hover:text-accent-beige"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-accent-beige/80 mb-2 text-sm">First name</label>
+                  <input
+                    value={editFirstName}
+                    onChange={(e) => setEditFirstName(e.target.value)}
+                    className="w-full px-4 py-3 bg-matte-black border border-deep-purple/30 rounded-2xl text-accent-beige focus:outline-none focus:border-deep-purple"
+                  />
+                </div>
+                <div>
+                  <label className="block text-accent-beige/80 mb-2 text-sm">Last name</label>
+                  <input
+                    value={editLastName}
+                    onChange={(e) => setEditLastName(e.target.value)}
+                    className="w-full px-4 py-3 bg-matte-black border border-deep-purple/30 rounded-2xl text-accent-beige focus:outline-none focus:border-deep-purple"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-accent-beige/80 mb-2 text-sm">Username</label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-deep-purple" size={20} />
+                  <input
+                    value={editUsername}
+                    onChange={(e) => setEditUsername(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-matte-black border border-deep-purple/30 rounded-2xl text-accent-beige focus:outline-none focus:border-deep-purple"
+                    minLength={3}
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-accent-beige/80 mb-2 text-sm">Bio</label>
+                <textarea
+                  value={editBio}
+                  onChange={(e) => setEditBio(e.target.value)}
+                  className="w-full h-28 p-3 bg-matte-black border border-deep-purple/30 rounded-2xl text-accent-beige focus:outline-none focus:border-deep-purple resize-none"
+                  maxLength={500}
+                />
+              </div>
+              <div>
+                <label className="block text-accent-beige/80 mb-2 text-sm">Profile Image</label>
+                <label className="flex items-center gap-2 px-4 py-2 border border-deep-purple/30 rounded-2xl text-accent-beige cursor-pointer hover:border-deep-purple">
+                  <ImageIcon size={18} className="text-deep-purple" />
+                  <span>Choose file</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) setAvatarFile(e.target.files[0]);
+                    }}
+                  />
+                </label>
+                {avatarFile && <span className="text-accent-beige/70 text-sm ml-2">{avatarFile.name}</span>}
+              </div>
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={handleCustomizeSave}
+                  disabled={saving}
+                  className="flex-1 px-4 py-3 bg-deep-purple hover:bg-deep-purple/80 text-accent-beige rounded-2xl font-semibold disabled:opacity-50"
+                >
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
+                <button
+                  onClick={() => setCustomizeOpen(false)}
+                  className="flex-1 px-4 py-3 bg-matte-black border border-deep-purple/30 hover:border-deep-purple text-accent-beige rounded-2xl font-semibold"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Navbar />
     </div>

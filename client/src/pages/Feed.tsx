@@ -3,11 +3,14 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '../api';
 import Navbar from '../components/Navbar';
 import ReactPlayer from 'react-player';
-import { Heart, MessageCircle, Share2, Video, Music, FileText, Hand, Search } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Video, Music, FileText, Hand, Search, MoreVertical, Trash2, Edit, Forward } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 interface Post {
   _id: string;
   user: {
+    _id: string;
     username: string;
     profileImage?: string;
     isLive?: boolean;
@@ -30,6 +33,8 @@ interface Post {
 }
 
 const Feed = () => {
+  const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
   const [playingIndex, setPlayingIndex] = useState(0);
   const playerRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [openCommentsPostId, setOpenCommentsPostId] = useState<string | null>(null);
@@ -38,6 +43,10 @@ const Feed = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showSearch, setShowSearch] = useState(false);
+  const [postMenuOpen, setPostMenuOpen] = useState<string | null>(null);
+  const [editPostId, setEditPostId] = useState<string | null>(null);
+  const [editCaption, setEditCaption] = useState('');
+  const [editTags, setEditTags] = useState('');
 
   const handleSearch = async (query: string) => {
     if (!query.trim()) {
@@ -80,6 +89,29 @@ const Feed = () => {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (postId: string) => {
+      await api.delete(`/feed/${postId}`);
+    },
+    onSuccess: () => {
+      refetch();
+      setPostMenuOpen(null);
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ postId, caption, tags }: { postId: string; caption: string; tags: string }) => {
+      const response = await api.put(`/feed/${postId}`, { caption, tags });
+      return response.data;
+    },
+    onSuccess: () => {
+      refetch();
+      setEditPostId(null);
+      setEditCaption('');
+      setEditTags('');
+    },
+  });
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -102,7 +134,21 @@ const Feed = () => {
     return () => observer.disconnect();
   }, [posts]);
 
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (postMenuOpen && !(e.target as Element).closest('.post-menu')) {
+        setPostMenuOpen(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [postMenuOpen]);
+
   const handleLike = (postId: string) => {
+    if (!currentUser) {
+      navigate('/profile');
+      return;
+    }
     likeMutation.mutate(postId);
   };
 
@@ -223,7 +269,10 @@ const Feed = () => {
 
             {/* Top bar (user info) */}
             <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate(`/profile/${post.user._id}`)}
+                className="flex items-center gap-3"
+              >
                 <div className={`w-10 h-10 rounded-full bg-deep-purple/30 flex items-center justify-center overflow-hidden border ${post.user.isLive ? 'border-red-500' : 'border-deep-purple/40'}`}>
                   {post.user.profileImage ? (
                     <img src={post.user.profileImage} alt={post.user.username} className="w-full h-full object-cover" />
@@ -235,6 +284,68 @@ const Feed = () => {
                   <h3 className="text-accent-beige font-semibold">{post.user.username}</h3>
                   <p className="text-accent-beige/60 text-xs">{post.category}</p>
                 </div>
+              </button>
+              <div className="relative post-menu">
+                <button
+                  onClick={() => setPostMenuOpen(postMenuOpen === post._id ? null : post._id)}
+                  className="p-2 rounded-full bg-black/40 border border-white/10 text-accent-beige hover:bg-black/60"
+                >
+                  <MoreVertical size={20} />
+                </button>
+                {postMenuOpen === post._id && (
+                  <div className="absolute right-0 mt-2 w-48 bg-matte-black border border-deep-purple/30 rounded-2xl shadow-xl z-50 post-menu">
+                    {currentUser?.id === post.user._id && (
+                      <>
+                        <button
+                          onClick={() => {
+                            setEditPostId(post._id);
+                            setEditCaption(post.caption);
+                            setEditTags(post.tags.join(', '));
+                            setPostMenuOpen(null);
+                          }}
+                          className="w-full flex items-center gap-2 px-4 py-3 text-accent-beige hover:bg-deep-purple/10 rounded-t-2xl"
+                        >
+                          <Edit size={18} />
+                          <span>Edit</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm('Delete this post?')) {
+                              deleteMutation.mutate(post._id);
+                            }
+                          }}
+                          className="w-full flex items-center gap-2 px-4 py-3 text-red-400 hover:bg-red-500/10"
+                        >
+                          <Trash2 size={18} />
+                          <span>Delete</span>
+                        </button>
+                      </>
+                    )}
+                    <button
+                      onClick={() => {
+                        navigator.share?.({
+                          title: post.caption,
+                          url: window.location.href,
+                        }).catch(() => {});
+                        setPostMenuOpen(null);
+                      }}
+                      className="w-full flex items-center gap-2 px-4 py-3 text-accent-beige hover:bg-deep-purple/10"
+                    >
+                      <Share2 size={18} />
+                      <span>Share</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        // Forward functionality
+                        setPostMenuOpen(null);
+                      }}
+                      className="w-full flex items-center gap-2 px-4 py-3 text-accent-beige hover:bg-deep-purple/10 rounded-b-2xl"
+                    >
+                      <Forward size={18} />
+                      <span>Forward</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -306,17 +417,83 @@ const Feed = () => {
         <div className="max-w-4xl mx-auto px-4 py-4 space-y-6">
           {displayPosts.map((post: Post) => (
             <div key={post._id} className="bg-matte-black border border-deep-purple/20 rounded-2xl overflow-hidden">
-              <div className="flex items-center gap-3 p-4 border-b border-deep-purple/10">
-                <div className={`w-10 h-10 rounded-full bg-deep-purple/30 flex items-center justify-center overflow-hidden border ${post.user.isLive ? 'border-red-500' : 'border-deep-purple/40'}`}>
-                  {post.user.profileImage ? (
-                    <img src={post.user.profileImage} alt={post.user.username} className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-deep-purple font-bold">{post.user.username[0].toUpperCase()}</span>
+              <div className="flex items-center justify-between p-4 border-b border-deep-purple/10">
+                <button
+                  onClick={() => navigate(`/profile/${post.user._id}`)}
+                  className="flex items-center gap-3 flex-1"
+                >
+                  <div className={`w-10 h-10 rounded-full bg-deep-purple/30 flex items-center justify-center overflow-hidden border ${post.user.isLive ? 'border-red-500' : 'border-deep-purple/40'}`}>
+                    {post.user.profileImage ? (
+                      <img src={post.user.profileImage} alt={post.user.username} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-deep-purple font-bold">{post.user.username[0].toUpperCase()}</span>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-accent-beige font-semibold">{post.user.username}</h3>
+                    <p className="text-accent-beige/60 text-xs">{post.category}</p>
+                  </div>
+                </button>
+                <div className="relative post-menu">
+                  <button
+                    onClick={() => setPostMenuOpen(postMenuOpen === post._id ? null : post._id)}
+                    className="p-2 rounded-full bg-matte-black border border-deep-purple/30 text-accent-beige hover:bg-deep-purple/10"
+                  >
+                    <MoreVertical size={18} />
+                  </button>
+                  {postMenuOpen === post._id && (
+                    <div className="absolute right-0 mt-2 w-48 bg-matte-black border border-deep-purple/30 rounded-2xl shadow-xl z-50 post-menu">
+                      {currentUser?.id === post.user._id && (
+                        <>
+                          <button
+                            onClick={() => {
+                              setEditPostId(post._id);
+                              setEditCaption(post.caption);
+                              setEditTags(post.tags.join(', '));
+                              setPostMenuOpen(null);
+                            }}
+                            className="w-full flex items-center gap-2 px-4 py-3 text-accent-beige hover:bg-deep-purple/10 rounded-t-2xl"
+                          >
+                            <Edit size={18} />
+                            <span>Edit</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm('Delete this post?')) {
+                                deleteMutation.mutate(post._id);
+                              }
+                            }}
+                            className="w-full flex items-center gap-2 px-4 py-3 text-red-400 hover:bg-red-500/10"
+                          >
+                            <Trash2 size={18} />
+                            <span>Delete</span>
+                          </button>
+                        </>
+                      )}
+                      <button
+                        onClick={() => {
+                          navigator.share?.({
+                            title: post.caption,
+                            url: window.location.href,
+                          }).catch(() => {});
+                          setPostMenuOpen(null);
+                        }}
+                        className="w-full flex items-center gap-2 px-4 py-3 text-accent-beige hover:bg-deep-purple/10"
+                      >
+                        <Share2 size={18} />
+                        <span>Share</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setPostMenuOpen(null);
+                        }}
+                        className="w-full flex items-center gap-2 px-4 py-3 text-accent-beige hover:bg-deep-purple/10 rounded-b-2xl"
+                      >
+                        <Forward size={18} />
+                        <span>Forward</span>
+                      </button>
+                    </div>
                   )}
-                </div>
-                <div>
-                  <h3 className="text-accent-beige font-semibold">{post.user.username}</h3>
-                  <p className="text-accent-beige/60 text-xs">{post.category}</p>
                 </div>
               </div>
 
@@ -368,6 +545,75 @@ const Feed = () => {
       )}
 
       <Navbar />
+
+      {/* Edit Post Modal */}
+      {editPostId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-matte-black border border-deep-purple/30 rounded-2xl max-w-md w-full">
+            <div className="p-6 border-b border-deep-purple/20 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-accent-beige">Edit Post</h2>
+              <button
+                onClick={() => {
+                  setEditPostId(null);
+                  setEditCaption('');
+                  setEditTags('');
+                }}
+                className="text-accent-beige/60 hover:text-accent-beige"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-accent-beige/80 mb-2 text-sm">Caption</label>
+                <textarea
+                  value={editCaption}
+                  onChange={(e) => setEditCaption(e.target.value)}
+                  className="w-full h-24 p-3 bg-matte-black border border-deep-purple/30 rounded-2xl text-accent-beige focus:outline-none focus:border-deep-purple resize-none"
+                  maxLength={1000}
+                />
+              </div>
+              <div>
+                <label className="block text-accent-beige/80 mb-2 text-sm">Tags (comma separated)</label>
+                <input
+                  type="text"
+                  value={editTags}
+                  onChange={(e) => setEditTags(e.target.value)}
+                  className="w-full p-3 bg-matte-black border border-deep-purple/30 rounded-2xl text-accent-beige focus:outline-none focus:border-deep-purple"
+                  placeholder="tag1, tag2, tag3"
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => {
+                    if (editPostId) {
+                      updateMutation.mutate({
+                        postId: editPostId,
+                        caption: editCaption,
+                        tags: editTags,
+                      });
+                    }
+                  }}
+                  disabled={updateMutation.isPending}
+                  className="flex-1 px-4 py-3 bg-deep-purple hover:bg-deep-purple/80 text-accent-beige rounded-2xl font-semibold disabled:opacity-50"
+                >
+                  {updateMutation.isPending ? 'Saving...' : 'Save'}
+                </button>
+                <button
+                  onClick={() => {
+                    setEditPostId(null);
+                    setEditCaption('');
+                    setEditTags('');
+                  }}
+                  className="flex-1 px-4 py-3 bg-matte-black border border-deep-purple/30 hover:border-deep-purple text-accent-beige rounded-2xl font-semibold"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Comments Drawer */}
       {openCommentsPostId && (

@@ -40,6 +40,11 @@ const Upload = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+      setError('Please sign in to upload');
+      navigate('/profile');
+      return;
+    }
     setError('');
     setUploading(true);
 
@@ -61,7 +66,7 @@ const Upload = () => {
 
       await uploadMutation.mutateAsync(formData);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Upload failed');
+      setError(err.response?.data?.message || err.message || 'Upload failed. Make sure you are signed in.');
     } finally {
       setUploading(false);
     }
@@ -84,10 +89,16 @@ const Upload = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6" aria-disabled={!user}>
+        <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
             <div className="bg-red-500/20 border border-red-500 text-red-300 rounded-2xl p-4">
               {error}
+            </div>
+          )}
+          
+          {!user && (
+            <div className="bg-yellow-500/20 border border-yellow-500 text-yellow-300 rounded-2xl p-4">
+              Please sign in to upload. Go to Profile to login or sign up.
             </div>
           )}
 

@@ -93,7 +93,7 @@ const Live = () => {
               >
                 Start Streaming
               </button>
-            </div>
+          </div>
           </div>
         ) : (
           <>
@@ -103,6 +103,7 @@ const Live = () => {
               playsInline
               muted={isMuted}
               className="w-full h-full object-cover"
+              style={{ display: 'block' }}
             />
             
             {/* Live overlay */}

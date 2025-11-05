@@ -8,7 +8,7 @@ export const getFeed = async (req, res) => {
     }
 
     const posts = await Post.find(filter)
-      .populate('user', 'username profileImage isLive')
+      .populate('user', '_id username profileImage isLive')
       .sort({ createdAt: -1 })
       .limit(20);
 
@@ -41,7 +41,7 @@ export const createPost = async (req, res) => {
       category: category || 'Other',
     });
 
-    await post.populate('user', 'username profileImage');
+    await post.populate('user', '_id username profileImage');
 
     res.status(201).json(post);
   } catch (error) {
@@ -56,13 +56,12 @@ export const likePost = async (req, res) => {
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    const isLiked = post.likes.includes(req.user._id);
-    if (isLiked) {
-      post.likes = post.likes.filter(id => id.toString() !== req.user._id.toString());
-    } else {
-      post.likes.push(req.user._id);
+    // Only allow one like per user - if already liked, return unchanged
+    if (post.likes.includes(req.user._id)) {
+      return res.json(post);
     }
 
+    post.likes.push(req.user._id);
     await post.save();
     res.json(post);
   } catch (error) {
@@ -108,9 +107,50 @@ export const searchContent = async (req, res) => {
         { tags: { $regex: q, $options: 'i' } },
       ],
     })
-      .populate('user', 'username profileImage isLive')
+      .populate('user', '_id username profileImage isLive')
       .limit(10);
     res.json(posts);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const deletePost = async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    if (post.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    await Post.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Post deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updatePost = async (req, res) => {
+  try {
+    const { caption, tags } = req.body;
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    if (post.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    if (caption !== undefined) post.caption = caption;
+    if (tags !== undefined) post.tags = tags.split(',').map(t => t.trim()).filter(t => t);
+
+    await post.save();
+    await post.populate('user', '_id username profileImage isLive');
+    res.json(post);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
