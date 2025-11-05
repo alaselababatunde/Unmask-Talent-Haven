@@ -127,7 +127,7 @@ const Feed = () => {
                 { key: 'audio', label: 'Audio', icon: Music },
                 { key: 'text', label: 'Poetry', icon: FileText },
                 { key: 'sign-language', label: 'Sign', icon: Hand },
-              ].map((t) => (
+              ].map((t: { key: string; label: string; icon: any }) => (
                 <button
                   key={t.key}
                   onClick={() => {
@@ -180,7 +180,7 @@ const Feed = () => {
 
       {isVideoTab && !(searchQuery.trim() && searchResults.length > 0) ? (
       <div className="h-[calc(100vh-56px)] overflow-y-scroll snap-y snap-mandatory no-scrollbar relative">
-        {displayPosts.map((post, index) => (
+        {displayPosts.map((post: Post, index: number) => (
           <div
             key={post._id}
             ref={(el) => {
@@ -271,7 +271,7 @@ const Feed = () => {
               )}
               {post.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
-                  {post.tags.map((tag, i) => (
+                  {post.tags.map((tag: string, i: number) => (
                     <span key={i} className="text-deep-purple text-xs bg-deep-purple/10 px-2 py-1 rounded-full">
                       #{tag}
                     </span>
@@ -304,7 +304,7 @@ const Feed = () => {
       </div>
       ) : (
         <div className="max-w-4xl mx-auto px-4 py-4 space-y-6">
-          {displayPosts.map((post) => (
+          {displayPosts.map((post: Post) => (
             <div key={post._id} className="bg-matte-black border border-deep-purple/20 rounded-2xl overflow-hidden">
               <div className="flex items-center gap-3 p-4 border-b border-deep-purple/10">
                 <div className={`w-10 h-10 rounded-full bg-deep-purple/30 flex items-center justify-center overflow-hidden border ${post.user.isLive ? 'border-red-500' : 'border-deep-purple/40'}`}>
@@ -388,7 +388,7 @@ const Feed = () => {
             </div>
             <div className="px-4 py-2 overflow-y-auto space-y-3 max-h-[50vh]">
               {posts
-                .find((p) => p._id === openCommentsPostId)?.comments.map((comment, i) => (
+                .find((p) => p._id === openCommentsPostId)?.comments.map((comment: Post['comments'][0], i: number) => (
                   <div key={i} className="flex gap-2">
                     <span className="font-semibold text-accent-beige text-sm">{comment.user.username}</span>
                     <span className="text-accent-beige/70 text-sm">{comment.text}</span>
