@@ -27,47 +27,12 @@ function App() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/feed" element={<Feed />} />
-            <Route
-              path="/upload"
-              element={
-                <ProtectedRoute>
-                  <Upload />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/balance"
-              element={
-                <ProtectedRoute>
-                  <Balance />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/chat"
-              element={
-                <ProtectedRoute>
-                  <Chat />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/upload" element={<Upload />} />
+            <Route path="/balance" element={<Balance />} />
+            <Route path="/chat" element={<Chat />} />
             <Route path="/profile/:id?" element={<Profile />} />
-            <Route
-              path="/supporters"
-              element={
-                <ProtectedRoute>
-                  <Supporters />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/live"
-              element={
-                <ProtectedRoute>
-                  <Live />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/supporters" element={<Supporters />} />
+            <Route path="/live" element={<Live />} />
             <Route path="/" element={<Navigate to="/feed" replace />} />
           </Routes>
         </Router>
