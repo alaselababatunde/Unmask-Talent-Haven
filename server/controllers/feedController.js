@@ -96,3 +96,23 @@ export const commentPost = async (req, res) => {
   }
 };
 
+export const searchContent = async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q || !q.trim()) {
+      return res.json([]);
+    }
+    const posts = await Post.find({
+      $or: [
+        { caption: { $regex: q, $options: 'i' } },
+        { tags: { $regex: q, $options: 'i' } },
+      ],
+    })
+      .populate('user', 'username profileImage isLive')
+      .limit(10);
+    res.json(posts);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+

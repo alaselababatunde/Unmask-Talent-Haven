@@ -1,11 +1,12 @@
 import express from 'express';
-import { getFeed, createPost, likePost, commentPost } from '../controllers/feedController.js';
+import { getFeed, createPost, likePost, commentPost, searchContent } from '../controllers/feedController.js';
 import { protect } from '../middleware/auth.js';
 import { upload } from '../config/cloudinary.js';
 
 const router = express.Router();
 
 router.get('/', getFeed);
+router.get('/search', searchContent);
 router.post('/', protect, (req, res, next) => {
   // Only use multer for non-text posts
   if (req.body.mediaType === 'text') {

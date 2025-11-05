@@ -3,7 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '../api';
 import Navbar from '../components/Navbar';
 import ReactPlayer from 'react-player';
-import { Heart, MessageCircle, Share2, Video, Music, FileText, Hand } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Video, Music, FileText, Hand, Search } from 'lucide-react';
 
 interface Post {
   _id: string;
@@ -35,6 +35,22 @@ const Feed = () => {
   const [openCommentsPostId, setOpenCommentsPostId] = useState<string | null>(null);
   const [newCommentText, setNewCommentText] = useState('');
   const [activeTab, setActiveTab] = useState<'video' | 'audio' | 'text' | 'sign-language'>('video');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [showSearch, setShowSearch] = useState(false);
+
+  const handleSearch = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    try {
+      const res = await api.get('/feed/search', { params: { q: query } });
+      setSearchResults(res.data);
+    } catch (err) {
+      console.error('Search failed', err);
+    }
+  };
 
   const { data: posts = [], refetch } = useQuery<Post[]>({
     queryKey: ['feed', activeTab],
@@ -100,32 +116,54 @@ const Feed = () => {
 
   return (
     <div className="min-h-screen bg-matte-black">
-      {/* Category Tabs */}
+      {/* Category Tabs with Search */}
       <div className="sticky top-0 z-40 bg-matte-black/80 backdrop-blur border-b border-deep-purple/20">
         <div className="max-w-4xl mx-auto px-4">
-          <div className="flex items-center gap-3 py-3 overflow-x-auto">
-            {[
-              { key: 'video', label: 'Video', icon: Video },
-              { key: 'audio', label: 'Audio', icon: Music },
-              { key: 'text', label: 'Poetry', icon: FileText },
-              { key: 'sign-language', label: 'Sign', icon: Hand },
-            ].map((t) => (
-              <button
-                key={t.key}
-                onClick={() => setActiveTab(t.key as any)}
-                className={`px-4 py-2 rounded-full text-sm font-semibold transition border ${
-                  activeTab === (t.key as any)
-                    ? 'bg-deep-purple text-accent-beige border-deep-purple'
-                    : 'bg-matte-black text-accent-beige/70 border-deep-purple/30 hover:border-deep-purple'
-                }`}
-              >
-                <span className="inline-flex items-center gap-2">
-                  {t.icon ? <t.icon size={16} /> : null}
-                  {t.label}
-                </span>
-              </button>
-            ))}
+          <div className="flex items-center justify-between py-3">
+            <div className="flex items-center gap-3 overflow-x-auto flex-1">
+              {[
+                { key: 'video', label: 'Video', icon: Video },
+                { key: 'audio', label: 'Audio', icon: Music },
+                { key: 'text', label: 'Poetry', icon: FileText },
+                { key: 'sign-language', label: 'Sign', icon: Hand },
+              ].map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => setActiveTab(t.key as any)}
+                  className={`px-4 py-2 rounded-full text-sm font-semibold transition border whitespace-nowrap ${
+                    activeTab === (t.key as any)
+                      ? 'bg-deep-purple text-accent-beige border-deep-purple'
+                      : 'bg-matte-black text-accent-beige/70 border-deep-purple/30 hover:border-deep-purple'
+                  }`}
+                >
+                  <span className="inline-flex items-center gap-2">
+                    {t.icon ? <t.icon size={16} /> : null}
+                    {t.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowSearch(!showSearch)}
+              className="ml-2 p-2 rounded-full bg-matte-black border border-deep-purple/30 hover:border-deep-purple text-accent-beige"
+            >
+              <Search size={20} />
+            </button>
           </div>
+          {showSearch && (
+            <div className="pb-3">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  handleSearch(e.target.value);
+                }}
+                placeholder="Search profiles or content..."
+                className="w-full px-4 py-2 bg-matte-black border border-deep-purple/30 rounded-full text-accent-beige focus:outline-none focus:border-deep-purple"
+              />
+            </div>
+          )}
         </div>
       </div>
 
