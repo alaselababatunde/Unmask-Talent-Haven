@@ -38,6 +38,9 @@ const Profile = () => {
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [username, setUsername] = useState('');
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
@@ -73,7 +76,7 @@ const Profile = () => {
       if (authMode === 'login') {
         await login(email, password);
       } else {
-        await signup(username, email, password);
+        await signup(firstName, lastName, username, email, password);
       }
       navigate('/feed');
     } catch (err: any) {
@@ -114,6 +117,30 @@ const Profile = () => {
 
               {authMode === 'signup' && (
                 <div>
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    <div>
+                      <label className="block text-accent-beige/80 mb-2 text-sm">First name</label>
+                      <input
+                        type="text"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        className="w-full px-4 py-3 bg-matte-black border border-deep-purple/30 rounded-2xl text-accent-beige focus:outline-none focus:border-deep-purple"
+                        placeholder="First name"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-accent-beige/80 mb-2 text-sm">Last name</label>
+                      <input
+                        type="text"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        className="w-full px-4 py-3 bg-matte-black border border-deep-purple/30 rounded-2xl text-accent-beige focus:outline-none focus:border-deep-purple"
+                        placeholder="Last name"
+                        required
+                      />
+                    </div>
+                  </div>
                   <label className="block text-accent-beige/80 mb-2 text-sm">Username</label>
                   <input
                     type="text"
@@ -140,15 +167,24 @@ const Profile = () => {
 
               <div>
                 <label className="block text-accent-beige/80 mb-2 text-sm">Password</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-matte-black border border-deep-purple/30 rounded-2xl text-accent-beige focus:outline-none focus:border-deep-purple"
-                  placeholder="••••••••"
-                  required
-                  minLength={authMode === 'signup' ? 6 : undefined}
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full px-4 py-3 bg-matte-black border border-deep-purple/30 rounded-2xl text-accent-beige focus:outline-none focus:border-deep-purple pr-16"
+                    placeholder="••••••••"
+                    required
+                    minLength={authMode === 'signup' ? 6 : undefined}
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-accent-beige/60 hover:text-accent-beige text-xs"
+                    onClick={() => setShowPassword((v) => !v)}
+                  >
+                    {showPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
               </div>
 
               <button
@@ -199,15 +235,15 @@ const Profile = () => {
                 <h1 className="text-2xl font-bold text-accent-beige">{data.user.username}</h1>
                 {isOwnProfile && (
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => {
-                        setIsEditing(!isEditing);
-                        setBio(data.user.bio || '');
-                      }}
-                      className="p-2 bg-deep-purple/20 hover:bg-deep-purple/30 rounded-full text-deep-purple transition-all"
-                    >
-                      <Edit size={20} />
-                    </button>
+                <button
+                  onClick={() => {
+                    setIsEditing(!isEditing);
+                    setBio(data.user.bio || '');
+                  }}
+                  className="p-2 bg-deep-purple/20 hover:bg-deep-purple/30 rounded-full text-deep-purple transition-all"
+                >
+                  <Edit size={20} />
+                </button>
                     <div className="relative">
                       <button
                         onClick={() => setMenuOpen((v) => !v)}

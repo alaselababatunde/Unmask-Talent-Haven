@@ -2,6 +2,16 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema({
+  firstName: {
+    type: String,
+    default: '',
+    trim: true,
+  },
+  lastName: {
+    type: String,
+    default: '',
+    trim: true,
+  },
   username: {
     type: String,
     required: true,
@@ -58,6 +68,10 @@ const userSchema = new mongoose.Schema({
     type: String,
   }],
   isVerified: {
+    type: Boolean,
+    default: false,
+  },
+  isLive: {
     type: Boolean,
     default: false,
   },

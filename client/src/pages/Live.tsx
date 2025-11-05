@@ -1,11 +1,14 @@
 import Navbar from '../components/Navbar';
 import { Radio, Users, Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Live = () => {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-matte-black pb-24">
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex items-center gap-3 mb-8">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
           <div className="p-3 bg-deep-purple/20 rounded-full glow-purple">
             <Radio className="text-deep-purple" size={24} />
           </div>
@@ -13,6 +16,13 @@ const Live = () => {
             <h1 className="text-3xl font-bold text-accent-beige">Live Streaming</h1>
             <p className="text-accent-beige/60 text-sm">Go live and share your talent in real-time</p>
           </div>
+          </div>
+          <button
+            onClick={() => navigate('/profile')}
+            className="px-4 py-2 bg-matte-black border border-deep-purple/30 hover:border-deep-purple text-accent-beige rounded-2xl text-sm"
+          >
+            Back to Profile
+          </button>
         </div>
 
         <div className="bg-matte-black border border-deep-purple/30 rounded-2xl p-12 text-center">

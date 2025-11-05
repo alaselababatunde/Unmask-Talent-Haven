@@ -3,6 +3,8 @@ import api from '../api';
 
 interface User {
   id: string;
+  firstName?: string;
+  lastName?: string;
   username: string;
   email: string;
   profileImage?: string;
@@ -12,7 +14,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
-  signup: (username: string, email: string, password: string) => Promise<void>;
+  signup: (firstName: string, lastName: string, username: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   setAuth: (token: string, user: User) => void;
   loading: boolean;
@@ -43,8 +45,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setAuth(newToken, newUser);
   };
 
-  const signup = async (username: string, email: string, password: string) => {
-    const response = await api.post('/auth/signup', { username, email, password });
+  const signup = async (firstName: string, lastName: string, username: string, email: string, password: string) => {
+    const response = await api.post('/auth/signup', { firstName, lastName, username, email, password });
     const { token: newToken, user: newUser } = response.data;
     setAuth(newToken, newUser);
   };

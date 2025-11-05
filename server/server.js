@@ -3,6 +3,8 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import connectDB from './config/db.js';
 import passport from './config/oauth.js';
+import { Server as SocketIOServer } from 'socket.io';
+import http from 'http';
 
 // Routes
 import authRoutes from './routes/authRoutes.js';
@@ -14,6 +16,7 @@ import oauthRoutes from './routes/oauthRoutes.js';
 dotenv.config();
 
 const app = express();
+const httpServer = http.createServer(app);
 
 // CORS: allow configured origin, localhost, and this project's Vercel preview domains
 const corsOptions = {
@@ -61,7 +64,43 @@ app.get('/api/health', (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+const io = new SocketIOServer(httpServer, {
+  cors: {
+    origin: (origin, cb) => {
+      // reuse CORS policy
+      if (!origin) return cb(null, true);
+      const ok = /vercel\.app$/i.test(origin) && origin.includes('unmask-talent-haven-client');
+      const explicit = [process.env.FRONTEND_URL, process.env.FRONTEND_URL_2, 'http://localhost:3000', 'http://localhost:5173', 'https://localhost:3000', 'https://localhost:5173'].filter(Boolean);
+      if (ok || explicit.includes(origin)) return cb(null, true);
+      return cb(null, false);
+    },
+  },
+});
+
+io.on('connection', (socket) => {
+  // join creators room by default
+  const room = 'creators';
+  socket.join(room);
+
+  socket.on('message', (payload) => {
+    // expect { text, userId, username, room? }
+    const out = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      text: String(payload?.text || ''),
+      userId: String(payload?.userId || ''),
+      username: String(payload?.username || 'anon'),
+      room: payload?.room || room,
+      createdAt: new Date().toISOString(),
+    };
+    io.to(out.room).emit('message', out);
+  });
+
+  socket.on('disconnect', () => {
+    // no-op
+  });
+});
+
+httpServer.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 

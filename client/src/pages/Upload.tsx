@@ -3,9 +3,11 @@ import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import Navbar from '../components/Navbar';
+import { useAuth } from '../context/AuthContext';
 import { Upload as UploadIcon, Video, Music, FileText, Languages, X } from 'lucide-react';
 
 const Upload = () => {
+  const { user } = useAuth();
   const [mediaType, setMediaType] = useState<'video' | 'audio' | 'text' | 'sign-language'>('video');
   const [file, setFile] = useState<File | null>(null);
   const [caption, setCaption] = useState('');
@@ -70,7 +72,19 @@ const Upload = () => {
       <div className="max-w-2xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-accent-beige mb-8">Upload Your Talent</h1>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        {!user && (
+          <div className="mb-6 p-4 border border-deep-purple/30 rounded-2xl bg-deep-purple/10 text-accent-beige">
+            You need to be signed in to upload. Use the Profile page to login or sign up.
+            <button
+              onClick={() => navigate('/profile')}
+              className="ml-3 px-3 py-1 bg-deep-purple hover:bg-deep-purple/80 rounded-xl text-xs"
+            >
+              Go to Profile
+            </button>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6" aria-disabled={!user}>
           {error && (
             <div className="bg-red-500/20 border border-red-500 text-red-300 rounded-2xl p-4">
               {error}

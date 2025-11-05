@@ -2,8 +2,13 @@ import Post from '../models/Post.js';
 
 export const getFeed = async (req, res) => {
   try {
-    const posts = await Post.find()
-      .populate('user', 'username profileImage')
+    const filter = {};
+    if (req.query.mediaType) {
+      filter.mediaType = req.query.mediaType;
+    }
+
+    const posts = await Post.find(filter)
+      .populate('user', 'username profileImage isLive')
       .sort({ createdAt: -1 })
       .limit(20);
 

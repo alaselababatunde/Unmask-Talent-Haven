@@ -3,9 +3,9 @@ import { generateToken } from '../utils/generateToken.js';
 
 export const signup = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { firstName, lastName, username, email, password } = req.body;
 
-    if (!username || !email || !password) {
+    if (!firstName || !lastName || !username || !email || !password) {
       return res.status(400).json({ message: 'Please provide all fields' });
     }
 
@@ -14,11 +14,7 @@ export const signup = async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    const user = await User.create({
-      username,
-      email,
-      password,
-    });
+    const user = await User.create({ firstName, lastName, username, email, password });
 
     const token = generateToken(user._id);
 
@@ -26,6 +22,8 @@ export const signup = async (req, res) => {
       token,
       user: {
         id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
         username: user.username,
         email: user.email,
         profileImage: user.profileImage,

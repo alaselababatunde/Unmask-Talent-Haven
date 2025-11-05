@@ -1,69 +1,49 @@
 import { useState, useRef, useEffect } from 'react';
 import Navbar from '../components/Navbar';
-import { Send, Sparkles } from 'lucide-react';
+import { Send, Users as UsersIcon } from 'lucide-react';
+import { io, Socket } from 'socket.io-client';
+import { useAuth } from '../context/AuthContext';
 
-interface Message {
-  id: string;
-  text: string;
-  sender: 'user' | 'ai';
-  timestamp: Date;
-}
+interface Message { id: string; text: string; username: string; userId: string; createdAt: string; }
 
 const Chat = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      text: "Welcome to UTH! I'm here to motivate and support you. What talent would you like to share today? 🌟",
-      sender: 'ai',
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const socketRef = useRef<Socket | null>(null);
+  const { user } = useAuth();
 
-  const motivationalMessages = [
-    "Keep shining 🌟 Your talent inspires others!",
-    "You're doing amazing! Every step forward counts.",
-    "Your creativity is a gift to the world. Keep sharing it!",
-    "Believe in yourself! You have something special to offer.",
-    "Don't be afraid to be unique. That's what makes you stand out!",
-    "Your passion is contagious. Keep pursuing your dreams!",
-    "Every expert was once a beginner. Keep practicing!",
-    "You're making a difference. Keep going!",
-  ];
+  const SOCKET_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/?api\/?$/i, '');
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  useEffect(() => { scrollToBottom(); }, [messages]);
+
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    const s = io(SOCKET_BASE, { transports: ['websocket'] });
+    socketRef.current = s;
+    s.on('connect', () => {
+      // connected
+    });
+    s.on('message', (msg: Message) => {
+      setMessages((prev) => [...prev, msg]);
+    });
+    return () => { s.disconnect(); };
+  }, []);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
+    socketRef.current?.emit('message', {
       text: input,
-      sender: 'user',
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
+      room: 'creators',
+      userId: user?.id || 'anon',
+      username: user?.username || 'anon',
+    });
     setInput('');
-
-    // Simulate AI response
-    setTimeout(() => {
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)],
-        sender: 'ai',
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, aiMessage]);
-    }, 1000);
   };
 
   return (
@@ -71,11 +51,11 @@ const Chat = () => {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-3 bg-deep-purple/20 rounded-full glow-purple">
-            <Sparkles className="text-deep-purple" size={24} />
+            <UsersIcon className="text-deep-purple" size={24} />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-accent-beige">AI Assistant</h1>
-            <p className="text-accent-beige/60 text-sm">Your motivational companion</p>
+            <h1 className="text-2xl font-bold text-accent-beige">Creators Chat</h1>
+            <p className="text-accent-beige/60 text-sm">Real-time room for creators</p>
           </div>
         </div>
 
@@ -85,19 +65,14 @@ const Chat = () => {
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`flex ${message.userId === (user?.id || '') ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[80%] rounded-2xl p-4 ${
-                    message.sender === 'user'
-                      ? 'bg-deep-purple/20 text-accent-beige'
-                      : 'bg-rich-brown/30 text-accent-beige border border-rich-brown/20'
-                  }`}
+                  className={`max-w-[80%] rounded-2xl p-4 ${message.userId === (user?.id || '') ? 'bg-deep-purple/20 text-accent-beige' : 'bg-rich-brown/30 text-accent-beige border border-rich-brown/20'}`}
                 >
+                  <p className="text-xs opacity-70 mb-1">{message.username}</p>
                   <p className="text-sm leading-relaxed">{message.text}</p>
-                  <p className="text-xs opacity-60 mt-2">
-                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
+                  <p className="text-xs opacity-60 mt-2">{new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                 </div>
               </div>
             ))}

@@ -59,7 +59,15 @@ const Settings = () => {
   return (
     <div className="min-h-screen bg-matte-black pb-24">
       <div className="max-w-2xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-accent-beige mb-6">Settings</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold text-accent-beige">Settings</h1>
+          <button
+            onClick={() => navigate('/profile')}
+            className="px-4 py-2 bg-matte-black border border-deep-purple/30 hover:border-deep-purple text-accent-beige rounded-2xl text-sm"
+          >
+            Back to Profile
+          </button>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && <div className="bg-red-500/20 border border-red-500 text-red-300 rounded-2xl p-3">{error}</div>}

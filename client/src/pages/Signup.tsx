@@ -5,15 +5,19 @@ import { Mail, Lock, User, Github, Facebook, ChevronDown, ChevronUp, CheckCircle
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 const Signup = () => {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { signup } = useAuth();
   const navigate = useNavigate();
   const [showReqs, setShowReqs] = useState(false);
 
+  const nameOk = firstName.trim().length >= 1 && lastName.trim().length >= 1;
   const usernameOk = username.trim().length >= 3;
   const emailOk = /.+@.+\..+/.test(email);
   const passwordOk = password.length >= 6;
@@ -24,7 +28,7 @@ const Signup = () => {
     setLoading(true);
 
     try {
-      await signup(username, email, password);
+      await signup(firstName, lastName, username, email, password);
       navigate('/feed');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Signup failed');
@@ -53,6 +57,10 @@ const Signup = () => {
           {showReqs && (
             <div className="mt-2 rounded-2xl border border-deep-purple/30 p-4 bg-deep-purple/5 space-y-2">
               <div className="flex items-center gap-2 text-sm">
+                {nameOk ? <CheckCircle2 className="text-green-400" size={16} /> : <XCircle className="text-red-400" size={16} />}
+                <span className="text-accent-beige/80">First and last name required</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
                 {usernameOk ? <CheckCircle2 className="text-green-400" size={16} /> : <XCircle className="text-red-400" size={16} />}
                 <span className="text-accent-beige/80">Username at least 3 characters</span>
               </div>
@@ -74,6 +82,31 @@ const Signup = () => {
               {error}
             </div>
           )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-accent-beige/80 mb-2 text-sm">First name</label>
+              <input
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className="w-full pl-4 pr-4 py-3 bg-matte-black border border-deep-purple/30 rounded-2xl text-accent-beige focus:outline-none focus:border-deep-purple focus:glow-purple"
+                placeholder="First name"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-accent-beige/80 mb-2 text-sm">Last name</label>
+              <input
+                type="text"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                className="w-full pl-4 pr-4 py-3 bg-matte-black border border-deep-purple/30 rounded-2xl text-accent-beige focus:outline-none focus:border-deep-purple focus:glow-purple"
+                placeholder="Last name"
+                required
+              />
+            </div>
+          </div>
 
           <div>
             <label className="block text-accent-beige/80 mb-2 text-sm">Username</label>
@@ -110,14 +143,21 @@ const Signup = () => {
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-deep-purple" size={20} />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-matte-black border border-deep-purple/30 rounded-2xl text-accent-beige focus:outline-none focus:border-deep-purple focus:glow-purple"
+                className="w-full pl-10 pr-16 py-3 bg-matte-black border border-deep-purple/30 rounded-2xl text-accent-beige focus:outline-none focus:border-deep-purple focus:glow-purple"
                 placeholder="••••••••"
                 required
                 minLength={6}
               />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-accent-beige/60 hover:text-accent-beige text-xs"
+                onClick={() => setShowPassword((v) => !v)}
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
             </div>
           </div>
 
