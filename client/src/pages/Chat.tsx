@@ -3,7 +3,6 @@ import Navbar from '../components/Navbar';
 import { Send, Users as UsersIcon, MessageCircle, Search } from 'lucide-react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
 
 interface Message { id: string; text: string; username: string; userId: string; createdAt: string; }
 
@@ -30,7 +29,6 @@ const Chat = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
   const { user } = useAuth();
-  const navigate = useNavigate();
 
   const SOCKET_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/?api\/?$/i, '');
 
