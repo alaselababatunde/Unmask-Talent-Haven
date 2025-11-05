@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Mail, Lock, Github, Facebook } from 'lucide-react';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -92,7 +93,7 @@ const Login = () => {
 
           <div className="grid grid-cols-3 gap-3">
             <a
-              href="/api/auth/google"
+              href={`${API_BASE}/auth/google`}
               className="flex items-center justify-center py-3 bg-matte-black border border-deep-purple/30 rounded-2xl hover:bg-deep-purple/10 transition-all"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -103,13 +104,13 @@ const Login = () => {
               </svg>
             </a>
             <a
-              href="/api/auth/github"
+              href={`${API_BASE}/auth/github`}
               className="flex items-center justify-center py-3 bg-matte-black border border-deep-purple/30 rounded-2xl hover:bg-deep-purple/10 transition-all"
             >
               <Github className="w-5 h-5 text-accent-beige" />
             </a>
             <a
-              href="/api/auth/facebook"
+              href={`${API_BASE}/auth/facebook`}
               className="flex items-center justify-center py-3 bg-matte-black border border-deep-purple/30 rounded-2xl hover:bg-deep-purple/10 transition-all"
             >
               <Facebook className="w-5 h-5 text-blue-500" />

@@ -31,6 +31,8 @@ interface Post {
 const Feed = () => {
   const [playingIndex, setPlayingIndex] = useState(0);
   const playerRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [openCommentsPostId, setOpenCommentsPostId] = useState<string | null>(null);
+  const [newCommentText, setNewCommentText] = useState('');
 
   const { data: posts = [], refetch } = useQuery<Post[]>({
     queryKey: ['feed'],
@@ -93,100 +95,99 @@ const Feed = () => {
   };
 
   return (
-    <div className="min-h-screen bg-matte-black pb-24">
-      {/* Weekly Challenge Banner */}
-      <div className="gradient-purple-brown p-4 mb-4 rounded-b-2xl glow-purple">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-accent-beige font-bold text-lg mb-1">Weekly Challenge</h2>
-          <p className="text-accent-beige/80 text-sm">Showcase your talent this week and win amazing prizes!</p>
-        </div>
-      </div>
-
-      <div className="max-w-4xl mx-auto px-4 space-y-6">
+    <div className="min-h-screen bg-matte-black">
+      <div className="h-screen overflow-y-scroll snap-y snap-mandatory no-scrollbar relative">
         {posts.map((post, index) => (
           <div
             key={post._id}
             ref={(el) => {
               playerRefs.current[index] = el;
             }}
-            className="bg-matte-black border border-deep-purple/20 rounded-2xl overflow-hidden"
+            className="snap-start h-screen w-full relative"
           >
-            {/* Post Header */}
-            <div className="flex items-center gap-3 p-4 border-b border-deep-purple/10">
-              <div className="w-10 h-10 rounded-full bg-deep-purple/30 flex items-center justify-center overflow-hidden">
-                {post.user.profileImage ? (
-                  <img src={post.user.profileImage} alt={post.user.username} className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-deep-purple font-bold">{post.user.username[0].toUpperCase()}</span>
-                )}
-              </div>
-              <div>
-                <h3 className="text-accent-beige font-semibold">{post.user.username}</h3>
-                <p className="text-accent-beige/60 text-xs">{post.category}</p>
-              </div>
-            </div>
-
-            {/* Media */}
-            <div className="relative bg-matte-black aspect-video">
+            {/* Media layer */}
+            <div className="absolute inset-0 flex items-center justify-center bg-black">
               {post.mediaType === 'video' || post.mediaType === 'sign-language' ? (
-                <ReactPlayer
-                  url={post.mediaUrl}
-                  playing={playingIndex === index}
-                  controls
-                  width="100%"
-                  height="100%"
-                  className="react-player"
-                />
+                <div className="w-full h-full">
+                  <ReactPlayer
+                    url={post.mediaUrl}
+                    playing={playingIndex === index}
+                    controls={false}
+                    loop
+                    width="100%"
+                    height="100%"
+                    className="!h-full !w-full object-contain"
+                  />
+                </div>
               ) : post.mediaType === 'audio' ? (
-                <div className="flex items-center justify-center h-full">
+                <div className="flex items-center justify-center w-full h-full">
                   <ReactPlayer
                     url={post.mediaUrl}
                     playing={playingIndex === index}
                     controls
-                    width="100%"
-                    height="60px"
+                    width="90%"
+                    height="80px"
                   />
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-full p-8">
-                  <p className="text-accent-beige text-lg leading-relaxed whitespace-pre-wrap">{post.caption}</p>
+                <div className="flex items-center justify-center w-full h-full p-8">
+                  <p className="text-accent-beige text-xl leading-relaxed whitespace-pre-wrap max-w-2xl text-center">
+                    {post.caption}
+                  </p>
                 </div>
               )}
             </div>
 
-            {/* Actions */}
-            <div className="p-4 space-y-3">
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => handleLike(post._id)}
-                  className={`flex items-center gap-2 ${
-                    post.likes.length > 0 ? 'text-deep-purple' : 'text-accent-beige/60'
-                  } hover:text-deep-purple transition-colors`}
-                >
-                  <Heart className={post.likes.length > 0 ? 'fill-current' : ''} size={24} />
-                  <span>{post.likes.length}</span>
-                </button>
-                <button className="flex items-center gap-2 text-accent-beige/60 hover:text-deep-purple transition-colors">
-                  <MessageCircle size={24} />
-                  <span>{post.comments.length}</span>
-                </button>
-                <button className="flex items-center gap-2 text-accent-beige/60 hover:text-deep-purple transition-colors">
-                  <Share2 size={24} />
-                </button>
-              </div>
-
-              {/* Caption */}
-              {post.caption && (
-                <div>
-                  <p className="text-accent-beige/80 text-sm">
-                    <span className="font-semibold">{post.user.username}</span> {post.caption}
-                  </p>
+            {/* Top bar (user info) */}
+            <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-deep-purple/30 flex items-center justify-center overflow-hidden border border-deep-purple/40">
+                  {post.user.profileImage ? (
+                    <img src={post.user.profileImage} alt={post.user.username} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-deep-purple font-bold">{post.user.username[0].toUpperCase()}</span>
+                  )}
                 </div>
-              )}
+                <div>
+                  <h3 className="text-accent-beige font-semibold">{post.user.username}</h3>
+                  <p className="text-accent-beige/60 text-xs">{post.category}</p>
+                </div>
+              </div>
+            </div>
 
-              {/* Tags */}
+            {/* Right-side actions */}
+            <div className="absolute right-4 bottom-32 flex flex-col items-center gap-5">
+              <button
+                onClick={() => handleLike(post._id)}
+                className={`p-3 rounded-full bg-black/40 border border-white/10 hover:bg-black/60 transition ${
+                  post.likes.length > 0 ? 'text-deep-purple' : 'text-accent-beige'
+                }`}
+              >
+                <Heart className={post.likes.length > 0 ? 'fill-current' : ''} size={28} />
+                <span className="block text-center text-xs mt-1">{post.likes.length}</span>
+              </button>
+              <button
+                className="p-3 rounded-full bg-black/40 border border-white/10 text-accent-beige hover:bg-black/60 transition"
+                onClick={() => setOpenCommentsPostId(post._id)}
+              >
+                <MessageCircle size={28} />
+                <span className="block text-center text-xs mt-1">{post.comments.length}</span>
+              </button>
+              <button className="p-3 rounded-full bg-black/40 border border-white/10 text-accent-beige hover:bg-black/60 transition">
+                <Share2 size={28} />
+              </button>
+            </div>
+
+            {/* Bottom caption */}
+            <div className="absolute left-4 right-20 bottom-8">
+              {post.caption && (
+                <p className="text-accent-beige/90 text-sm">
+                  <span className="font-semibold mr-2">{post.user.username}</span>
+                  {post.caption}
+                </p>
+              )}
               {post.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 mt-2">
                   {post.tags.map((tag, i) => (
                     <span key={i} className="text-deep-purple text-xs bg-deep-purple/10 px-2 py-1 rounded-full">
                       #{tag}
@@ -194,28 +195,12 @@ const Feed = () => {
                   ))}
                 </div>
               )}
-
-              {/* Comments */}
-              {post.comments.length > 0 && (
-                <div className="space-y-2 pt-2 border-t border-deep-purple/10">
-                  {post.comments.slice(0, 3).map((comment, i) => (
-                    <div key={i} className="flex gap-2">
-                      <span className="font-semibold text-accent-beige text-sm">{comment.user.username}</span>
-                      <span className="text-accent-beige/70 text-sm">{comment.text}</span>
-                    </div>
-                  ))}
-                  {post.comments.length > 3 && (
-                    <button className="text-deep-purple text-sm">View all {post.comments.length} comments</button>
-                  )}
-                </div>
-              )}
-
-              {/* Add Comment */}
-              <div className="flex gap-2 pt-2 border-t border-deep-purple/10">
+              {/* inline comment input */}
+              <div className="mt-3">
                 <input
                   type="text"
                   placeholder="Add a comment..."
-                  className="flex-1 bg-matte-black border border-deep-purple/30 rounded-full px-4 py-2 text-accent-beige text-sm focus:outline-none focus:border-deep-purple"
+                  className="w-full bg-black/40 border border-white/10 rounded-full px-4 py-2 text-accent-beige text-sm focus:outline-none focus:border-deep-purple"
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
                       handleComment(post._id, e.currentTarget.value);
@@ -229,16 +214,78 @@ const Feed = () => {
         ))}
 
         {posts.length === 0 && (
-          <div className="text-center py-12">
+          <div className="snap-start h-screen w-full flex items-center justify-center">
             <p className="text-accent-beige/60">No posts yet. Be the first to share your talent!</p>
           </div>
         )}
       </div>
 
       <Navbar />
+
+      {/* Comments Drawer */}
+      {openCommentsPostId && (
+        <div className="fixed inset-0 z-50">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setOpenCommentsPostId(null)}
+          />
+          <div className="absolute bottom-0 left-0 right-0 bg-matte-black border-t border-deep-purple/30 rounded-t-2xl max-h-[70vh]">
+            <div className="p-4 border-b border-deep-purple/20 flex items-center justify-between">
+              <span className="text-accent-beige font-semibold">Comments</span>
+              <button
+                onClick={() => setOpenCommentsPostId(null)}
+                className="text-accent-beige/60 hover:text-accent-beige"
+              >
+                Close
+              </button>
+            </div>
+            <div className="px-4 py-2 overflow-y-auto space-y-3 max-h-[50vh]">
+              {posts
+                .find((p) => p._id === openCommentsPostId)?.comments.map((comment, i) => (
+                  <div key={i} className="flex gap-2">
+                    <span className="font-semibold text-accent-beige text-sm">{comment.user.username}</span>
+                    <span className="text-accent-beige/70 text-sm">{comment.text}</span>
+                  </div>
+                ))}
+              {posts.find((p) => p._id === openCommentsPostId)?.comments.length === 0 && (
+                <p className="text-accent-beige/60 text-sm">No comments yet.</p>
+              )}
+            </div>
+            <div className="p-4 border-t border-deep-purple/20">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newCommentText}
+                  onChange={(e) => setNewCommentText(e.target.value)}
+                  placeholder="Add a comment..."
+                  className="flex-1 bg-matte-black border border-deep-purple/30 rounded-full px-4 py-2 text-accent-beige text-sm focus:outline-none focus:border-deep-purple"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newCommentText.trim() && openCommentsPostId) {
+                      handleComment(openCommentsPostId, newCommentText.trim());
+                      setNewCommentText('');
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => {
+                    if (newCommentText.trim() && openCommentsPostId) {
+                      handleComment(openCommentsPostId, newCommentText.trim());
+                      setNewCommentText('');
+                    }
+                  }}
+                  className="px-4 py-2 bg-deep-purple text-accent-beige rounded-full text-sm font-semibold hover:bg-deep-purple/80"
+                >
+                  Send
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default Feed;
+
 
