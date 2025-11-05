@@ -3,7 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '../api';
 import Navbar from '../components/Navbar';
 import ReactPlayer from 'react-player';
-import { Heart, MessageCircle, Share2 } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Video, Music, FileText, Hand } from 'lucide-react';
 
 interface Post {
   _id: string;
@@ -105,10 +105,10 @@ const Feed = () => {
         <div className="max-w-4xl mx-auto px-4">
           <div className="flex items-center gap-3 py-3 overflow-x-auto">
             {[
-              { key: 'video', label: 'Video' },
-              { key: 'audio', label: 'Audio' },
-              { key: 'text', label: 'Poetry' },
-              { key: 'sign-language', label: 'Sign' },
+              { key: 'video', label: 'Video', icon: Video },
+              { key: 'audio', label: 'Audio', icon: Music },
+              { key: 'text', label: 'Poetry', icon: FileText },
+              { key: 'sign-language', label: 'Sign', icon: Hand },
             ].map((t) => (
               <button
                 key={t.key}
@@ -119,7 +119,10 @@ const Feed = () => {
                     : 'bg-matte-black text-accent-beige/70 border-deep-purple/30 hover:border-deep-purple'
                 }`}
               >
-                {t.label}
+                <span className="inline-flex items-center gap-2">
+                  {t.icon ? <t.icon size={16} /> : null}
+                  {t.label}
+                </span>
               </button>
             ))}
           </div>

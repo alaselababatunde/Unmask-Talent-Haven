@@ -9,6 +9,8 @@ import { useState } from 'react';
 interface UserData {
   user: {
     _id: string;
+    firstName?: string;
+    lastName?: string;
     username: string;
     email: string;
     profileImage?: string;
@@ -17,6 +19,7 @@ interface UserData {
     following: string[];
     achievements: string[];
     badges: string[];
+    isLive?: boolean;
   };
   posts: Array<{
     _id: string;
@@ -255,6 +258,18 @@ const Profile = () => {
                       </button>
                       {menuOpen && (
                         <div className="absolute right-0 mt-2 w-44 bg-matte-black border border-deep-purple/30 rounded-2xl shadow-xl z-10">
+                          <button
+                            onClick={async () => {
+                              try {
+                                await api.put(`/user/${userId}/live`, { isLive: !data.user.isLive });
+                                setMenuOpen(false);
+                                refetch();
+                              } catch {}
+                            }}
+                            className="w-full text-left px-4 py-2 text-accent-beige/90 hover:bg-deep-purple/10"
+                          >
+                            {data.user.isLive ? 'End Live' : 'Go Live'}
+                          </button>
                           <button
                             onClick={() => {
                               setMenuOpen(false);

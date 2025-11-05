@@ -9,6 +9,8 @@ const Settings = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -25,6 +27,8 @@ const Settings = () => {
     (async () => {
       try {
         const res = await api.get(`/user/${user.id}`);
+        setFirstName(res.data.user.firstName || '');
+        setLastName(res.data.user.lastName || '');
         setUsername(res.data.user.username || '');
         setBio(res.data.user.bio || '');
       } catch (e: any) {
@@ -41,6 +45,8 @@ const Settings = () => {
     setSaving(true);
     try {
       const form = new FormData();
+      form.append('firstName', firstName);
+      form.append('lastName', lastName);
       form.append('username', username);
       form.append('bio', bio);
       if (avatarFile) form.append('profileImage', avatarFile);
@@ -72,6 +78,27 @@ const Settings = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && <div className="bg-red-500/20 border border-red-500 text-red-300 rounded-2xl p-3">{error}</div>}
           {success && <div className="bg-green-500/20 border border-green-500 text-green-200 rounded-2xl p-3">{success}</div>}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-accent-beige/80 mb-2 text-sm">First name</label>
+              <input
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className="w-full px-4 py-3 bg-matte-black border border-deep-purple/30 rounded-2xl text-accent-beige focus:outline-none focus:border-deep-purple"
+                placeholder="First name"
+              />
+            </div>
+            <div>
+              <label className="block text-accent-beige/80 mb-2 text-sm">Last name</label>
+              <input
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                className="w-full px-4 py-3 bg-matte-black border border-deep-purple/30 rounded-2xl text-accent-beige focus:outline-none focus:border-deep-purple"
+                placeholder="Last name"
+              />
+            </div>
+          </div>
 
           <div>
             <label className="block text-accent-beige/80 mb-2 text-sm">Username</label>
