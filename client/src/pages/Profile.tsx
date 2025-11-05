@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '../api';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
-import { Edit, Trophy, Users, Heart, Video, MoreVertical, Search } from 'lucide-react';
+import { Edit, Trophy, Users, Heart, Video, MoreVertical } from 'lucide-react';
 import { useState } from 'react';
 
 interface UserData {
@@ -47,9 +47,6 @@ const Profile = () => {
   const [username, setUsername] = useState('');
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [showSearch, setShowSearch] = useState(false);
 
   const userId = id || currentUser?.id;
 

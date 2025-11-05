@@ -1,19 +1,17 @@
 import { useState, useRef, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import { Radio, X, Video, VideoOff, Mic, MicOff } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
 
 const Live = () => {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [isLive, setIsLive] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
-  const [viewers, setViewers] = useState(0);
+  const [viewers] = useState(0);
   const [error, setError] = useState('');
 
   useEffect(() => {

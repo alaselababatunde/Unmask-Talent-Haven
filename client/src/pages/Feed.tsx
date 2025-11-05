@@ -113,6 +113,7 @@ const Feed = () => {
   };
 
   const isVideoTab = activeTab === 'video' || activeTab === 'sign-language';
+  const displayPosts = searchQuery.trim() && searchResults.length > 0 ? searchResults : posts;
 
   return (
     <div className="min-h-screen bg-matte-black">
@@ -129,7 +130,11 @@ const Feed = () => {
               ].map((t) => (
                 <button
                   key={t.key}
-                  onClick={() => setActiveTab(t.key as any)}
+                  onClick={() => {
+                    setActiveTab(t.key as any);
+                    setSearchQuery('');
+                    setSearchResults([]);
+                  }}
                   className={`px-4 py-2 rounded-full text-sm font-semibold transition border whitespace-nowrap ${
                     activeTab === (t.key as any)
                       ? 'bg-deep-purple text-accent-beige border-deep-purple'
@@ -167,9 +172,15 @@ const Feed = () => {
         </div>
       </div>
 
-      {isVideoTab ? (
+      {searchQuery.trim() && searchResults.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-accent-beige/60">No results found for "{searchQuery}"</p>
+        </div>
+      )}
+
+      {isVideoTab && !(searchQuery.trim() && searchResults.length > 0) ? (
       <div className="h-[calc(100vh-56px)] overflow-y-scroll snap-y snap-mandatory no-scrollbar relative">
-        {posts.map((post, index) => (
+        {displayPosts.map((post, index) => (
           <div
             key={post._id}
             ref={(el) => {
@@ -293,7 +304,7 @@ const Feed = () => {
       </div>
       ) : (
         <div className="max-w-4xl mx-auto px-4 py-4 space-y-6">
-          {posts.map((post) => (
+          {displayPosts.map((post) => (
             <div key={post._id} className="bg-matte-black border border-deep-purple/20 rounded-2xl overflow-hidden">
               <div className="flex items-center gap-3 p-4 border-b border-deep-purple/10">
                 <div className={`w-10 h-10 rounded-full bg-deep-purple/30 flex items-center justify-center overflow-hidden border ${post.user.isLive ? 'border-red-500' : 'border-deep-purple/40'}`}>
