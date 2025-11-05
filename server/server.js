@@ -14,10 +14,32 @@ import oauthRoutes from './routes/oauthRoutes.js';
 dotenv.config();
 
 const app = express();
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+
+// CORS: allow configured origin, localhost, and this project's Vercel preview domains
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true); // mobile apps, curl
+
+    const explicitAllowed = [
+      process.env.FRONTEND_URL,
+      process.env.FRONTEND_URL_2,
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'https://localhost:3000',
+      'https://localhost:5173',
+    ].filter(Boolean);
+
+    const isExplicit = explicitAllowed.includes(origin);
+    const isVercelPreviewForApp = /vercel\.app$/i.test(origin) && origin.includes('unmask-talent-haven-client');
+
+    if (isExplicit || isVercelPreviewForApp) {
+      return callback(null, true);
+    }
+    return callback(null, false);
+  },
   credentials: true,
-}));
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
