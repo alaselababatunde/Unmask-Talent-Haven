@@ -29,7 +29,7 @@ const Supporters = () => {
     },
   });
 
-  const handleSendThankYou = (supporterId: string) => {
+  const handleSendThankYou = (_supporterId: string) => {
     // Navigate to chat - in a real implementation, this would open a chat with the supporter
     navigate('/chat');
     // Show a message that the feature is coming or navigate to chat
@@ -189,4 +189,3 @@ const Supporters = () => {
 };
 
 export default Supporters;
-
