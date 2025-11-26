@@ -209,26 +209,29 @@ const Feed = () => {
                 { key: 'audio', label: 'Audio', icon: Music },
                 { key: 'text', label: 'Poetry', icon: FileText },
                 { key: 'sign-language', label: 'Sign', icon: Hand },
-              ].map((t: { key: string; label: string; icon: any }) => (
-                <button
-                  key={t.key}
-                  onClick={() => {
-                    setActiveTab(t.key as any);
-                    setSearchQuery('');
-                    setSearchResults([]);
-                  }}
-                  className={`px-4 py-2 rounded-full text-sm font-semibold transition border whitespace-nowrap ${
-                    activeTab === (t.key as any)
-                      ? 'bg-deep-purple text-accent-beige border-deep-purple'
-                      : 'bg-matte-black text-accent-beige/70 border-deep-purple/30 hover:border-deep-purple'
-                  }`}
-                >
-                  <span className="inline-flex items-center gap-2">
-                    {t.icon ? <t.icon size={16} /> : null}
-                    {t.label}
-                  </span>
-                </button>
-              ))}
+              ].map((t: { key: string; label: string; icon: any }) => {
+                const Icon = t.icon;
+                return (
+                  <button
+                    key={t.key}
+                    onClick={() => {
+                      setActiveTab(t.key as any);
+                      setSearchQuery('');
+                      setSearchResults([]);
+                    }}
+                    className={`px-4 py-2 rounded-full text-sm font-semibold transition border whitespace-nowrap ${
+                      activeTab === (t.key as any)
+                        ? 'bg-deep-purple text-accent-beige border-deep-purple'
+                        : 'bg-matte-black text-accent-beige/70 border-deep-purple/30 hover:border-deep-purple'
+                    }`}
+                  >
+                    <span className="inline-flex items-center gap-2">
+                      {Icon ? <Icon size={16} /> : null}
+                      {t.label}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
             <button
               onClick={() => setShowSearch(!showSearch)}
