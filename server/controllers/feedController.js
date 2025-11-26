@@ -1,4 +1,5 @@
 import Post from '../models/Post.js';
+import Notification from '../models/Notification.js';
 
 export const getFeed = async (req, res) => {
   try {
@@ -21,15 +22,42 @@ export const getFeed = async (req, res) => {
 export const createPost = async (req, res) => {
   try {
     const { caption, tags, category, mediaType } = req.body;
+    
+    // Validate media type
+    const validMediaTypes = ['video', 'audio', 'text', 'sign-language'];
+    if (!validMediaTypes.includes(mediaType)) {
+      return res.status(400).json({ message: 'Invalid media type' });
+    }
+
     let mediaUrl = req.file ? req.file.path : req.body.mediaUrl;
 
     // For text posts, use the text content as mediaUrl
     if (mediaType === 'text' && req.body.mediaUrl) {
       mediaUrl = req.body.mediaUrl;
-    }
-
-    if (!mediaUrl) {
-      return res.status(400).json({ message: 'Media URL or content is required' });
+      if (!mediaUrl || mediaUrl.trim().length === 0) {
+        return res.status(400).json({ message: 'Text content is required for text posts' });
+      }
+    } else if (mediaType !== 'text') {
+      // For media uploads, ensure we have a file
+      if (!mediaUrl) {
+        return res.status(400).json({ 
+          message: 'Media file is required',
+          details: req.file ? 'File upload failed' : 'No file provided'
+        });
+      }
+      
+      // Validate file size on backend (should have been caught by multer, but double check)
+      if (req.file) {
+        const maxSize = (mediaType === 'video' || mediaType === 'sign-language') 
+          ? 100 * 1024 * 1024  // 100MB
+          : 50 * 1024 * 1024;  // 50MB
+          
+        if (req.file.size > maxSize) {
+          return res.status(400).json({ 
+            message: `File is too large. Maximum size is ${maxSize / (1024 * 1024)}MB`
+          });
+        }
+      }
     }
 
     const post = await Post.create({
@@ -45,13 +73,30 @@ export const createPost = async (req, res) => {
 
     res.status(201).json(post);
   } catch (error) {
+    console.error('Upload error:', error);
+    
+    // Provide user-friendly error messages
+    if (error.message.includes('File type')) {
+      return res.status(400).json({ message: 'Invalid file type. Please upload a valid video or audio file.' });
+    }
+    
+    if (error.message.includes('size')) {
+      return res.status(400).json({ message: 'File is too large. Please upload a smaller file.' });
+    }
+    
+    if (error.message.includes('Cloudinary') || error.message.includes('cloud')) {
+      return res.status(500).json({ 
+        message: 'Video storage not configured. Please ensure Cloudinary credentials are set in server/.env' 
+      });
+    }
+    
     res.status(500).json({ message: error.message });
   }
 };
 
 export const likePost = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);
+    const post = await Post.findById(req.params.id).populate('user', '_id username');
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
@@ -63,6 +108,24 @@ export const likePost = async (req, res) => {
 
     post.likes.push(req.user._id);
     await post.save();
+
+    // Create and emit notification if liker is not the post owner
+    if (post.user._id.toString() !== req.user._id.toString()) {
+      const notification = await Notification.create({
+        user: post.user._id,
+        from: req.user._id,
+        type: 'like',
+        message: `${req.user.username} liked your post`,
+      });
+      
+      // Emit notification via socket
+      const app = req.app || global.app;
+      const io = app.get ? app.get('io') : null;
+      if (io) {
+        io.to(`user:${post.user._id}`).emit('notification', notification);
+      }
+    }
+
     res.json(post);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -76,7 +139,7 @@ export const commentPost = async (req, res) => {
       return res.status(400).json({ message: 'Comment text is required' });
     }
 
-    const post = await Post.findById(req.params.id);
+    const post = await Post.findById(req.params.id).populate('user', '_id username');
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
@@ -88,6 +151,23 @@ export const commentPost = async (req, res) => {
 
     await post.save();
     await post.populate('comments.user', 'username profileImage');
+
+    // Create and emit notification if commenter is not the post owner
+    if (post.user._id.toString() !== req.user._id.toString()) {
+      const notification = await Notification.create({
+        user: post.user._id,
+        from: req.user._id,
+        type: 'comment',
+        message: `${req.user.username} commented: "${text.substring(0, 50)}${text.length > 50 ? '...' : ''}"`,
+      });
+      
+      // Emit notification via socket
+      const app = req.app || global.app;
+      const io = app.get ? app.get('io') : null;
+      if (io) {
+        io.to(`user:${post.user._id}`).emit('notification', notification);
+      }
+    }
 
     res.json(post);
   } catch (error) {

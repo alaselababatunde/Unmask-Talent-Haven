@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '../api';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
@@ -15,8 +15,8 @@ interface UserData {
     email: string;
     profileImage?: string;
     bio?: string;
-    followers: string[];
-    following: string[];
+    followers: Array<{ _id: string; username: string; profileImage?: string }>;
+    following: Array<{ _id: string; username: string; profileImage?: string }>;
     achievements: string[];
     badges: string[];
     isLive?: boolean;
@@ -100,6 +100,26 @@ const Profile = () => {
       setSaving(false);
     }
   };
+
+  const followMutation = useMutation({
+    mutationFn: async () => {
+      const response = await api.post(`/user/${userId}/follow`);
+      return response.data;
+    },
+    onSuccess: () => {
+      refetch();
+    },
+  });
+
+  const unfollowMutation = useMutation({
+    mutationFn: async () => {
+      const response = await api.post(`/user/${userId}/unfollow`);
+      return response.data;
+    },
+    onSuccess: () => {
+      refetch();
+    },
+  });
 
   useEffect(() => {
     if (data && customizeOpen) {
@@ -282,17 +302,17 @@ const Profile = () => {
                   </h1>
                   <p className="text-accent-beige/60 text-sm">@{data.user.username}</p>
                 </div>
-                {isOwnProfile && (
+                {isOwnProfile ? (
                   <div className="flex items-center gap-2">
-                <button
-                  onClick={() => {
-                    setIsEditing(!isEditing);
-                    setBio(data.user.bio || '');
-                  }}
-                  className="p-2 bg-deep-purple/20 hover:bg-deep-purple/30 rounded-full text-deep-purple transition-all"
-                >
-                  <Edit size={20} />
-                </button>
+                    <button
+                      onClick={() => {
+                        setIsEditing(!isEditing);
+                        setBio(data.user.bio || '');
+                      }}
+                      className="p-2 bg-deep-purple/20 hover:bg-deep-purple/30 rounded-full text-deep-purple transition-all"
+                    >
+                      <Edit size={20} />
+                    </button>
                     <div className="relative">
                       <button
                         onClick={() => setMenuOpen((v) => !v)}
@@ -343,6 +363,39 @@ const Profile = () => {
                         </div>
                       )}
                     </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    {currentUser ? (
+                      data.user.followers.some(f => f._id === currentUser.id) ? (
+                        <button
+                          onClick={() => unfollowMutation.mutate()}
+                          className="px-4 py-2 bg-matte-black border border-deep-purple/30 hover:bg-deep-purple/10 text-accent-beige rounded-2xl font-semibold"
+                        >
+                          Unfollow
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => followMutation.mutate()}
+                          className="px-4 py-2 bg-deep-purple hover:bg-deep-purple/80 text-accent-beige rounded-2xl font-semibold"
+                        >
+                          Follow
+                        </button>
+                      )
+                    ) : (
+                      <button
+                        onClick={() => navigate('/login')}
+                        className="px-4 py-2 bg-deep-purple hover:bg-deep-purple/80 text-accent-beige rounded-2xl font-semibold"
+                      >
+                        Follow
+                      </button>
+                    )}
+                    <button
+                      onClick={() => navigate('/chat')}
+                      className="px-3 py-2 bg-matte-black border border-deep-purple/30 hover:bg-deep-purple/10 text-accent-beige rounded-2xl"
+                    >
+                      Message
+                    </button>
                   </div>
                 )}
               </div>

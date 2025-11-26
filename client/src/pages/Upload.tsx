@@ -56,6 +56,19 @@ const Upload = () => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
       
+      // Validate file type
+      const validVideoTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo'];
+      const validAudioTypes = ['audio/mpeg', 'audio/wav', 'audio/aac', 'audio/mp4', 'audio/ogg'];
+      const validTypes = mediaType === 'video' || mediaType === 'sign-language' ? validVideoTypes : validAudioTypes;
+      
+      if (!validTypes.includes(selectedFile.type)) {
+        const expected = mediaType === 'video' || mediaType === 'sign-language' 
+          ? 'MP4, WEBM, MOV' 
+          : 'MP3, WAV, AAC';
+        setError(`Invalid file format. Please upload a ${expected} file.`);
+        return;
+      }
+      
       // Validate file size
       const maxSize = mediaType === 'video' || mediaType === 'sign-language' ? 100 * 1024 * 1024 : 50 * 1024 * 1024;
       if (selectedFile.size > maxSize) {

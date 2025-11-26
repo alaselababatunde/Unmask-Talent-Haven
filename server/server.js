@@ -56,6 +56,8 @@ app.use('/api/auth', oauthRoutes);
 app.use('/api/feed', feedRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/balance', balanceRoutes);
+import notificationRoutes from './routes/notificationRoutes.js';
+app.use('/api/notifications', notificationRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -77,10 +79,25 @@ const io = new SocketIOServer(httpServer, {
   },
 });
 
+// expose io to request handlers via app.locals
+app.set('io', io);
+
 io.on('connection', (socket) => {
   // join creators room by default
   const room = 'creators';
   socket.join(room);
+
+  // allow clients to join their personal room for direct notifications
+  socket.on('join', (payload) => {
+    try {
+      const userId = payload?.userId;
+      if (userId) {
+        socket.join(`user:${userId}`);
+      }
+    } catch (e) {
+      // ignore
+    }
+  });
 
   socket.on('message', (payload) => {
     // expect { text, userId, username, room? }

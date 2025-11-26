@@ -34,7 +34,7 @@ interface Post {
 
 const Feed = () => {
   const navigate = useNavigate();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, updateFollowing } = useAuth();
   const [playingIndex, setPlayingIndex] = useState(0);
   const playerRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [openCommentsPostId, setOpenCommentsPostId] = useState<string | null>(null);
@@ -73,6 +73,42 @@ const Feed = () => {
     mutationFn: async (postId: string) => {
       const response = await api.post(`/feed/${postId}/like`);
       return response.data;
+    },
+    onSuccess: () => {
+      refetch();
+    },
+  });
+
+  const followMutation = useMutation<string, any, string>({
+    mutationFn: async (targetId: string) => {
+      const res = await api.post(`/user/${targetId}/follow`);
+      return res.data;
+    },
+    onMutate: async (targetId: string) => {
+      // optimistic update
+      try {
+        updateFollowing(targetId, true);
+      } catch (e) {}
+    },
+    onError: (err, targetId) => {
+      // rollback
+      try { updateFollowing(targetId, false); } catch (e) {}
+    },
+    onSuccess: () => {
+      refetch();
+    },
+  });
+
+  const unfollowMutation = useMutation<string, any, string>({
+    mutationFn: async (targetId: string) => {
+      const res = await api.post(`/user/${targetId}/unfollow`);
+      return res.data;
+    },
+    onMutate: async (targetId: string) => {
+      try { updateFollowing(targetId, false); } catch (e) {}
+    },
+    onError: (err, targetId) => {
+      try { updateFollowing(targetId, true); } catch (e) {}
     },
     onSuccess: () => {
       refetch();
@@ -285,7 +321,23 @@ const Feed = () => {
                   <p className="text-accent-beige/60 text-xs">{post.category}</p>
                 </div>
               </button>
-              <div className="relative post-menu">
+              <div className="flex items-center gap-3">
+                {currentUser && currentUser.id !== post.user._id && (
+                  <button
+                    onClick={() => {
+                      const isFollowing = !!(currentUser as any)?.following?.find((f: any) => f._id === post.user._id || f === post.user._id);
+                      if (isFollowing) {
+                        unfollowMutation.mutate(post.user._id);
+                      } else {
+                        followMutation.mutate(post.user._id);
+                      }
+                    }}
+                    className="px-3 py-1 rounded-full bg-deep-purple text-accent-beige text-sm font-semibold border border-deep-purple/60 hover:bg-deep-purple/80"
+                  >
+                    {(currentUser as any)?.following && (currentUser as any).following.find((f: any) => f._id === post.user._id || f === post.user._id) ? 'Following' : 'Follow'}
+                  </button>
+                )}
+                <div className="relative post-menu">
                 <button
                   onClick={() => setPostMenuOpen(postMenuOpen === post._id ? null : post._id)}
                   className="p-2 rounded-full bg-black/40 border border-white/10 text-accent-beige hover:bg-black/60"
@@ -346,6 +398,7 @@ const Feed = () => {
                     </button>
                   </div>
                 )}
+                </div>
               </div>
             </div>
 
@@ -434,7 +487,23 @@ const Feed = () => {
                     <p className="text-accent-beige/60 text-xs">{post.category}</p>
                   </div>
                 </button>
-                <div className="relative post-menu">
+                <div className="flex items-center gap-3">
+                  {currentUser && currentUser.id !== post.user._id && (
+                    <button
+                      onClick={() => {
+                        const isFollowing = !!(currentUser as any)?.following?.find((f: any) => f._id === post.user._id || f === post.user._id);
+                        if (isFollowing) {
+                          unfollowMutation.mutate(post.user._id);
+                        } else {
+                          followMutation.mutate(post.user._id);
+                        }
+                      }}
+                      className="px-3 py-1 rounded-full bg-deep-purple text-accent-beige text-sm font-semibold border border-deep-purple/60 hover:bg-deep-purple/80"
+                    >
+                      {(currentUser as any)?.following && (currentUser as any).following.find((f: any) => f._id === post.user._id || f === post.user._id) ? 'Following' : 'Follow'}
+                    </button>
+                  )}
+                  <div className="relative post-menu">
                   <button
                     onClick={() => setPostMenuOpen(postMenuOpen === post._id ? null : post._id)}
                     className="p-2 rounded-full bg-matte-black border border-deep-purple/30 text-accent-beige hover:bg-deep-purple/10"
@@ -498,15 +567,15 @@ const Feed = () => {
               </div>
 
               {post.mediaType === 'audio' ? (
-                <div className="p-4">
+                <div className="p-4 bg-gradient-to-br from-deep-purple/10 to-matte-black rounded-xl">
                   <ReactPlayer url={post.mediaUrl} controls width="100%" height="60px" />
                 </div>
               ) : post.mediaType === 'text' ? (
-                <div className="p-6">
+                <div className="p-6 bg-gradient-to-br from-deep-purple/5 to-matte-black/50 rounded-xl">
                   <p className="text-accent-beige text-lg leading-relaxed whitespace-pre-wrap">{post.caption}</p>
                 </div>
               ) : (
-                <div className="p-4">
+                <div className="p-4 rounded-xl overflow-hidden bg-black">
                   <ReactPlayer url={post.mediaUrl} controls width="100%" />
                 </div>
               )}
@@ -515,24 +584,41 @@ const Feed = () => {
                 <div className="flex items-center gap-4 mb-3">
                   <button
                     onClick={() => handleLike(post._id)}
-                    className={`flex items-center gap-2 ${post.likes.length > 0 ? 'text-deep-purple' : 'text-accent-beige/60'} hover:text-deep-purple transition-colors`}
+                    className={`flex items-center gap-2 transition-all transform hover:scale-110 ${post.likes.length > 0 ? 'text-deep-purple' : 'text-accent-beige/60'} hover:text-deep-purple`}
                   >
                     <Heart className={post.likes.length > 0 ? 'fill-current' : ''} size={20} />
-                    <span>{post.likes.length}</span>
+                    <span className="text-sm font-semibold">{post.likes.length}</span>
                   </button>
                   <button
                     onClick={() => setOpenCommentsPostId(post._id)}
-                    className="flex items-center gap-2 text-accent-beige/60 hover:text-deep-purple transition-colors"
+                    className="flex items-center gap-2 text-accent-beige/60 hover:text-deep-purple transition-all transform hover:scale-110"
                   >
                     <MessageCircle size={20} />
-                    <span>{post.comments.length}</span>
+                    <span className="text-sm font-semibold">{post.comments.length}</span>
+                  </button>
+                  <button className="flex items-center gap-2 text-accent-beige/60 hover:text-deep-purple transition-all transform hover:scale-110 ml-auto">
+                    <Share2 size={20} />
                   </button>
                 </div>
 
                 {post.caption && (
-                  <p className="text-accent-beige/80 text-sm">
-                    <span className="font-semibold">{post.user.username}</span> {post.caption}
+                  <p className="text-accent-beige/80 text-sm line-clamp-2">
+                    <span className="font-semibold text-accent-beige">{post.user.username}</span>{' '}
+                    {post.caption}
                   </p>
+                )}
+
+                {post.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {post.tags.slice(0, 3).map((tag: string, i: number) => (
+                      <span key={i} className="text-deep-purple text-xs bg-deep-purple/10 px-2 py-1 rounded-full hover:bg-deep-purple/20 transition-colors cursor-pointer">
+                        #{tag}
+                      </span>
+                    ))}
+                    {post.tags.length > 3 && (
+                      <span className="text-accent-beige/60 text-xs px-2 py-1">+{post.tags.length - 3}</span>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -548,8 +634,8 @@ const Feed = () => {
 
       {/* Edit Post Modal */}
       {editPostId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-matte-black border border-deep-purple/30 rounded-2xl max-w-md w-full">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur">
+          <div className="bg-matte-black border border-deep-purple/30 rounded-2xl max-w-md w-full shadow-2xl">
             <div className="p-6 border-b border-deep-purple/20 flex items-center justify-between">
               <h2 className="text-xl font-bold text-accent-beige">Edit Post</h2>
               <button
@@ -558,14 +644,14 @@ const Feed = () => {
                   setEditCaption('');
                   setEditTags('');
                 }}
-                className="text-accent-beige/60 hover:text-accent-beige"
+                className="text-accent-beige/60 hover:text-accent-beige transition-colors"
               >
                 ✕
               </button>
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-accent-beige/80 mb-2 text-sm">Caption</label>
+                <label className="block text-accent-beige/80 mb-2 text-sm font-semibold">Caption</label>
                 <textarea
                   value={editCaption}
                   onChange={(e) => setEditCaption(e.target.value)}
@@ -574,7 +660,7 @@ const Feed = () => {
                 />
               </div>
               <div>
-                <label className="block text-accent-beige/80 mb-2 text-sm">Tags (comma separated)</label>
+                <label className="block text-accent-beige/80 mb-2 text-sm font-semibold">Tags (comma separated)</label>
                 <input
                   type="text"
                   value={editTags}
@@ -595,7 +681,7 @@ const Feed = () => {
                     }
                   }}
                   disabled={updateMutation.isPending}
-                  className="flex-1 px-4 py-3 bg-deep-purple hover:bg-deep-purple/80 text-accent-beige rounded-2xl font-semibold disabled:opacity-50"
+                  className="flex-1 px-4 py-3 bg-deep-purple hover:bg-deep-purple/80 text-accent-beige rounded-2xl font-semibold disabled:opacity-50 transition-all transform hover:scale-105"
                 >
                   {updateMutation.isPending ? 'Saving...' : 'Save'}
                 </button>
@@ -605,7 +691,7 @@ const Feed = () => {
                     setEditCaption('');
                     setEditTags('');
                   }}
-                  className="flex-1 px-4 py-3 bg-matte-black border border-deep-purple/30 hover:border-deep-purple text-accent-beige rounded-2xl font-semibold"
+                  className="flex-1 px-4 py-3 bg-matte-black border border-deep-purple/30 hover:border-deep-purple text-accent-beige rounded-2xl font-semibold transition-colors"
                 >
                   Cancel
                 </button>
@@ -619,39 +705,44 @@ const Feed = () => {
       {openCommentsPostId && (
         <div className="fixed inset-0 z-50">
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-black/50 backdrop-blur"
             onClick={() => setOpenCommentsPostId(null)}
           />
-          <div className="absolute bottom-0 left-0 right-0 bg-matte-black border-t border-deep-purple/30 rounded-t-2xl max-h-[70vh]">
-            <div className="p-4 border-b border-deep-purple/20 flex items-center justify-between">
-              <span className="text-accent-beige font-semibold">Comments</span>
+          <div className="absolute bottom-0 left-0 right-0 bg-matte-black border-t border-deep-purple/30 rounded-t-3xl max-h-[70vh] shadow-2xl">
+            <div className="p-4 border-b border-deep-purple/20 flex items-center justify-between sticky top-0 bg-matte-black/95">
+              <span className="text-accent-beige font-bold text-lg">Comments</span>
               <button
                 onClick={() => setOpenCommentsPostId(null)}
-                className="text-accent-beige/60 hover:text-accent-beige"
+                className="text-accent-beige/60 hover:text-accent-beige transition-colors"
               >
-                Close
+                ✕
               </button>
             </div>
-            <div className="px-4 py-2 overflow-y-auto space-y-3 max-h-[50vh]">
+            <div className="px-4 py-3 overflow-y-auto space-y-4 max-h-[45vh]">
               {posts
                 .find((p) => p._id === openCommentsPostId)?.comments.map((comment: Post['comments'][0], i: number) => (
-                  <div key={i} className="flex gap-2">
-                    <span className="font-semibold text-accent-beige text-sm">{comment.user.username}</span>
-                    <span className="text-accent-beige/70 text-sm">{comment.text}</span>
+                  <div key={i} className="flex gap-3 p-3 bg-deep-purple/5 rounded-xl hover:bg-deep-purple/10 transition-colors">
+                    <div className="w-8 h-8 rounded-full bg-deep-purple/30 flex-shrink-0 flex items-center justify-center border border-deep-purple/40">
+                      <span className="text-xs text-deep-purple font-bold">{comment.user.username[0].toUpperCase()}</span>
+                    </div>
+                    <div className="flex-1">
+                      <span className="font-semibold text-accent-beige text-sm">{comment.user.username}</span>
+                      <span className="text-accent-beige/70 text-sm block mt-1">{comment.text}</span>
+                    </div>
                   </div>
                 ))}
               {posts.find((p) => p._id === openCommentsPostId)?.comments.length === 0 && (
-                <p className="text-accent-beige/60 text-sm">No comments yet.</p>
+                <p className="text-accent-beige/60 text-center py-8">No comments yet. Be the first!</p>
               )}
             </div>
-            <div className="p-4 border-t border-deep-purple/20">
+            <div className="p-4 border-t border-deep-purple/20 bg-matte-black/95 sticky bottom-0">
               <div className="flex gap-2">
                 <input
                   type="text"
                   value={newCommentText}
                   onChange={(e) => setNewCommentText(e.target.value)}
-                  placeholder="Add a comment..."
-                  className="flex-1 bg-matte-black border border-deep-purple/30 rounded-full px-4 py-2 text-accent-beige text-sm focus:outline-none focus:border-deep-purple"
+                  placeholder="Share your thoughts..."
+                  className="flex-1 bg-matte-black border border-deep-purple/30 rounded-full px-4 py-2 text-accent-beige text-sm focus:outline-none focus:border-deep-purple placeholder-accent-beige/40"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && newCommentText.trim() && openCommentsPostId) {
                       handleComment(openCommentsPostId, newCommentText.trim());
@@ -666,7 +757,7 @@ const Feed = () => {
                       setNewCommentText('');
                     }
                   }}
-                  className="px-4 py-2 bg-deep-purple text-accent-beige rounded-full text-sm font-semibold hover:bg-deep-purple/80"
+                  className="px-4 py-2 bg-deep-purple text-accent-beige rounded-full text-sm font-bold hover:bg-deep-purple/80 transition-all transform hover:scale-105"
                 >
                   Send
                 </button>
@@ -680,5 +771,6 @@ const Feed = () => {
 };
 
 export default Feed;
+
 
 
