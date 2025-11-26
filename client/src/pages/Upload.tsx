@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
-import { Upload as UploadIcon, Video, Music, FileText, Languages, X } from 'lucide-react';
+import { Upload as UploadIcon, Video, Music, FileText, Languages, X, AlertCircle } from 'lucide-react';
 
 const Upload = () => {
   const { user } = useAuth();
@@ -15,37 +15,71 @@ const Upload = () => {
   const [category, setCategory] = useState('Other');
   const [textContent, setTextContent] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const uploadMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const response = await api.post('/feed', formData);
+      const response = await api.post('/feed', formData, {
+        onUploadProgress: (progressEvent) => {
+          const progress = progressEvent.total 
+            ? Math.round((progressEvent.loaded * 100) / progressEvent.total)
+            : 0;
+          setUploadProgress(progress);
+        },
+      });
       return response.data;
     },
     onSuccess: () => {
       navigate('/feed');
     },
     onError: (err: any) => {
-      setError(err.response?.data?.message || err.message || 'Upload failed. Please try again.');
+      const errorMsg = err.response?.data?.message || err.message || 'Upload failed';
+      
+      // Provide specific error messages
+      if (errorMsg.includes('Cloudinary') || errorMsg.includes('cloud')) {
+        setError('⚠️ Video storage not configured. Please set up Cloudinary credentials in server/.env file.');
+      } else if (errorMsg.includes('size') || errorMsg.includes('large')) {
+        setError('File is too large. Please upload a smaller file (max 100MB for video, 50MB for audio).');
+      } else if (errorMsg.includes('format') || errorMsg.includes('type')) {
+        setError('Invalid file format. Please upload a valid video or audio file.');
+      } else if (errorMsg.includes('network') || errorMsg.includes('timeout')) {
+        setError('Network error. Please check your connection and try again.');
+      } else {
+        setError(errorMsg);
+      }
     },
   });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+      const selectedFile = e.target.files[0];
+      
+      // Validate file size
+      const maxSize = mediaType === 'video' || mediaType === 'sign-language' ? 100 * 1024 * 1024 : 50 * 1024 * 1024;
+      if (selectedFile.size > maxSize) {
+        setError(`File is too large. Maximum size is ${maxSize / (1024 * 1024)}MB`);
+        return;
+      }
+      
+      setFile(selectedFile);
+      setError('');
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!user) {
       setError('Please sign in to upload');
       navigate('/profile');
       return;
     }
+
     setError('');
     setUploading(true);
+    setUploadProgress(0);
 
     try {
       const formData = new FormData();
@@ -55,20 +89,26 @@ const Upload = () => {
       formData.append('category', category);
 
       if (mediaType === 'text') {
+        if (!textContent.trim()) {
+          throw new Error('Please enter your text content');
+        }
         formData.append('mediaUrl', textContent);
         formData.append('caption', textContent);
-      } else if (file) {
-        formData.append('media', file);
       } else {
-        throw new Error('Please select a file or enter text content');
+        if (!file) {
+          throw new Error('Please select a file to upload');
+        }
+        formData.append('media', file);
       }
 
       await uploadMutation.mutateAsync(formData);
     } catch (err: any) {
-      // Error is handled by mutation onError
-      console.error('Upload error:', err);
+      if (!uploadMutation.isError) {
+        setError(err.message || 'Upload failed. Please try again.');
+      }
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -78,27 +118,37 @@ const Upload = () => {
         <h1 className="text-3xl font-bold text-accent-beige mb-8">Upload Your Talent</h1>
 
         {!user && (
-          <div className="mb-6 p-4 border border-deep-purple/30 rounded-2xl bg-deep-purple/10 text-accent-beige">
-            You need to be signed in to upload. Use the Profile page to login or sign up.
-            <button
-              onClick={() => navigate('/profile')}
-              className="ml-3 px-3 py-1 bg-deep-purple hover:bg-deep-purple/80 rounded-xl text-xs"
-            >
-              Go to Profile
-            </button>
+          <div className="mb-6 p-4 border border-yellow-500/50 rounded-2xl bg-yellow-500/10 text-yellow-200 flex items-start gap-3">
+            <AlertCircle size={20} className="mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="font-semibold mb-1">Sign in required</p>
+              <p className="text-sm">You need to be signed in to upload content.</p>
+              <button
+                onClick={() => navigate('/profile')}
+                className="mt-2 px-3 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-black rounded-xl text-sm font-semibold transition"
+              >
+                Go to Profile
+              </button>
+            </div>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="bg-red-500/20 border border-red-500 text-red-300 rounded-2xl p-4">
-              {error}
-            </div>
-          )}
-          
-          {!user && (
-            <div className="bg-yellow-500/20 border border-yellow-500 text-yellow-300 rounded-2xl p-4">
-              Please sign in to upload. Go to Profile to login or sign up.
+            <div className="bg-red-500/20 border border-red-500 text-red-300 rounded-2xl p-4 flex items-start gap-3">
+              <AlertCircle size={20} className="mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-semibold mb-1">Upload Error</p>
+                <p className="text-sm">{error}</p>
+                {error.includes('Cloudinary') && (
+                  <div className="mt-3 p-3 bg-red-500/10 rounded-xl text-xs">
+                    <p className="font-semibold mb-1">For developers:</p>
+                    <p>1. Sign up at cloudinary.com</p>
+                    <p>2. Get your credentials from the dashboard</p>
+                    <p>3. Update server/.env with your actual credentials</p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -119,6 +169,7 @@ const Upload = () => {
                     setMediaType(type);
                     setFile(null);
                     setTextContent('');
+                    setError('');
                   }}
                   className={`p-4 rounded-2xl border-2 transition-all ${
                     mediaType === type
@@ -144,6 +195,9 @@ const Upload = () => {
                 placeholder="Share your creative writing, poetry, or thoughts..."
                 required
               />
+              <p className="text-accent-beige/40 text-xs mt-2">
+                {textContent.length} / 1000 characters
+              </p>
             </div>
           ) : (
             <div>
@@ -155,10 +209,8 @@ const Upload = () => {
                   type="file"
                   accept={
                     mediaType === 'video' || mediaType === 'sign-language'
-                      ? 'video/*'
-                      : mediaType === 'audio'
-                      ? 'audio/*'
-                      : '*'
+                      ? 'video/mp4,video/webm,video/quicktime'
+                      : 'audio/mpeg,audio/wav,audio/mp3'
                   }
                   onChange={handleFileChange}
                   className="hidden"
@@ -178,15 +230,20 @@ const Upload = () => {
                   </p>
                 </label>
                 {file && (
-                  <div className="mt-4 p-4 bg-deep-purple/10 border border-deep-purple/30 rounded-2xl flex items-center justify-between">
-                    <span className="text-accent-beige text-sm">{file.name}</span>
-                    <button
-                      type="button"
-                      onClick={() => setFile(null)}
-                      className="text-red-400 hover:text-red-300"
-                    >
-                      <X size={20} />
-                    </button>
+                  <div className="mt-4 p-4 bg-deep-purple/10 border border-deep-purple/30 rounded-2xl">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-accent-beige text-sm font-medium">{file.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => setFile(null)}
+                        className="text-red-400 hover:text-red-300 p-1"
+                      >
+                        <X size={18} />
+                      </button>
+                    </div>
+                    <p className="text-accent-beige/60 text-xs">
+                      Size: {(file.size / (1024 * 1024)).toFixed(2)} MB
+                    </p>
                   </div>
                 )}
               </div>
@@ -204,6 +261,9 @@ const Upload = () => {
                 placeholder="Write a caption for your talent..."
                 maxLength={1000}
               />
+              <p className="text-accent-beige/40 text-xs mt-2">
+                {caption.length} / 1000 characters
+              </p>
             </div>
           )}
 
@@ -237,13 +297,39 @@ const Upload = () => {
             </select>
           </div>
 
+          {/* Upload Progress */}
+          {uploading && uploadProgress > 0 && (
+            <div className="bg-deep-purple/10 border border-deep-purple/30 rounded-2xl p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-accent-beige text-sm">Uploading...</span>
+                <span className="text-deep-purple font-semibold">{uploadProgress}%</span>
+              </div>
+              <div className="w-full bg-matte-black rounded-full h-2 overflow-hidden">
+                <div 
+                  className="bg-deep-purple h-full transition-all duration-300 rounded-full"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={uploading || (!file && mediaType !== 'text') || (mediaType === 'text' && !textContent)}
-            className="w-full py-4 bg-deep-purple hover:bg-deep-purple/80 text-accent-beige rounded-2xl font-semibold transition-all glow-purple disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={uploading || !user || (!file && mediaType !== 'text') || (mediaType === 'text' && !textContent.trim())}
+            className="w-full py-4 bg-deep-purple hover:bg-deep-purple/80 text-accent-beige rounded-2xl font-semibold transition-all glow-purple disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {uploading ? 'Uploading...' : 'Upload'}
+            {uploading ? (
+              <>
+                <div className="w-5 h-5 border-2 border-accent-beige/30 border-t-accent-beige rounded-full animate-spin" />
+                Uploading... {uploadProgress}%
+              </>
+            ) : (
+              <>
+                <UploadIcon size={20} />
+                Upload
+              </>
+            )}
           </button>
         </form>
       </div>
@@ -254,4 +340,3 @@ const Upload = () => {
 };
 
 export default Upload;
-
