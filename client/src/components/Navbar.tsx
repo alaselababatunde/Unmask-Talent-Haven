@@ -53,7 +53,6 @@ const Navbar = () => {
 };
 
 const NotificationsPanelWrapper = () => {
-  const { notifications } = useAuth();
   const [open, setOpen] = useState(false);
 
   return (
