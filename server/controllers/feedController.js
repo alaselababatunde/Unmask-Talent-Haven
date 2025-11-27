@@ -21,6 +21,7 @@ export const getFeed = async (req, res) => {
 
 export const createPost = async (req, res) => {
   try {
+    console.log('createPost request body:', { body: req.body, file: req.file ? { originalname: req.file.originalname, mimetype: req.file.mimetype, size: req.file.size } : null, user: req.user ? req.user._id : null });
     const { caption, tags, category, mediaType } = req.body;
     
     // Validate media type
