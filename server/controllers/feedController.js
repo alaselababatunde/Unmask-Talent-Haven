@@ -30,7 +30,8 @@ export const createPost = async (req, res) => {
       return res.status(400).json({ message: 'Invalid media type' });
     }
 
-    let mediaUrl = req.file ? req.file.path : req.body.mediaUrl;
+    // Support a few possible properties Multer/Cloudinary storage might return
+    let mediaUrl = req.file ? (req.file.path || req.file.url || req.file.secure_url || req.file.filename) : req.body.mediaUrl;
 
     // For text posts, use the text content as mediaUrl
     if (mediaType === 'text' && req.body.mediaUrl) {
