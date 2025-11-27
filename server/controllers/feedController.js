@@ -21,6 +21,7 @@ export const getFeed = async (req, res) => {
 
 export const createPost = async (req, res) => {
   try {
+    console.log('createPost request body:', { body: req.body, file: req.file ? { originalname: req.file.originalname, mimetype: req.file.mimetype, size: req.file.size } : null, user: req.user ? req.user._id : null });
     const { caption, tags, category, mediaType } = req.body;
     
     // Validate media type
@@ -29,7 +30,8 @@ export const createPost = async (req, res) => {
       return res.status(400).json({ message: 'Invalid media type' });
     }
 
-    let mediaUrl = req.file ? req.file.path : req.body.mediaUrl;
+    // Support a few possible properties Multer/Cloudinary storage might return
+    let mediaUrl = req.file ? (req.file.path || req.file.url || req.file.secure_url || req.file.filename) : req.body.mediaUrl;
 
     // For text posts, use the text content as mediaUrl
     if (mediaType === 'text' && req.body.mediaUrl) {
@@ -77,20 +79,21 @@ export const createPost = async (req, res) => {
     
     // Provide user-friendly error messages
     if (error.message.includes('File type')) {
-      return res.status(400).json({ message: 'Invalid file type. Please upload a valid video or audio file.' });
+      return res.status(400).json({ message: 'Invalid file type. Please upload a valid video or audio file.', details: error.code || error.name || error.message });
     }
     
     if (error.message.includes('size')) {
-      return res.status(400).json({ message: 'File is too large. Please upload a smaller file.' });
+      return res.status(400).json({ message: 'File is too large. Please upload a smaller file.', details: error.code || error.name || error.message });
     }
     
     if (error.message.includes('Cloudinary') || error.message.includes('cloud')) {
       return res.status(500).json({ 
-        message: 'Video storage not configured. Please ensure Cloudinary credentials are set in server/.env' 
+        message: 'Video storage not configured. Please ensure Cloudinary credentials are set in server/.env',
+        details: error.code || error.name || error.message,
       });
     }
     
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: error.message, details: error.code || error.name || null });
   }
 };
 

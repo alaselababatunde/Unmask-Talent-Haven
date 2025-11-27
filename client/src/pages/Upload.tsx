@@ -35,7 +35,9 @@ const Upload = () => {
       navigate('/feed');
     },
     onError: (err: any) => {
-      const errorMsg = err.response?.data?.message || err.message || 'Upload failed';
+      const serverMessage = err.response?.data?.message;
+      const serverDetails = err.response?.data?.details;
+      const errorMsg = serverMessage || err.message || 'Upload failed';
       
       // Provide specific error messages
       if (errorMsg.includes('Cloudinary') || errorMsg.includes('cloud')) {
@@ -47,7 +49,8 @@ const Upload = () => {
       } else if (errorMsg.includes('network') || errorMsg.includes('timeout')) {
         setError('Network error. Please check your connection and try again.');
       } else {
-        setError(errorMsg);
+        // Attach any server-provided details to the displayed message for easier debugging
+        setError(serverDetails ? `${errorMsg} (${serverDetails})` : errorMsg);
       }
     },
   });
