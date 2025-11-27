@@ -8,16 +8,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.20.0",
     "@tanstack/react-query": "^5.8.4",
     "axios": "^1.6.2",
     "lucide-react": "^0.294.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "react-player": "^2.13.0",
+    "react-router-dom": "^6.20.0",
     "socket.io-client": "^4.7.5"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
     "@types/webidl-conversions": "^7.0.3",
