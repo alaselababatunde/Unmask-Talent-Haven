@@ -14,9 +14,9 @@ const uploadHandler = (req, res, next) => {
 		if (err) {
 			console.error('Upload middleware error:', err);
 			if (err instanceof multer.MulterError) {
-				return res.status(400).json({ message: err.message });
+				return res.status(400).json({ message: err.message, details: err.code || null });
 			}
-			return res.status(500).json({ message: err.message || 'Upload failed' });
+			return res.status(500).json({ message: err.message || 'Upload failed', details: err.code || err.name || null });
 		}
 		next();
 	});

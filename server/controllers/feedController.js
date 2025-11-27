@@ -79,20 +79,21 @@ export const createPost = async (req, res) => {
     
     // Provide user-friendly error messages
     if (error.message.includes('File type')) {
-      return res.status(400).json({ message: 'Invalid file type. Please upload a valid video or audio file.' });
+      return res.status(400).json({ message: 'Invalid file type. Please upload a valid video or audio file.', details: error.code || error.name || error.message });
     }
     
     if (error.message.includes('size')) {
-      return res.status(400).json({ message: 'File is too large. Please upload a smaller file.' });
+      return res.status(400).json({ message: 'File is too large. Please upload a smaller file.', details: error.code || error.name || error.message });
     }
     
     if (error.message.includes('Cloudinary') || error.message.includes('cloud')) {
       return res.status(500).json({ 
-        message: 'Video storage not configured. Please ensure Cloudinary credentials are set in server/.env' 
+        message: 'Video storage not configured. Please ensure Cloudinary credentials are set in server/.env',
+        details: error.code || error.name || error.message,
       });
     }
     
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: error.message, details: error.code || error.name || null });
   }
 };
 
