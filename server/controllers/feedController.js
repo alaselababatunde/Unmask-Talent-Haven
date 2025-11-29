@@ -23,7 +23,7 @@ export const createPost = async (req, res) => {
   try {
     console.log('createPost request body:', { body: req.body, file: req.file ? { originalname: req.file.originalname, mimetype: req.file.mimetype, size: req.file.size } : null, user: req.user ? req.user._id : null });
     const { caption, tags, category, mediaType } = req.body;
-    
+
     // Validate media type
     const validMediaTypes = ['video', 'audio', 'text', 'sign-language'];
     if (!validMediaTypes.includes(mediaType)) {
@@ -42,20 +42,20 @@ export const createPost = async (req, res) => {
     } else if (mediaType !== 'text') {
       // For media uploads, ensure we have a file
       if (!mediaUrl) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           message: 'Media file is required',
           details: req.file ? 'File upload failed' : 'No file provided'
         });
       }
-      
+
       // Validate file size on backend (should have been caught by multer, but double check)
       if (req.file) {
-        const maxSize = (mediaType === 'video' || mediaType === 'sign-language') 
+        const maxSize = (mediaType === 'video' || mediaType === 'sign-language')
           ? 100 * 1024 * 1024  // 100MB
           : 50 * 1024 * 1024;  // 50MB
-          
+
         if (req.file.size > maxSize) {
-          return res.status(400).json({ 
+          return res.status(400).json({
             message: `File is too large. Maximum size is ${maxSize / (1024 * 1024)}MB`
           });
         }
@@ -76,23 +76,24 @@ export const createPost = async (req, res) => {
     res.status(201).json(post);
   } catch (error) {
     console.error('Upload error:', error);
-    
+
     // Provide user-friendly error messages
     if (error.message.includes('File type')) {
       return res.status(400).json({ message: 'Invalid file type. Please upload a valid video or audio file.', details: error.code || error.name || error.message });
     }
-    
+
     if (error.message.includes('size')) {
       return res.status(400).json({ message: 'File is too large. Please upload a smaller file.', details: error.code || error.name || error.message });
     }
-    
-    if (error.message.includes('Cloudinary') || error.message.includes('cloud')) {
-      return res.status(500).json({ 
-        message: 'Video storage not configured. Please ensure Cloudinary credentials are set in server/.env',
-        details: error.code || error.name || error.message,
+
+    if (error.message.includes('Cloudinary') || error.message.includes('cloud') || error.http_code === 400) {
+      console.error('Cloudinary Error Details:', JSON.stringify(error, null, 2));
+      return res.status(500).json({
+        message: 'Video storage configuration error or upload failed.',
+        details: error.message || 'Check server logs for details',
       });
     }
-    
+
     res.status(500).json({ message: error.message, details: error.code || error.name || null });
   }
 };
@@ -120,7 +121,7 @@ export const likePost = async (req, res) => {
         type: 'like',
         message: `${req.user.username} liked your post`,
       });
-      
+
       // Emit notification via socket
       const app = req.app || global.app;
       const io = app.get ? app.get('io') : null;
@@ -163,7 +164,7 @@ export const commentPost = async (req, res) => {
         type: 'comment',
         message: `${req.user.username} commented: "${text.substring(0, 50)}${text.length > 50 ? '...' : ''}"`,
       });
-      
+
       // Emit notification via socket
       const app = req.app || global.app;
       const io = app.get ? app.get('io') : null;

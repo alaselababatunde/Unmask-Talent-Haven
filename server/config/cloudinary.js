@@ -14,7 +14,7 @@ const storage = new CloudinaryStorage({
     // Determine resource type based on file mimetype
     let resourceType = 'auto';
     let allowedFormats = [];
-    
+
     if (file.mimetype.startsWith('video/')) {
       resourceType = 'video';
       allowedFormats = ['mp4', 'webm', 'mov', 'avi', 'mkv'];
@@ -25,17 +25,17 @@ const storage = new CloudinaryStorage({
       resourceType = 'image';
       allowedFormats = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
     }
-    
+
     return {
       folder: 'uth-app',
       allowed_formats: allowedFormats,
       resource_type: resourceType,
-      timeout: 180000, // 3 minutes timeout for large videos
+      timeout: 600000, // 10 minutes timeout for large videos
     };
   },
 });
 
-export const upload = multer({ 
+export const upload = multer({
   storage,
   limits: {
     fileSize: 100 * 1024 * 1024, // 100MB max file size
@@ -58,7 +58,7 @@ export const upload = multer({
       'image/gif',
       'image/webp',
     ];
-    
+
     if (allowedMimes.includes(file.mimetype)) {
       cb(null, true);
     } else {

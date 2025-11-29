@@ -3,7 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '../api';
 import Navbar from '../components/Navbar';
 import ReactPlayer from 'react-player';
-import { Heart, MessageCircle, Share2, Video, Music, FileText, Hand, Search, MoreVertical, Trash2, Edit, Forward } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Video, Music, FileText, Hand, Search, MoreVertical, Trash2, Edit, Forward, X, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -88,11 +88,11 @@ const Feed = () => {
       // optimistic update
       try {
         updateFollowing(targetId, true);
-      } catch (e) {}
+      } catch (e) { }
     },
     onError: (_, targetId) => {
       // rollback
-      try { updateFollowing(targetId, false); } catch (e) {}
+      try { updateFollowing(targetId, false); } catch (e) { }
     },
     onSuccess: () => {
       refetch();
@@ -105,10 +105,10 @@ const Feed = () => {
       return res.data;
     },
     onMutate: async (targetId: string) => {
-      try { updateFollowing(targetId, false); } catch (e) {}
+      try { updateFollowing(targetId, false); } catch (e) { }
     },
     onError: (_, targetId) => {
-      try { updateFollowing(targetId, true); } catch (e) {}
+      try { updateFollowing(targetId, true); } catch (e) { }
     },
     onSuccess: () => {
       refetch();
@@ -198,12 +198,12 @@ const Feed = () => {
   const displayPosts = searchQuery.trim() && searchResults.length > 0 ? searchResults : posts;
 
   return (
-    <div className="min-h-screen bg-matte-black">
+    <div className="min-h-screen bg-matte-black pb-20 md:pb-0">
       {/* Category Tabs with Search */}
-      <div className="sticky top-0 z-40 bg-matte-black/80 backdrop-blur border-b border-deep-purple/20">
+      <div className="sticky top-0 z-40 bg-matte-black/80 backdrop-blur-md border-b border-white/5">
         <div className="max-w-4xl mx-auto px-4">
-          <div className="flex items-center justify-between py-3">
-            <div className="flex items-center gap-3 overflow-x-auto flex-1">
+          <div className="flex items-center justify-between py-4 gap-4">
+            <div className="flex items-center gap-3 overflow-x-auto flex-1 no-scrollbar mask-linear-fade">
               {[
                 { key: 'video', label: 'Video', icon: Video },
                 { key: 'audio', label: 'Audio', icon: Music },
@@ -211,6 +211,7 @@ const Feed = () => {
                 { key: 'sign-language', label: 'Sign', icon: Hand },
               ].map((t: { key: string; label: string; icon: any }) => {
                 const Icon = t.icon;
+                const isActive = activeTab === (t.key as any);
                 return (
                   <button
                     key={t.key}
@@ -219,29 +220,31 @@ const Feed = () => {
                       setSearchQuery('');
                       setSearchResults([]);
                     }}
-                    className={`px-4 py-2 rounded-full text-sm font-semibold transition border whitespace-nowrap ${
-                      activeTab === (t.key as any)
-                        ? 'bg-deep-purple text-accent-beige border-deep-purple'
-                        : 'bg-matte-black text-accent-beige/70 border-deep-purple/30 hover:border-deep-purple'
-                    }`}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-300 whitespace-nowrap ${isActive
+                      ? 'bg-gradient-to-r from-deep-purple to-[#7B4B27] text-white shadow-lg shadow-deep-purple/25 scale-105'
+                      : 'bg-white/5 text-accent-beige/60 hover:bg-white/10 hover:text-accent-beige'
+                      }`}
                   >
-                    <span className="inline-flex items-center gap-2">
-                      {Icon ? <Icon size={16} /> : null}
-                      {t.label}
-                    </span>
+                    {Icon ? <Icon size={16} /> : null}
+                    {t.label}
                   </button>
                 );
               })}
             </div>
             <button
               onClick={() => setShowSearch(!showSearch)}
-              className="ml-2 p-2 rounded-full bg-matte-black border border-deep-purple/30 hover:border-deep-purple text-accent-beige"
+              className={`p-3 rounded-full transition-all duration-300 ${showSearch
+                ? 'bg-deep-purple text-white rotate-90'
+                : 'bg-white/5 text-accent-beige/60 hover:bg-white/10 hover:text-accent-beige'
+                }`}
             >
               <Search size={20} />
             </button>
           </div>
-          {showSearch && (
-            <div className="pb-3">
+
+          <div className={`overflow-hidden transition-all duration-300 ease-in-out ${showSearch ? 'max-h-20 opacity-100 pb-4' : 'max-h-0 opacity-0'}`}>
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-accent-beige/40" size={18} />
               <input
                 type="text"
                 value={searchQuery}
@@ -249,250 +252,96 @@ const Feed = () => {
                   setSearchQuery(e.target.value);
                   handleSearch(e.target.value);
                 }}
-                placeholder="Search profiles or content..."
-                className="w-full px-4 py-2 bg-matte-black border border-deep-purple/30 rounded-full text-accent-beige focus:outline-none focus:border-deep-purple"
+                placeholder="Search profiles, tags, or content..."
+                className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-2xl text-accent-beige focus:outline-none focus:border-deep-purple/50 focus:bg-white/10 transition-all placeholder:text-accent-beige/20"
               />
             </div>
-          )}
+          </div>
         </div>
       </div>
 
       {searchQuery.trim() && searchResults.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-accent-beige/60">No results found for "{searchQuery}"</p>
+        <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-in">
+          <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-4">
+            <Search size={32} className="text-accent-beige/20" />
+          </div>
+          <p className="text-accent-beige/60 text-lg">No results found for "{searchQuery}"</p>
+          <p className="text-accent-beige/40 text-sm mt-2">Try searching for something else</p>
         </div>
       )}
 
       {isVideoTab && !(searchQuery.trim() && searchResults.length > 0) && (
-      <div className="h-[calc(100vh-56px)] overflow-y-scroll snap-y snap-mandatory no-scrollbar relative">
-        {displayPosts.map((post: Post, index: number) => (
-          <div
-            key={post._id}
-            ref={(el) => {
-              playerRefs.current[index] = el;
-            }}
-            className="snap-start h-screen w-full relative"
-          >
-            {/* Media layer */}
-            <div className="absolute inset-0 flex items-center justify-center bg-black">
-              {post.mediaType === 'video' || post.mediaType === 'sign-language' ? (
-                <div className="w-full h-full">
-                <ReactPlayer
-                  url={post.mediaUrl}
-                  playing={playingIndex === index}
-                    controls={false}
-                    loop
-                  width="100%"
-                  height="100%"
-                    className="!h-full !w-full object-contain"
-                />
-                </div>
-              ) : post.mediaType === 'audio' ? (
-                <div className="flex items-center justify-center w-full h-full">
-                  <ReactPlayer
-                    url={post.mediaUrl}
-                    playing={playingIndex === index}
-                    controls
-                    width="90%"
-                    height="80px"
-                  />
-                </div>
-              ) : (
-                <div className="flex items-center justify-center w-full h-full p-8">
-                  <p className="text-accent-beige text-xl leading-relaxed whitespace-pre-wrap max-w-2xl text-center">
-                    {post.caption}
-                  </p>
-                </div>
-              )}
-            </div>
+        <div className="h-[calc(100vh-80px)] overflow-y-scroll snap-y snap-mandatory no-scrollbar relative">
+          {displayPosts.map((post: Post, index: number) => (
+            <div
+              key={post._id}
+              ref={(el) => {
+                playerRefs.current[index] = el;
+              }}
+              className="snap-start h-[calc(100vh-80px)] w-full relative bg-black flex items-center justify-center"
+            >
+              {/* Media layer */}
+              <div className="w-full h-full relative">
+                {post.mediaType === 'video' || post.mediaType === 'sign-language' ? (
+                  <div className="w-full h-full bg-black">
+                    <ReactPlayer
+                      url={post.mediaUrl}
+                      playing={playingIndex === index}
+                      controls={false}
+                      loop
+                      width="100%"
+                      height="100%"
+                      className="!h-full !w-full object-contain"
+                      playsinline
+                    />
+                    {/* Gradient Overlay for better text visibility */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80 pointer-events-none" />
+                  </div>
+                ) : post.mediaType === 'audio' ? (
+                  <div className="flex flex-col items-center justify-center w-full h-full bg-gradient-to-br from-deep-purple/20 to-black relative overflow-hidden">
+                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-20 blur-xl" />
+                    <div className="relative z-10 w-full max-w-md px-8">
+                      <div className="w-48 h-48 mx-auto bg-gradient-to-br from-deep-purple to-[#7B4B27] rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(147,51,234,0.3)] mb-8 animate-pulse">
+                        <Music size={64} className="text-white" />
+                      </div>
+                      <ReactPlayer
+                        url={post.mediaUrl}
+                        playing={playingIndex === index}
+                        controls
+                        width="100%"
+                        height="50px"
+                        className="!bg-transparent"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center w-full h-full p-8 bg-gradient-to-br from-black to-deep-purple/10">
+                    <div className="max-w-2xl w-full glass-panel p-8 md:p-12 rounded-3xl shadow-2xl relative overflow-hidden">
+                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-deep-purple to-[#7B4B27]" />
+                      <FileText size={40} className="text-deep-purple/20 absolute top-8 right-8" />
+                      <p className="text-accent-beige text-xl md:text-2xl leading-relaxed whitespace-pre-wrap font-serif text-center">
+                        {post.caption}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
 
-            {/* Top bar (user info) */}
-            <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between">
-              <button
-                onClick={() => navigate(`/profile/${post.user._id}`)}
-                className="flex items-center gap-3"
-              >
-                <div className={`w-10 h-10 rounded-full bg-deep-purple/30 flex items-center justify-center overflow-hidden border ${post.user.isLive ? 'border-red-500' : 'border-deep-purple/40'}`}>
-                  {post.user.profileImage ? (
-                    <img src={post.user.profileImage} alt={post.user.username} className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-deep-purple font-bold">{post.user.username[0].toUpperCase()}</span>
-                  )}
-                </div>
-                <div>
-                  <h3 className="text-accent-beige font-semibold">{post.user.username}</h3>
-                  <p className="text-accent-beige/60 text-xs">{post.category}</p>
-                </div>
-              </button>
-              <div className="flex items-center gap-3">
-                {currentUser && currentUser.id !== post.user._id && (
+              {/* Right-side actions */}
+              <div className="absolute right-4 bottom-32 flex flex-col items-center gap-6 z-20">
+                <div className="relative group">
                   <button
-                    onClick={() => {
-                      const isFollowing = !!(currentUser as any)?.following?.find((f: any) => f._id === post.user._id || f === post.user._id);
-                      if (isFollowing) {
-                        unfollowMutation.mutate(post.user._id);
-                      } else {
-                        followMutation.mutate(post.user._id);
-                      }
-                    }}
-                    className="px-3 py-1 rounded-full bg-deep-purple text-accent-beige text-sm font-semibold border border-deep-purple/60 hover:bg-deep-purple/80"
+                    onClick={() => navigate(`/profile/${post.user._id}`)}
+                    className="w-12 h-12 rounded-full border-2 border-white/20 p-0.5 overflow-hidden transition-transform hover:scale-110 hover:border-deep-purple"
                   >
-                    {(currentUser as any)?.following && (currentUser as any).following.find((f: any) => f._id === post.user._id || f === post.user._id) ? 'Following' : 'Follow'}
-                  </button>
-                )}
-                <div className="relative post-menu">
-                <button
-                  onClick={() => setPostMenuOpen(postMenuOpen === post._id ? null : post._id)}
-                  className="p-2 rounded-full bg-black/40 border border-white/10 text-accent-beige hover:bg-black/60"
-                >
-                  <MoreVertical size={20} />
-                </button>
-                {postMenuOpen === post._id && (
-                  <div className="absolute right-0 mt-2 w-48 bg-matte-black border border-deep-purple/30 rounded-2xl shadow-xl z-50 post-menu">
-                    {currentUser?.id === post.user._id && (
-                      <>
-                        <button
-                          onClick={() => {
-                            setEditPostId(post._id);
-                            setEditCaption(post.caption);
-                            setEditTags(post.tags.join(', '));
-                            setPostMenuOpen(null);
-                          }}
-                          className="w-full flex items-center gap-2 px-4 py-3 text-accent-beige hover:bg-deep-purple/10 rounded-t-2xl"
-                        >
-                          <Edit size={18} />
-                          <span>Edit</span>
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (confirm('Delete this post?')) {
-                              deleteMutation.mutate(post._id);
-                            }
-                          }}
-                          className="w-full flex items-center gap-2 px-4 py-3 text-red-400 hover:bg-red-500/10"
-                        >
-                          <Trash2 size={18} />
-                          <span>Delete</span>
-                        </button>
-                      </>
-                    )}
-                    <button
-                      onClick={() => {
-                        navigator.share?.({
-                          title: post.caption,
-                          url: window.location.href,
-                        }).catch(() => {});
-                        setPostMenuOpen(null);
-                      }}
-                      className="w-full flex items-center gap-2 px-4 py-3 text-accent-beige hover:bg-deep-purple/10"
-                    >
-                      <Share2 size={18} />
-                      <span>Share</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        // Forward functionality
-                        setPostMenuOpen(null);
-                      }}
-                      className="w-full flex items-center gap-2 px-4 py-3 text-accent-beige hover:bg-deep-purple/10 rounded-b-2xl"
-                    >
-                      <Forward size={18} />
-                      <span>Forward</span>
-                    </button>
-                  </div>
-                )}
-                </div>
-              </div>
-            </div>
-
-            {/* Right-side actions */}
-            <div className="absolute right-4 bottom-32 flex flex-col items-center gap-5">
-                <button
-                  onClick={() => handleLike(post._id)}
-                className={`p-3 rounded-full bg-black/40 border border-white/10 hover:bg-black/60 transition ${
-                  post.likes.length > 0 ? 'text-deep-purple' : 'text-accent-beige'
-                }`}
-                >
-                <Heart className={post.likes.length > 0 ? 'fill-current' : ''} size={28} />
-                <span className="block text-center text-xs mt-1">{post.likes.length}</span>
-                </button>
-              <button
-                className="p-3 rounded-full bg-black/40 border border-white/10 text-accent-beige hover:bg-black/60 transition"
-                onClick={() => setOpenCommentsPostId(post._id)}
-              >
-                <MessageCircle size={28} />
-                <span className="block text-center text-xs mt-1">{post.comments.length}</span>
-                </button>
-              <button className="p-3 rounded-full bg-black/40 border border-white/10 text-accent-beige hover:bg-black/60 transition">
-                <Share2 size={28} />
-                </button>
-              </div>
-
-            {/* Bottom caption */}
-            <div className="absolute left-4 right-20 bottom-8">
-              {post.caption && (
-                <p className="text-accent-beige/90 text-sm">
-                  <span className="font-semibold mr-2">{post.user.username}</span>
-                  {post.caption}
-                  </p>
-              )}
-              {post.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {post.tags.map((tag: string, i: number) => (
-                    <span key={i} className="text-deep-purple text-xs bg-deep-purple/10 px-2 py-1 rounded-full">
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-              )}
-              {/* inline comment input */}
-              <div className="mt-3">
-                <input
-                  type="text"
-                  placeholder="Add a comment..."
-                  className="w-full bg-black/40 border border-white/10 rounded-full px-4 py-2 text-accent-beige text-sm focus:outline-none focus:border-deep-purple"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      handleComment(post._id, e.currentTarget.value);
-                      e.currentTarget.value = '';
-                    }
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        ))}
-
-        {posts.length === 0 && (
-          <div className="snap-start h-screen w-full flex items-center justify-center">
-            <p className="text-accent-beige/60">No posts yet. Be the first to share your talent!</p>
-          </div>
-        )}
-      </div>
-      )}
-      {/*
-      {(!isVideoTab || (searchQuery.trim() && searchResults.length > 0)) && (
-        <div className="max-w-4xl mx-auto px-4 py-4 space-y-6">
-          {displayPosts.map((post: Post) => (
-            <div key={post._id} className="bg-matte-black border border-deep-purple/20 rounded-2xl overflow-hidden">
-              <div className="flex items-center justify-between p-4 border-b border-deep-purple/10">
-                <button
-                  onClick={() => navigate(`/profile/${post.user._id}`)}
-                  className="flex items-center gap-3 flex-1"
-                >
-                  <div className={`w-10 h-10 rounded-full bg-deep-purple/30 flex items-center justify-center overflow-hidden border ${post.user.isLive ? 'border-red-500' : 'border-deep-purple/40'}`}>
                     {post.user.profileImage ? (
-                      <img src={post.user.profileImage} alt={post.user.username} className="w-full h-full object-cover" />
+                      <img src={post.user.profileImage} alt={post.user.username} className="w-full h-full rounded-full object-cover" />
                     ) : (
-                      <span className="text-deep-purple font-bold">{post.user.username[0].toUpperCase()}</span>
+                      <div className="w-full h-full rounded-full bg-deep-purple flex items-center justify-center text-white font-bold">
+                        {post.user.username[0].toUpperCase()}
+                      </div>
                     )}
-                  </div>
-                  <div>
-                    <h3 className="text-accent-beige font-semibold">{post.user.username}</h3>
-                    <p className="text-accent-beige/60 text-xs">{post.category}</p>
-                  </div>
-                </button>
-                <div className="flex items-center gap-3">
+                  </button>
                   {currentUser && currentUser.id !== post.user._id && (
                     <button
                       onClick={() => {
@@ -503,20 +352,57 @@ const Feed = () => {
                           followMutation.mutate(post.user._id);
                         }
                       }}
-                      className="px-3 py-1 rounded-full bg-deep-purple text-accent-beige text-sm font-semibold border border-deep-purple/60 hover:bg-deep-purple/80"
+                      className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-deep-purple text-white rounded-full p-1 shadow-lg hover:scale-110 transition-transform"
                     >
-                      {(currentUser as any)?.following && (currentUser as any).following.find((f: any) => f._id === post.user._id || f === post.user._id) ? 'Following' : 'Follow'}
+                      <Plus size={12} />
                     </button>
                   )}
-                  <div className="relative post-menu">
+                </div>
+
+                <button
+                  onClick={() => handleLike(post._id)}
+                  className="flex flex-col items-center gap-1 group"
+                >
+                  <div className={`p-3 rounded-full bg-black/20 backdrop-blur-sm border border-white/10 transition-all group-hover:scale-110 group-hover:bg-black/40 ${post.likes.length > 0 ? 'text-red-500' : 'text-white'}`}>
+                    <Heart className={post.likes.length > 0 ? 'fill-current' : ''} size={28} />
+                  </div>
+                  <span className="text-xs font-medium text-white shadow-black drop-shadow-md">{post.likes.length}</span>
+                </button>
+
+                <button
+                  onClick={() => setOpenCommentsPostId(post._id)}
+                  className="flex flex-col items-center gap-1 group"
+                >
+                  <div className="p-3 rounded-full bg-black/20 backdrop-blur-sm border border-white/10 text-white transition-all group-hover:scale-110 group-hover:bg-black/40">
+                    <MessageCircle size={28} />
+                  </div>
+                  <span className="text-xs font-medium text-white shadow-black drop-shadow-md">{post.comments.length}</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    navigator.share?.({
+                      title: post.caption,
+                      url: window.location.href,
+                    }).catch(() => { });
+                  }}
+                  className="flex flex-col items-center gap-1 group"
+                >
+                  <div className="p-3 rounded-full bg-black/20 backdrop-blur-sm border border-white/10 text-white transition-all group-hover:scale-110 group-hover:bg-black/40">
+                    <Share2 size={28} />
+                  </div>
+                  <span className="text-xs font-medium text-white shadow-black drop-shadow-md">Share</span>
+                </button>
+
+                <div className="relative post-menu">
                   <button
                     onClick={() => setPostMenuOpen(postMenuOpen === post._id ? null : post._id)}
-                    className="p-2 rounded-full bg-matte-black border border-deep-purple/30 text-accent-beige hover:bg-deep-purple/10"
+                    className="p-3 rounded-full bg-black/20 backdrop-blur-sm border border-white/10 text-white transition-all hover:bg-black/40"
                   >
-                    <MoreVertical size={18} />
+                    <MoreVertical size={24} />
                   </button>
                   {postMenuOpen === post._id && (
-                    <div className="absolute right-0 mt-2 w-48 bg-matte-black border border-deep-purple/30 rounded-2xl shadow-xl z-50 post-menu">
+                    <div className="absolute right-12 bottom-0 w-48 bg-matte-black/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-fade-in z-50">
                       {currentUser?.id === post.user._id && (
                         <>
                           <button
@@ -526,10 +412,10 @@ const Feed = () => {
                               setEditTags(post.tags.join(', '));
                               setPostMenuOpen(null);
                             }}
-                            className="w-full flex items-center gap-2 px-4 py-3 text-accent-beige hover:bg-deep-purple/10 rounded-t-2xl"
+                            className="w-full flex items-center gap-3 px-4 py-3 text-accent-beige hover:bg-white/10 transition-colors"
                           >
                             <Edit size={18} />
-                            <span>Edit</span>
+                            <span className="text-sm font-medium">Edit Post</span>
                           </button>
                           <button
                             onClick={() => {
@@ -537,111 +423,95 @@ const Feed = () => {
                                 deleteMutation.mutate(post._id);
                               }
                             }}
-                            className="w-full flex items-center gap-2 px-4 py-3 text-red-400 hover:bg-red-500/10"
+                            className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 transition-colors"
                           >
                             <Trash2 size={18} />
-                            <span>Delete</span>
+                            <span className="text-sm font-medium">Delete</span>
                           </button>
                         </>
                       )}
-                      <button
-                        onClick={() => {
-                          navigator.share?.({
-                            title: post.caption,
-                            url: window.location.href,
-                          }).catch(() => {});
-                          setPostMenuOpen(null);
-                        }}
-                        className="w-full flex items-center gap-2 px-4 py-3 text-accent-beige hover:bg-deep-purple/10"
-                      >
-                        <Share2 size={18} />
-                        <span>Share</span>
-                      </button>
-                      <button
-                        onClick={() => {
-                          setPostMenuOpen(null);
-                        }}
-                        className="w-full flex items-center gap-2 px-4 py-3 text-accent-beige hover:bg-deep-purple/10 rounded-b-2xl"
-                      >
-                        <Forward size={18} />
-                        <span>Forward</span>
-                      </button>
                     </div>
                   )}
                 </div>
               </div>
 
-              {post.mediaType === 'audio' ? (
-                <div className="p-4 bg-gradient-to-br from-deep-purple/10 to-matte-black rounded-xl">
-                  <ReactPlayer url={post.mediaUrl} controls width="100%" height="60px" />
-                </div>
-              ) : post.mediaType === 'text' ? (
-                <div className="p-6 bg-gradient-to-br from-deep-purple/5 to-matte-black/50 rounded-xl">
-                  <p className="text-accent-beige text-lg leading-relaxed whitespace-pre-wrap">{post.caption}</p>
-                </div>
-              ) : (
-                <div className="p-4 rounded-xl overflow-hidden bg-black">
-                  <ReactPlayer url={post.mediaUrl} controls width="100%" />
-                </div>
-              )}
-
-              <div className="p-4">
-                <div className="flex items-center gap-4 mb-3">
-                  <button
-                    onClick={() => handleLike(post._id)}
-                    className={`flex items-center gap-2 transition-all transform hover:scale-110 ${post.likes.length > 0 ? 'text-deep-purple' : 'text-accent-beige/60'} hover:text-deep-purple`}
-                  >
-                    <Heart className={post.likes.length > 0 ? 'fill-current' : ''} size={20} />
-                    <span className="text-sm font-semibold">{post.likes.length}</span>
-                  </button>
-                  <button
-                    onClick={() => setOpenCommentsPostId(post._id)}
-                    className="flex items-center gap-2 text-accent-beige/60 hover:text-deep-purple transition-all transform hover:scale-110"
-                  >
-                    <MessageCircle size={20} />
-                    <span className="text-sm font-semibold">{post.comments.length}</span>
-                  </button>
-                  <button className="flex items-center gap-2 text-accent-beige/60 hover:text-deep-purple transition-all transform hover:scale-110 ml-auto">
-                    <Share2 size={20} />
-                  </button>
-                </div>
-
-                {post.caption && (
-                  <p className="text-accent-beige/80 text-sm line-clamp-2">
-                    <span className="font-semibold text-accent-beige">{post.user.username}</span>{' '}
-                    {post.caption}
-                  </p>
-                )}
-
-                {post.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {post.tags.slice(0, 3).map((tag: string, i: number) => (
-                      <span key={i} className="text-deep-purple text-xs bg-deep-purple/10 px-2 py-1 rounded-full hover:bg-deep-purple/20 transition-colors cursor-pointer">
-                        #{tag}
+              {/* Bottom caption area */}
+              <div className="absolute left-0 right-16 bottom-0 p-4 bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-20">
+                <div className="max-w-2xl">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="text-white font-bold text-lg shadow-black drop-shadow-md cursor-pointer hover:underline" onClick={() => navigate(`/profile/${post.user._id}`)}>
+                      @{post.user.username}
+                    </h3>
+                    {post.category && (
+                      <span className="px-2 py-0.5 rounded-md bg-white/10 text-white/80 text-[10px] font-medium uppercase tracking-wider border border-white/5 backdrop-blur-sm">
+                        {post.category}
                       </span>
-                    ))}
-                    {post.tags.length > 3 && (
-                      <span className="text-accent-beige/60 text-xs px-2 py-1">+{post.tags.length - 3}</span>
                     )}
                   </div>
-                )}
+
+                  {post.caption && (
+                    <p className="text-white/90 text-sm leading-relaxed mb-2 line-clamp-2 shadow-black drop-shadow-sm">
+                      {post.caption}
+                    </p>
+                  )}
+
+                  {post.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {post.tags.map((tag: string, i: number) => (
+                        <span key={i} className="text-white/80 text-xs font-medium hover:text-deep-purple transition-colors cursor-pointer">
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Inline comment input */}
+                  <div className="relative max-w-sm">
+                    <input
+                      type="text"
+                      placeholder="Add a comment..."
+                      className="w-full bg-white/10 border border-white/10 rounded-full pl-4 pr-10 py-2 text-white text-sm focus:outline-none focus:bg-black/60 focus:border-deep-purple/50 transition-all placeholder:text-white/40"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          handleComment(post._id, e.currentTarget.value);
+                          e.currentTarget.value = '';
+                        }
+                      }}
+                    />
+                    <button className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-deep-purple transition-colors">
+                      <MessageCircle size={16} />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           ))}
 
           {posts.length === 0 && (
-            <p className="text-center text-accent-beige/60 py-12">No posts yet.</p>
+            <div className="snap-start h-[calc(100vh-80px)] w-full flex flex-col items-center justify-center text-center p-8">
+              <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-6 animate-pulse">
+                <Video size={48} className="text-accent-beige/20" />
+              </div>
+              <h3 className="text-2xl font-bold text-accent-beige mb-2">No posts yet</h3>
+              <p className="text-accent-beige/60 max-w-xs mx-auto mb-8">Be the first to share your talent with the world!</p>
+              <button
+                onClick={() => navigate('/upload')}
+                className="px-8 py-3 bg-deep-purple text-white rounded-2xl font-bold shadow-lg shadow-deep-purple/20 hover:scale-105 transition-transform"
+              >
+                Create Post
+              </button>
+            </div>
           )}
         </div>
-      */}
+      )}
 
       <Navbar />
 
       {/* Edit Post Modal */}
       {editPostId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur">
-          <div className="bg-matte-black border border-deep-purple/30 rounded-2xl max-w-md w-full shadow-2xl">
-            <div className="p-6 border-b border-deep-purple/20 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-matte-black border border-white/10 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden animate-slide-up">
+            <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/5">
               <h2 className="text-xl font-bold text-accent-beige">Edit Post</h2>
               <button
                 onClick={() => {
@@ -649,28 +519,28 @@ const Feed = () => {
                   setEditCaption('');
                   setEditTags('');
                 }}
-                className="text-accent-beige/60 hover:text-accent-beige transition-colors"
+                className="text-accent-beige/60 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full"
               >
-                ✕
+                <X size={20} />
               </button>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-5">
               <div>
-                <label className="block text-accent-beige/80 mb-2 text-sm font-semibold">Caption</label>
+                <label className="block text-accent-beige/80 mb-2 text-sm font-bold uppercase tracking-wider">Caption</label>
                 <textarea
                   value={editCaption}
                   onChange={(e) => setEditCaption(e.target.value)}
-                  className="w-full h-24 p-3 bg-matte-black border border-deep-purple/30 rounded-2xl text-accent-beige focus:outline-none focus:border-deep-purple resize-none"
+                  className="w-full h-32 p-4 bg-black/40 border border-white/10 rounded-2xl text-accent-beige focus:outline-none focus:border-deep-purple focus:ring-1 focus:ring-deep-purple/50 resize-none transition-all"
                   maxLength={1000}
                 />
               </div>
               <div>
-                <label className="block text-accent-beige/80 mb-2 text-sm font-semibold">Tags (comma separated)</label>
+                <label className="block text-accent-beige/80 mb-2 text-sm font-bold uppercase tracking-wider">Tags</label>
                 <input
                   type="text"
                   value={editTags}
                   onChange={(e) => setEditTags(e.target.value)}
-                  className="w-full p-3 bg-matte-black border border-deep-purple/30 rounded-2xl text-accent-beige focus:outline-none focus:border-deep-purple"
+                  className="w-full p-4 bg-black/40 border border-white/10 rounded-2xl text-accent-beige focus:outline-none focus:border-deep-purple focus:ring-1 focus:ring-deep-purple/50 transition-all"
                   placeholder="tag1, tag2, tag3"
                 />
               </div>
@@ -686,9 +556,9 @@ const Feed = () => {
                     }
                   }}
                   disabled={updateMutation.isPending}
-                  className="flex-1 px-4 py-3 bg-deep-purple hover:bg-deep-purple/80 text-accent-beige rounded-2xl font-semibold disabled:opacity-50 transition-all transform hover:scale-105"
+                  className="flex-1 px-4 py-3.5 bg-deep-purple hover:bg-deep-purple/80 text-white rounded-2xl font-bold disabled:opacity-50 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  {updateMutation.isPending ? 'Saving...' : 'Save'}
+                  {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
                 </button>
                 <button
                   onClick={() => {
@@ -696,7 +566,7 @@ const Feed = () => {
                     setEditCaption('');
                     setEditTags('');
                   }}
-                  className="flex-1 px-4 py-3 bg-matte-black border border-deep-purple/30 hover:border-deep-purple text-accent-beige rounded-2xl font-semibold transition-colors"
+                  className="flex-1 px-4 py-3.5 bg-transparent border border-white/10 hover:bg-white/5 text-accent-beige rounded-2xl font-bold transition-colors"
                 >
                   Cancel
                 </button>
@@ -708,64 +578,76 @@ const Feed = () => {
 
       {/* Comments Drawer */}
       {openCommentsPostId && (
-        <div className="fixed inset-0 z-50">
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
           <div
-            className="absolute inset-0 bg-black/50 backdrop-blur"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
             onClick={() => setOpenCommentsPostId(null)}
           />
-          <div className="absolute bottom-0 left-0 right-0 bg-matte-black border-t border-deep-purple/30 rounded-t-3xl max-h-[70vh] shadow-2xl">
-            <div className="p-4 border-b border-deep-purple/20 flex items-center justify-between sticky top-0 bg-matte-black/95">
+          <div className="relative w-full max-w-lg bg-matte-black border-t sm:border border-white/10 rounded-t-3xl sm:rounded-3xl max-h-[80vh] shadow-2xl flex flex-col animate-slide-up">
+            <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/5 rounded-t-3xl">
               <span className="text-accent-beige font-bold text-lg">Comments</span>
               <button
                 onClick={() => setOpenCommentsPostId(null)}
-                className="text-accent-beige/60 hover:text-accent-beige transition-colors"
+                className="text-accent-beige/60 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full"
               >
-                ✕
+                <X size={20} />
               </button>
             </div>
-            <div className="px-4 py-3 overflow-y-auto space-y-4 max-h-[45vh]">
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[300px]">
               {posts
                 .find((p) => p._id === openCommentsPostId)?.comments.map((comment: Post['comments'][0], i: number) => (
-                  <div key={i} className="flex gap-3 p-3 bg-deep-purple/5 rounded-xl hover:bg-deep-purple/10 transition-colors">
-                    <div className="w-8 h-8 rounded-full bg-deep-purple/30 flex-shrink-0 flex items-center justify-center border border-deep-purple/40">
-                      <span className="text-xs text-deep-purple font-bold">{comment.user.username[0].toUpperCase()}</span>
+                  <div key={i} className="flex gap-3 animate-fade-in" style={{ animationDelay: `${i * 0.05}s` }}>
+                    <div className="w-10 h-10 rounded-full bg-deep-purple/20 flex-shrink-0 flex items-center justify-center border border-deep-purple/30 text-deep-purple font-bold">
+                      {comment.user.username[0].toUpperCase()}
                     </div>
-                    <div className="flex-1">
-                      <span className="font-semibold text-accent-beige text-sm">{comment.user.username}</span>
-                      <span className="text-accent-beige/70 text-sm block mt-1">{comment.text}</span>
+                    <div className="flex-1 bg-white/5 p-3 rounded-2xl rounded-tl-none border border-white/5">
+                      <span className="font-bold text-accent-beige text-sm block mb-1">{comment.user.username}</span>
+                      <p className="text-accent-beige/80 text-sm leading-relaxed">{comment.text}</p>
                     </div>
                   </div>
                 ))}
               {posts.find((p) => p._id === openCommentsPostId)?.comments.length === 0 && (
-                <p className="text-accent-beige/60 text-center py-8">No comments yet. Be the first!</p>
+                <div className="flex flex-col items-center justify-center h-full py-12 text-center opacity-60">
+                  <MessageCircle size={48} className="mb-4 text-accent-beige/20" />
+                  <p className="text-accent-beige/60">No comments yet</p>
+                  <p className="text-accent-beige/40 text-sm">Start the conversation!</p>
+                </div>
               )}
             </div>
-            <div className="p-4 border-t border-deep-purple/20 bg-matte-black/95 sticky bottom-0">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newCommentText}
-                  onChange={(e) => setNewCommentText(e.target.value)}
-                  placeholder="Share your thoughts..."
-                  className="flex-1 bg-matte-black border border-deep-purple/30 rounded-full px-4 py-2 text-accent-beige text-sm focus:outline-none focus:border-deep-purple placeholder-accent-beige/40"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && newCommentText.trim() && openCommentsPostId) {
-                      handleComment(openCommentsPostId, newCommentText.trim());
-                      setNewCommentText('');
-                    }
-                  }}
-                />
-                <button
-                  onClick={() => {
-                    if (newCommentText.trim() && openCommentsPostId) {
-                      handleComment(openCommentsPostId, newCommentText.trim());
-                      setNewCommentText('');
-                    }
-                  }}
-                  className="px-4 py-2 bg-deep-purple text-accent-beige rounded-full text-sm font-bold hover:bg-deep-purple/80 transition-all transform hover:scale-105"
-                >
-                  Send
-                </button>
+
+            <div className="p-4 border-t border-white/5 bg-matte-black/95 backdrop-blur rounded-b-3xl">
+              <div className="flex gap-3 items-center">
+                <div className="w-8 h-8 rounded-full bg-deep-purple/20 flex items-center justify-center text-deep-purple text-xs font-bold">
+                  {currentUser?.username?.[0]?.toUpperCase() || 'U'}
+                </div>
+                <div className="flex-1 relative">
+                  <input
+                    type="text"
+                    value={newCommentText}
+                    onChange={(e) => setNewCommentText(e.target.value)}
+                    placeholder="Add a comment..."
+                    className="w-full bg-white/5 border border-white/10 rounded-full pl-4 pr-12 py-3 text-accent-beige text-sm focus:outline-none focus:bg-black/40 focus:border-deep-purple/50 transition-all placeholder:text-accent-beige/30"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newCommentText.trim() && openCommentsPostId) {
+                        handleComment(openCommentsPostId, newCommentText.trim());
+                        setNewCommentText('');
+                      }
+                    }}
+                  />
+                  <button
+                    onClick={() => {
+                      if (newCommentText.trim() && openCommentsPostId) {
+                        handleComment(openCommentsPostId, newCommentText.trim());
+                        setNewCommentText('');
+                      }
+                    }}
+                    disabled={!newCommentText.trim()}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-deep-purple text-white rounded-full disabled:opacity-50 disabled:bg-white/10 transition-all hover:scale-110"
+                  >
+                    <Forward size={16} className={newCommentText.trim() ? 'ml-0.5' : ''} />
+                  </button>
+                </div>
               </div>
             </div>
           </div>

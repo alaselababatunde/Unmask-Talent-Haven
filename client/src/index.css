@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-matte-black text-accent-beige font-sans;
+    @apply bg-matte-black text-accent-beige font-sans antialiased selection:bg-deep-purple selection:text-white;
   }
 }
 
@@ -13,12 +13,34 @@
     background: linear-gradient(135deg, #5A2A83 0%, #7B4B27 100%);
   }
   
+  .glass-panel {
+    @apply bg-matte-black/60 backdrop-blur-md border border-white/10;
+  }
+
   .glow-purple {
     box-shadow: 0 0 20px rgba(90, 42, 131, 0.5);
   }
   
   .glow-purple-strong {
     box-shadow: 0 0 30px rgba(90, 42, 131, 0.8);
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 }
 
