@@ -16,6 +16,8 @@ const Live = () => {
   const [viewers, setViewers] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
   const [error, setError] = useState('');
+  const [chatMessages, setChatMessages] = useState<{ user: string, text: string }[]>([]);
+  const [chatInput, setChatInput] = useState('');
 
   useEffect(() => {
     return () => {
@@ -235,7 +237,13 @@ const Live = () => {
                   <Heart size={18} />
                   <span className="text-xs">Like</span>
                 </button>
-                <button className="p-2 rounded-lg bg-deep-purple/10 hover:bg-deep-purple/20 text-accent-beige flex flex-col items-center gap-1 transition-colors">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href);
+                    alert('Stream link copied!');
+                  }}
+                  className="p-2 rounded-lg bg-deep-purple/10 hover:bg-deep-purple/20 text-accent-beige flex flex-col items-center gap-1 transition-colors"
+                >
                   <Share2 size={18} />
                   <span className="text-xs">Share</span>
                 </button>
@@ -250,10 +258,18 @@ const Live = () => {
             <div className="flex-1 p-4 overflow-y-auto">
               <h4 className="text-accent-beige font-semibold mb-4">Live Chat</h4>
               <div className="space-y-3">
-                {/* Real chat would go here */}
-                <div className="text-center text-accent-beige/40 text-sm py-4">
-                  Waiting for viewers to join...
-                </div>
+                {chatMessages.length === 0 ? (
+                  <div className="text-center text-accent-beige/40 text-sm py-4">
+                    Waiting for viewers to join...
+                  </div>
+                ) : (
+                  chatMessages.map((msg, i) => (
+                    <div key={i} className="text-sm">
+                      <span className="font-bold text-deep-purple mr-2">{msg.user}:</span>
+                      <span className="text-accent-beige">{msg.text}</span>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
@@ -261,6 +277,14 @@ const Live = () => {
             <div className="p-4 border-t border-deep-purple/20">
               <input
                 type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && chatInput.trim()) {
+                    setChatMessages([...chatMessages, { user: user?.username || 'Me', text: chatInput }]);
+                    setChatInput('');
+                  }
+                }}
                 placeholder="Add a comment..."
                 className="w-full px-3 py-2 bg-matte-black border border-deep-purple/30 rounded-lg text-accent-beige text-sm focus:outline-none focus:border-deep-purple"
               />

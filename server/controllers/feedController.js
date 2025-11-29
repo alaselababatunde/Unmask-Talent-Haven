@@ -134,31 +134,34 @@ export const likePost = async (req, res) => {
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    // Only allow one like per user - if already liked, return unchanged
-    if (post.likes.includes(req.user._id)) {
-      return res.json(post);
-    }
+    const likeIndex = post.likes.indexOf(req.user._id);
 
-    post.likes.push(req.user._id);
-    await post.save();
+    if (likeIndex === -1) {
+      // Like
+      post.likes.push(req.user._id);
 
-    // Create and emit notification if liker is not the post owner
-    if (post.user._id.toString() !== req.user._id.toString()) {
-      const notification = await Notification.create({
-        user: post.user._id,
-        from: req.user._id,
-        type: 'like',
-        message: `${req.user.username} liked your post`,
-      });
+      // Create and emit notification if liker is not the post owner
+      if (post.user._id.toString() !== req.user._id.toString()) {
+        const notification = await Notification.create({
+          user: post.user._id,
+          from: req.user._id,
+          type: 'like',
+          message: `${req.user.username} liked your post`,
+        });
 
-      // Emit notification via socket
-      const app = req.app || global.app;
-      const io = app.get ? app.get('io') : null;
-      if (io) {
-        io.to(`user:${post.user._id}`).emit('notification', notification);
+        // Emit notification via socket
+        const app = req.app || global.app;
+        const io = app.get ? app.get('io') : null;
+        if (io) {
+          io.to(`user:${post.user._id}`).emit('notification', notification);
+        }
       }
+    } else {
+      // Unlike
+      post.likes.splice(likeIndex, 1);
     }
 
+    await post.save();
     res.json(post);
   } catch (error) {
     res.status(500).json({ message: error.message });

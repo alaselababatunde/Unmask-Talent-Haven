@@ -1,4 +1,3 @@
-```javascript
 import { useState } from 'react';
 import Navbar from '../../components/Navbar';
 import { useNavigate } from 'react-router-dom';
@@ -46,7 +45,7 @@ const MusicSettings = () => {
                 <p className="text-accent-beige/60 text-sm">Streaming quality</p>
               </div>
             </div>
-            <select 
+            <select
               value={quality}
               onChange={(e) => setQuality(e.target.value)}
               className="bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-deep-purple"
@@ -64,4 +63,3 @@ const MusicSettings = () => {
 };
 
 export default MusicSettings;
-```

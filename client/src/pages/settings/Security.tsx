@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Navbar from '../../components/Navbar';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Shield, Key, Smartphone } from 'lucide-react';
+import { ArrowLeft, Key, Smartphone } from 'lucide-react';
 
 const Security = () => {
     const navigate = useNavigate();

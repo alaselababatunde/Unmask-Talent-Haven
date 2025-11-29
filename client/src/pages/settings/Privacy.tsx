@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Navbar from '../../components/Navbar';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Lock, Eye, MessageCircle, Users } from 'lucide-react';
+import { ArrowLeft, Lock, Eye, MessageCircle } from 'lucide-react';
 
 const Privacy = () => {
     const navigate = useNavigate();

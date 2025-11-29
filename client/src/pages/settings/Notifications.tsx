@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Navbar from '../../components/Navbar';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bell, Heart, MessageCircle, UserPlus } from 'lucide-react';
+import { ArrowLeft, Heart, MessageCircle, UserPlus } from 'lucide-react';
 
 const Notifications = () => {
     const navigate = useNavigate();

@@ -203,6 +203,17 @@ const Feed = () => {
       navigate('/profile');
       return;
     }
+
+    // Optimistic update
+    const post = posts.find(p => p._id === postId) || (singlePostId && singlePost?._id === postId ? singlePost : null);
+    if (post) {
+      const isLiked = post.likes.includes(currentUser.id);
+      // We don't manually update state here because react-query refetch will handle it,
+      // but for immediate feedback we could. However, since we fixed the backend toggle,
+      // the refetch in onSuccess will be correct.
+      // To make it instant, we can use onMutate in the mutation, but let's stick to the mutation call.
+    }
+
     likeMutation.mutate(postId, {
       onError: (err) => {
         console.error('Like failed', err);
@@ -419,10 +430,15 @@ const Feed = () => {
 
                 <button
                   onClick={() => {
-                    navigator.share?.({
-                      title: post.caption,
-                      url: window.location.href,
-                    }).catch(() => { });
+                    if (navigator.share) {
+                      navigator.share({
+                        title: post.caption,
+                        url: window.location.href,
+                      }).catch(() => { });
+                    } else {
+                      navigator.clipboard.writeText(window.location.href);
+                      alert('Link copied to clipboard!');
+                    }
                   }}
                   className="flex flex-col items-center gap-1 group"
                 >
