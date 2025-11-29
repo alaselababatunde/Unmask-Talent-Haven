@@ -134,7 +134,7 @@ export const likePost = async (req, res) => {
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    const likeIndex = post.likes.indexOf(req.user._id);
+    const likeIndex = post.likes.findIndex(id => id.toString() === req.user._id.toString());
 
     if (likeIndex === -1) {
       // Like

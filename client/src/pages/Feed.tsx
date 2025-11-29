@@ -72,7 +72,7 @@ const Feed = () => {
     enabled: !singlePostId,
   });
 
-  const { data: singlePost } = useQuery<Post>({
+  const { data: singlePost, isLoading: isLoadingSingle } = useQuery<Post>({
     queryKey: ['post', singlePostId],
     queryFn: async () => {
       const response = await api.get(`/feed/${singlePostId}`);
@@ -313,7 +313,13 @@ const Feed = () => {
 
       {(isVideoTab || singlePostId) && !(searchQuery.trim() && searchResults.length > 0) && (
         <div className="h-[calc(100vh-80px)] overflow-y-scroll snap-y snap-mandatory no-scrollbar relative">
-          {displayPosts.map((post: Post, index: number) => (
+          {singlePostId && isLoadingSingle && (
+            <div className="h-full flex items-center justify-center">
+              <div className="w-12 h-12 border-4 border-deep-purple border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
+
+          {!isLoadingSingle && displayPosts.map((post: Post, index: number) => (
             <div
               key={post._id}
               ref={(el) => {
@@ -536,7 +542,9 @@ const Feed = () => {
             </div>
           ))}
 
-          {posts.length === 0 && (
+          ))}
+
+          {!singlePostId && displayPosts.length === 0 && (
             <div className="snap-start h-[calc(100vh-80px)] w-full flex flex-col items-center justify-center text-center p-8">
               <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-6 animate-pulse">
                 <Video size={48} className="text-accent-beige/20" />
