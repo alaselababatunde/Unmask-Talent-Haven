@@ -205,14 +205,9 @@ const Feed = () => {
     }
 
     // Optimistic update
-    const post = posts.find(p => p._id === postId) || (singlePostId && singlePost?._id === postId ? singlePost : null);
-    if (post) {
-      const isLiked = post.likes.includes(currentUser.id);
-      // We don't manually update state here because react-query refetch will handle it,
-      // but for immediate feedback we could. However, since we fixed the backend toggle,
-      // the refetch in onSuccess will be correct.
-      // To make it instant, we can use onMutate in the mutation, but let's stick to the mutation call.
-    }
+    // We don't manually update state here because react-query refetch will handle it,
+    // but for immediate feedback we could. However, since we fixed the backend toggle,
+    // the refetch in onSuccess will be correct.
 
     likeMutation.mutate(postId, {
       onError: (err) => {
