@@ -35,18 +35,18 @@ const Settings = () => {
     {
       title: 'Account',
       items: [
-        { icon: Lock, label: 'Privacy', onClick: () => alert('Privacy settings coming soon!') },
-        { icon: Shield, label: 'Security and permissions', onClick: () => alert('Security settings coming soon!') },
+        { icon: Lock, label: 'Privacy', onClick: () => navigate('/settings/privacy') },
+        { icon: Shield, label: 'Security and permissions', onClick: () => navigate('/settings/security') },
         { icon: Share2, label: 'Share profile', onClick: handleShareProfile },
       ],
     },
     {
       title: 'Content & display',
       items: [
-        { icon: Bell, label: 'Notifications', onClick: () => alert('Notification settings coming soon!') },
+        { icon: Bell, label: 'Notifications', onClick: () => navigate('/settings/notifications') },
         { icon: Radio, label: 'LIVE', onClick: () => navigate('/live') },
-        { icon: Music, label: 'Music', onClick: () => alert('Music settings coming soon!') },
-        { icon: Clock, label: 'Activity centre', onClick: () => alert('Activity centre coming soon!') },
+        { icon: Music, label: 'Music', onClick: () => navigate('/settings/music') },
+        { icon: Clock, label: 'Activity centre', onClick: () => navigate('/settings/activity') },
       ],
     },
   ];

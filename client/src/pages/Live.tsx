@@ -23,6 +23,12 @@ const Live = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (isLive && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+    }
+  }, [isLive]);
+
   // Simulate viewer count increase
   useEffect(() => {
     if (!isLive) return;
@@ -36,14 +42,12 @@ const Live = () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        setIsLive(true);
-        setViewers(Math.floor(Math.random() * 10) + 1);
-        setError('');
-        if (user?.id) {
-          await api.put(`/user/${user.id}/live`, { isLive: true });
-        }
+      streamRef.current = stream;
+      setIsLive(true);
+      setViewers(Math.floor(Math.random() * 10) + 1);
+      setError('');
+      if (user?.id) {
+        await api.put(`/user/${user.id}/live`, { isLive: true });
       }
     } catch (err: any) {
       setError(err?.message || 'Failed to access camera/microphone');

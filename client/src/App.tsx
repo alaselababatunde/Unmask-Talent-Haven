@@ -14,6 +14,11 @@ import Supporters from './pages/Supporters';
 import Live from './pages/Live';
 import AuthCallback from './pages/AuthCallback';
 import Settings from './pages/Settings';
+import Privacy from './pages/settings/Privacy';
+import Security from './pages/settings/Security';
+import Notifications from './pages/settings/Notifications';
+import MusicSettings from './pages/settings/Music';
+import Activity from './pages/settings/Activity';
 
 const queryClient = new QueryClient();
 
@@ -32,6 +37,11 @@ function App() {
             <Route path="/chat" element={<Chat />} />
             <Route path="/profile/:id?" element={<Profile />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/settings/privacy" element={<Privacy />} />
+            <Route path="/settings/security" element={<Security />} />
+            <Route path="/settings/notifications" element={<Notifications />} />
+            <Route path="/settings/music" element={<MusicSettings />} />
+            <Route path="/settings/activity" element={<Activity />} />
             <Route path="/supporters" element={<Supporters />} />
             <Route path="/live" element={<Live />} />
             <Route path="/" element={<Navigate to="/feed" replace />} />

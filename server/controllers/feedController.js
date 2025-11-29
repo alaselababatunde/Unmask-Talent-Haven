@@ -107,11 +107,23 @@ export const createPost = async (req, res) => {
       console.error('Cloudinary Error Details:', JSON.stringify(error, null, 2));
       return res.status(500).json({
         message: 'Video storage configuration error or upload failed.',
-        details: error.message || 'Check server logs for details',
+        details: {
+          message: error.message,
+          http_code: error.http_code,
+          name: error.name,
+          ...error
+        }
       });
     }
 
-    res.status(500).json({ message: error.message, details: error.code || error.name || null });
+    res.status(500).json({
+      message: error.message,
+      details: {
+        code: error.code,
+        name: error.name,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      }
+    });
   }
 };
 
