@@ -355,7 +355,7 @@ const Profile = () => {
                         <MoreVertical size={20} />
                       </button>
                       {menuOpen && (
-                        <div className="absolute right-0 mt-2 w-56 bg-matte-black/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl z-20 overflow-hidden animate-fade-in">
+                        <div className="absolute right-0 mt-2 w-56 bg-matte-black/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden animate-fade-in origin-top-right">
                           <button
                             onClick={() => {
                               setMenuOpen(false);

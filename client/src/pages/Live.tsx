@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
-import { Radio, Video, VideoOff, Mic, MicOff, Users, Heart, MessageCircle, Share2, Settings } from 'lucide-react';
+import { Radio, Video, VideoOff, Mic, MicOff, Users, Heart, MessageCircle, Share2, Settings, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
 
 const Live = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -29,14 +31,7 @@ const Live = () => {
     }
   }, [isLive]);
 
-  // Simulate viewer count increase
-  useEffect(() => {
-    if (!isLive) return;
-    const interval = setInterval(() => {
-      setViewers(v => Math.min(v + Math.floor(Math.random() * 3), 150));
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [isLive]);
+  // Removed fake viewer simulation
 
   const startStream = async () => {
     try {
@@ -71,6 +66,7 @@ const Live = () => {
         console.error('Failed to update live status', e);
       }
     }
+    navigate('/profile');
   };
 
   const toggleMute = () => {
@@ -96,7 +92,13 @@ const Live = () => {
       {!isLive ? (
         <div className="h-screen flex items-center justify-center px-4">
           <div className="text-center max-w-md">
-            <div className="mb-8">
+            <div className="mb-8 relative">
+              <button
+                onClick={() => navigate(-1)}
+                className="absolute left-0 top-0 -ml-4 p-2 text-accent-beige/60 hover:text-white transition-colors"
+              >
+                <ArrowLeft size={24} />
+              </button>
               <div className="w-24 h-24 mx-auto bg-deep-purple/20 rounded-full flex items-center justify-center mb-4">
                 <Radio className="text-deep-purple" size={56} />
               </div>
@@ -248,16 +250,10 @@ const Live = () => {
             <div className="flex-1 p-4 overflow-y-auto">
               <h4 className="text-accent-beige font-semibold mb-4">Live Chat</h4>
               <div className="space-y-3">
-                {[
-                  { user: 'Viewer1', msg: 'Great stream! 🔥' },
-                  { user: 'Viewer2', msg: 'Love your talent' },
-                  { user: 'Viewer3', msg: 'Keep it up! 💪' },
-                ].map((chat, i) => (
-                  <div key={i} className="text-sm">
-                    <span className="font-semibold text-deep-purple">{chat.user}:</span>
-                    <span className="text-accent-beige/70 ml-2">{chat.msg}</span>
-                  </div>
-                ))}
+                {/* Real chat would go here */}
+                <div className="text-center text-accent-beige/40 text-sm py-4">
+                  Waiting for viewers to join...
+                </div>
               </div>
             </div>
 

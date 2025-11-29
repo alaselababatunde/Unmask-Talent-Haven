@@ -203,7 +203,11 @@ const Feed = () => {
       navigate('/profile');
       return;
     }
-    likeMutation.mutate(postId);
+    likeMutation.mutate(postId, {
+      onError: (err) => {
+        console.error('Like failed', err);
+      }
+    });
   };
 
   const handleComment = (postId: string, text: string) => {
@@ -218,7 +222,7 @@ const Feed = () => {
   return (
     <div className="min-h-screen bg-matte-black pb-20 md:pb-0">
       {/* Category Tabs with Search */}
-      <div className="sticky top-0 z-40 bg-matte-black/80 backdrop-blur-md border-b border-white/5">
+      <div className="sticky top-0 z-40 bg-matte-black/95 backdrop-blur-xl border-b border-white/5 shadow-2xl shadow-black/50">
         <div className="max-w-4xl mx-auto px-4">
           <div className="flex items-center justify-between py-4 gap-4">
             <div className="flex items-center gap-3 overflow-x-auto flex-1 no-scrollbar mask-linear-fade">
@@ -346,13 +350,16 @@ const Feed = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center w-full h-full p-8 bg-gradient-to-br from-black to-deep-purple/10">
-                    <div className="max-w-2xl w-full glass-panel p-8 md:p-12 rounded-3xl shadow-2xl relative overflow-hidden">
+                  <div className="flex items-center justify-center w-full h-full p-4 md:p-8 bg-gradient-to-br from-black to-deep-purple/10">
+                    <div className="w-full max-w-2xl glass-panel p-6 md:p-12 rounded-3xl shadow-2xl relative overflow-hidden flex flex-col items-center justify-center min-h-[50vh]">
                       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-deep-purple to-[#7B4B27]" />
+                      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 pointer-events-none" />
                       <FileText size={40} className="text-deep-purple/20 absolute top-8 right-8" />
-                      <p className="text-accent-beige text-xl md:text-2xl leading-relaxed whitespace-pre-wrap font-serif text-center">
-                        {post.caption}
-                      </p>
+                      <div className="overflow-y-auto max-h-[60vh] w-full custom-scrollbar">
+                        <p className="text-accent-beige text-xl md:text-3xl leading-relaxed whitespace-pre-wrap font-serif text-center drop-shadow-lg">
+                          {post.caption}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 )}

@@ -4,7 +4,11 @@
 
 @layer base {
   body {
-    @apply bg-matte-black text-accent-beige font-sans antialiased selection:bg-deep-purple selection:text-white;
+    @apply bg-matte-black text-accent-beige font-sans antialiased selection:bg-deep-purple selection:text-white overflow-x-hidden min-h-screen w-full;
+  }
+
+  #root {
+    @apply min-h-screen w-full flex flex-col;
   }
 }
 
@@ -12,7 +16,7 @@
   .gradient-purple-brown {
     background: linear-gradient(135deg, #5A2A83 0%, #7B4B27 100%);
   }
-  
+
   .glass-panel {
     @apply bg-matte-black/60 backdrop-blur-md border border-white/10;
   }
@@ -20,7 +24,7 @@
   .glow-purple {
     box-shadow: 0 0 20px rgba(90, 42, 131, 0.5);
   }
-  
+
   .glow-purple-strong {
     box-shadow: 0 0 30px rgba(90, 42, 131, 0.8);
   }
@@ -34,13 +38,24 @@
   }
 
   @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
   }
 
   @keyframes slideUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
-
