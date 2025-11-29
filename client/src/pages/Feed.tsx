@@ -144,14 +144,12 @@ const Feed = () => {
       await api.delete(`/feed/${postId}`);
     },
     onSuccess: () => {
-      onSuccess: () => {
-        if (singlePostId) {
-          navigate('/profile'); // Go back to profile if deleted from single view
-        } else {
-          refetch();
-        }
-        setPostMenuOpen(null);
-      },
+      if (singlePostId) {
+        navigate('/profile'); // Go back to profile if deleted from single view
+      } else {
+        refetch();
+      }
+      setPostMenuOpen(null);
     },
   });
 
