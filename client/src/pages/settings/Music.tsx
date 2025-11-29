@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Navbar from '../../components/Navbar';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Music, Volume2, Radio } from 'lucide-react';
+import { ArrowLeft, Volume2, Radio } from 'lucide-react';
 
 const MusicSettings = () => {
   const navigate = useNavigate();
