@@ -3,7 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '../api';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
-import { Edit, Trophy, Heart, Video, MoreVertical, User, Image as ImageIcon, X } from 'lucide-react';
+import { Edit, Trophy, Heart, Video, MoreVertical, User, Image as ImageIcon, X, FileText, Music } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 interface UserData {
@@ -23,6 +23,7 @@ interface UserData {
   };
   posts: Array<{
     _id: string;
+    mediaType: 'video' | 'audio' | 'text' | 'sign-language';
     mediaUrl: string;
     thumbnail?: string;
     caption: string;
@@ -544,7 +545,19 @@ const Profile = () => {
                   onClick={() => navigate(`/feed?post=${post._id}`)}
                   className="aspect-square bg-white/5 rounded-xl overflow-hidden cursor-pointer relative group"
                 >
-                  {post.mediaUrl && (
+                  {post.mediaType === 'text' ? (
+                    <div className="w-full h-full bg-gradient-to-br from-deep-purple/20 to-black p-4 flex items-center justify-center relative overflow-hidden group-hover:scale-110 transition-transform duration-500">
+                      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
+                      <p className="text-white text-xs font-serif text-center line-clamp-4 leading-relaxed z-10">
+                        {post.caption}
+                      </p>
+                      <FileText className="absolute bottom-2 right-2 text-white/20" size={24} />
+                    </div>
+                  ) : post.mediaType === 'audio' ? (
+                    <div className="w-full h-full bg-gradient-to-br from-[#7B4B27]/40 to-black flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                      <Music size={32} className="text-white/80" />
+                    </div>
+                  ) : (
                     <img
                       src={post.thumbnail || post.mediaUrl}
                       alt={post.caption}

@@ -4,7 +4,7 @@ import api from '../api';
 import Navbar from '../components/Navbar';
 import ReactPlayer from 'react-player';
 import { Heart, MessageCircle, Share2, Video, Music, FileText, Hand, Search, MoreVertical, Trash2, Edit, Forward, X, Plus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 interface Post {
@@ -34,6 +34,8 @@ interface Post {
 
 const Feed = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const singlePostId = searchParams.get('post');
   const { user: currentUser, updateFollowing } = useAuth();
   const [playingIndex, setPlayingIndex] = useState(0);
   const playerRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -67,7 +69,19 @@ const Feed = () => {
       const response = await api.get('/feed', { params: { mediaType: activeTab } });
       return response.data;
     },
+    enabled: !singlePostId,
   });
+
+  const { data: singlePost, refetch: refetchSingle } = useQuery<Post>({
+    queryKey: ['post', singlePostId],
+    queryFn: async () => {
+      const response = await api.get(`/feed/${singlePostId}`);
+      return response.data;
+    },
+    enabled: !!singlePostId,
+  });
+
+  const displayPosts = singlePostId && singlePost ? [singlePost] : (searchQuery.trim() && searchResults.length > 0 ? searchResults : posts);
 
   const likeMutation = useMutation({
     mutationFn: async (postId: string) => {
@@ -130,8 +144,14 @@ const Feed = () => {
       await api.delete(`/feed/${postId}`);
     },
     onSuccess: () => {
-      refetch();
-      setPostMenuOpen(null);
+      onSuccess: () => {
+        if (singlePostId) {
+          navigate('/profile'); // Go back to profile if deleted from single view
+        } else {
+          refetch();
+        }
+        setPostMenuOpen(null);
+      },
     },
   });
 
@@ -195,7 +215,7 @@ const Feed = () => {
   };
 
   const isVideoTab = activeTab === 'video' || activeTab === 'sign-language';
-  const displayPosts = searchQuery.trim() && searchResults.length > 0 ? searchResults : posts;
+  // displayPosts is already defined above
 
   return (
     <div className="min-h-screen bg-matte-black pb-20 md:pb-0">
@@ -270,7 +290,20 @@ const Feed = () => {
         </div>
       )}
 
-      {isVideoTab && !(searchQuery.trim() && searchResults.length > 0) && (
+      {/* Single Post View Header */}
+      {singlePostId && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-matte-black/90 backdrop-blur-md border-b border-white/10 px-4 py-3 flex items-center gap-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 hover:bg-white/10 rounded-full text-white transition-colors"
+          >
+            <X size={24} />
+          </button>
+          <span className="text-white font-bold text-lg">Post</span>
+        </div>
+      )}
+
+      {(isVideoTab || singlePostId) && !(searchQuery.trim() && searchResults.length > 0) && (
         <div className="h-[calc(100vh-80px)] overflow-y-scroll snap-y snap-mandatory no-scrollbar relative">
           {displayPosts.map((post: Post, index: number) => (
             <div

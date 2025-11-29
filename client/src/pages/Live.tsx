@@ -61,7 +61,11 @@ const Live = () => {
     setIsLive(false);
     setViewers(0);
     if (user?.id) {
-      await api.put(`/user/${user.id}/live`, { isLive: false });
+      try {
+        await api.put(`/user/${user.id}/live`, { isLive: false });
+      } catch (e) {
+        console.error('Failed to update live status', e);
+      }
     }
   };
 
@@ -143,11 +147,10 @@ const Live = () => {
             <div className="absolute bottom-32 left-1/2 -translate-x-1/2 flex items-center gap-3 z-10">
               <button
                 onClick={toggleMute}
-                className={`p-3 rounded-full transition-all transform hover:scale-110 ${
-                  isMuted
+                className={`p-3 rounded-full transition-all transform hover:scale-110 ${isMuted
                     ? 'bg-red-500/80 text-white'
                     : 'bg-deep-purple/60 text-accent-beige hover:bg-deep-purple/80'
-                }`}
+                  }`}
                 title={isMuted ? 'Unmute' : 'Mute'}
               >
                 {isMuted ? <MicOff size={24} /> : <Mic size={24} />}
@@ -155,11 +158,10 @@ const Live = () => {
 
               <button
                 onClick={toggleVideo}
-                className={`p-3 rounded-full transition-all transform hover:scale-110 ${
-                  isVideoOff
+                className={`p-3 rounded-full transition-all transform hover:scale-110 ${isVideoOff
                     ? 'bg-red-500/80 text-white'
                     : 'bg-deep-purple/60 text-accent-beige hover:bg-deep-purple/80'
-                }`}
+                  }`}
                 title={isVideoOff ? 'Turn video on' : 'Turn video off'}
               >
                 {isVideoOff ? <VideoOff size={24} /> : <Video size={24} />}
@@ -175,10 +177,10 @@ const Live = () => {
 
               <button
                 onClick={stopStream}
-                className="p-3 rounded-full bg-red-500 hover:bg-red-600 text-white transition-all transform hover:scale-110"
+                className="px-6 py-3 rounded-full bg-red-500 hover:bg-red-600 text-white font-bold transition-all transform hover:scale-105 shadow-lg shadow-red-500/20"
                 title="Stop streaming"
               >
-                <X size={24} />
+                End Live
               </button>
             </div>
 

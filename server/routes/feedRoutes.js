@@ -1,5 +1,5 @@
 import express from 'express';
-import { getFeed, createPost, likePost, commentPost, searchContent, deletePost, updatePost } from '../controllers/feedController.js';
+import { getFeed, createPost, likePost, commentPost, searchContent, deletePost, updatePost, getSinglePost } from '../controllers/feedController.js';
 import { protect } from '../middleware/auth.js';
 import { upload } from '../config/cloudinary.js';
 import multer from 'multer';
@@ -23,6 +23,7 @@ const uploadHandler = (req, res, next) => {
 };
 
 router.post('/', protect, uploadHandler, createPost);
+router.get('/:id', getSinglePost);
 router.post('/:id/like', protect, likePost);
 router.post('/:id/comment', protect, commentPost);
 router.put('/:id', protect, updatePost);

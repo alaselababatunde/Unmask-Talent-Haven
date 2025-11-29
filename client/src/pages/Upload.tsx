@@ -40,7 +40,7 @@ const Upload = () => {
       const errorMsg = serverMessage || err.message || 'Upload failed';
 
       // Provide specific error messages
-      if (errorMsg.includes('Cloudinary') || errorMsg.includes('cloud')) {
+      if (errorMsg.includes('Cloudinary') || errorMsg.includes('cloud') || (serverDetails && JSON.stringify(serverDetails).includes('Cloudinary'))) {
         setError('⚠️ Video storage not configured. Please set up Cloudinary credentials in server/.env file.');
       } else if (errorMsg.includes('size') || errorMsg.includes('large')) {
         setError('File is too large. Please upload a smaller file (max 100MB for video, 50MB for audio).');
@@ -50,7 +50,7 @@ const Upload = () => {
         setError('Network error. Please check your connection and try again.');
       } else {
         // Attach any server-provided details to the displayed message for easier debugging
-        setError(serverDetails ? `${errorMsg} (${serverDetails})` : errorMsg);
+        setError(serverDetails ? `${errorMsg} (${typeof serverDetails === 'object' ? JSON.stringify(serverDetails) : serverDetails})` : errorMsg);
       }
     },
   });
@@ -200,8 +200,8 @@ const Upload = () => {
                     setError('');
                   }}
                   className={`relative group p-4 rounded-2xl border transition-all duration-300 overflow-hidden ${mediaType === type
-                      ? 'border-deep-purple bg-deep-purple/20 shadow-[0_0_30px_rgba(90,42,131,0.3)]'
-                      : 'border-white/10 bg-white/5 hover:border-deep-purple/50 hover:bg-white/10'
+                    ? 'border-deep-purple bg-deep-purple/20 shadow-[0_0_30px_rgba(90,42,131,0.3)]'
+                    : 'border-white/10 bg-white/5 hover:border-deep-purple/50 hover:bg-white/10'
                     }`}
                 >
                   <div className={`absolute inset-0 bg-gradient-to-br from-deep-purple/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity ${mediaType === type ? 'opacity-100' : ''}`} />
@@ -256,8 +256,8 @@ const Upload = () => {
                   <label
                     htmlFor="file-upload"
                     className={`flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-3xl cursor-pointer transition-all duration-300 ${file
-                        ? 'border-green-500/50 bg-green-500/5'
-                        : 'border-white/10 hover:border-deep-purple hover:bg-deep-purple/5'
+                      ? 'border-green-500/50 bg-green-500/5'
+                      : 'border-white/10 hover:border-deep-purple hover:bg-deep-purple/5'
                       }`}
                   >
                     {file ? (

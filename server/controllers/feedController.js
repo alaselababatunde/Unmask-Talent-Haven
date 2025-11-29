@@ -1,5 +1,6 @@
 import Post from '../models/Post.js';
 import Notification from '../models/Notification.js';
+import User from '../models/User.js';
 
 export const getFeed = async (req, res) => {
   try {
@@ -14,6 +15,22 @@ export const getFeed = async (req, res) => {
       .limit(20);
 
     res.json(posts);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getSinglePost = async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id)
+      .populate('user', '_id username profileImage isLive')
+      .populate('comments.user', 'username profileImage');
+
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    res.json(post);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -185,14 +202,30 @@ export const searchContent = async (req, res) => {
     if (!q || !q.trim()) {
       return res.json([]);
     }
+
+    // Search for users matching the query
+    const users = await User.find({
+      $or: [
+        { username: { $regex: q, $options: 'i' } },
+        { firstName: { $regex: q, $options: 'i' } },
+        { lastName: { $regex: q, $options: 'i' } }
+      ]
+    }).select('_id');
+
+    const userIds = users.map(user => user._id);
+
+    // Search for posts matching caption/tags OR belonging to found users
     const posts = await Post.find({
       $or: [
         { caption: { $regex: q, $options: 'i' } },
         { tags: { $regex: q, $options: 'i' } },
+        { user: { $in: userIds } }
       ],
     })
       .populate('user', '_id username profileImage isLive')
-      .limit(10);
+      .sort({ createdAt: -1 })
+      .limit(20);
+
     res.json(posts);
   } catch (error) {
     res.status(500).json({ message: error.message });
