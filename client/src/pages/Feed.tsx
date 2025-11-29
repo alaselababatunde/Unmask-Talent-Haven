@@ -72,7 +72,7 @@ const Feed = () => {
     enabled: !singlePostId,
   });
 
-  const { data: singlePost, refetch: refetchSingle } = useQuery<Post>({
+  const { data: singlePost } = useQuery<Post>({
     queryKey: ['post', singlePostId],
     queryFn: async () => {
       const response = await api.get(`/feed/${singlePostId}`);

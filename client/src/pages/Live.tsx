@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import Navbar from '../components/Navbar';
-import { Radio, X, Video, VideoOff, Mic, MicOff, Users, Heart, MessageCircle, Share2, Settings } from 'lucide-react';
+import { Radio, Video, VideoOff, Mic, MicOff, Users, Heart, MessageCircle, Share2, Settings } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
 
@@ -148,8 +148,8 @@ const Live = () => {
               <button
                 onClick={toggleMute}
                 className={`p-3 rounded-full transition-all transform hover:scale-110 ${isMuted
-                    ? 'bg-red-500/80 text-white'
-                    : 'bg-deep-purple/60 text-accent-beige hover:bg-deep-purple/80'
+                  ? 'bg-red-500/80 text-white'
+                  : 'bg-deep-purple/60 text-accent-beige hover:bg-deep-purple/80'
                   }`}
                 title={isMuted ? 'Unmute' : 'Mute'}
               >
@@ -159,8 +159,8 @@ const Live = () => {
               <button
                 onClick={toggleVideo}
                 className={`p-3 rounded-full transition-all transform hover:scale-110 ${isVideoOff
-                    ? 'bg-red-500/80 text-white'
-                    : 'bg-deep-purple/60 text-accent-beige hover:bg-deep-purple/80'
+                  ? 'bg-red-500/80 text-white'
+                  : 'bg-deep-purple/60 text-accent-beige hover:bg-deep-purple/80'
                   }`}
                 title={isVideoOff ? 'Turn video on' : 'Turn video off'}
               >

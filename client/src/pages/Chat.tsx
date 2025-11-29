@@ -3,6 +3,7 @@ import Navbar from '../components/Navbar';
 import { Send, ArrowLeft, MoreHorizontal, Phone, Video as VideoIcon, Info, Heart, Smile } from 'lucide-react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
+import api from '../api';
 
 interface Message {
   id: string;
@@ -163,8 +164,8 @@ const Chat = () => {
                   >
                     <div className="relative">
                       <div className={`w-16 h-16 rounded-full ${conv.isLive
-                          ? 'bg-gradient-to-tr from-deep-purple via-rich-brown to-accent-beige p-[3px]'
-                          : 'bg-deep-purple/30 p-[2px]'
+                        ? 'bg-gradient-to-tr from-deep-purple via-rich-brown to-accent-beige p-[3px]'
+                        : 'bg-deep-purple/30 p-[2px]'
                         }`}>
                         <div className="w-full h-full rounded-full bg-matte-black flex items-center justify-center overflow-hidden">
                           {conv.profileImage ? (
@@ -338,8 +339,8 @@ const Chat = () => {
                   <div className={`max-w-[75%] ${isMe ? 'order-2' : 'order-1'}`}>
                     <div
                       className={`rounded-3xl px-4 py-2.5 ${isMe
-                          ? 'bg-deep-purple text-accent-beige'
-                          : 'bg-deep-purple/20 text-accent-beige'
+                        ? 'bg-deep-purple text-accent-beige'
+                        : 'bg-deep-purple/20 text-accent-beige'
                         }`}
                     >
                       <p className="text-sm leading-relaxed break-words">
@@ -398,8 +399,8 @@ const Chat = () => {
             type="submit"
             disabled={!input.trim()}
             className={`p-2.5 rounded-full transition-all flex-shrink-0 ${input.trim()
-                ? 'bg-deep-purple hover:bg-deep-purple/80 text-accent-beige'
-                : 'bg-deep-purple/20 text-accent-beige/40'
+              ? 'bg-deep-purple hover:bg-deep-purple/80 text-accent-beige'
+              : 'bg-deep-purple/20 text-accent-beige/40'
               }`}
           >
             <Send size={20} />
