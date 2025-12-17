@@ -12,8 +12,19 @@ import feedRoutes from './routes/feedRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import balanceRoutes from './routes/balanceRoutes.js';
 import oauthRoutes from './routes/oauthRoutes.js';
+import aiRoutes from './routes/aiRoutes.js';
 
 dotenv.config();
+
+// Check for required Cloudinary environment variables
+const requiredEnvVars = ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'];
+const missingEnvVars = requiredEnvVars.filter(key => !process.env[key]);
+
+if (missingEnvVars.length > 0) {
+  console.warn('\x1b[33m%s\x1b[0m', '⚠️  WARNING: Missing Cloudinary configuration. Video/Image uploads will fail.');
+  console.warn('\x1b[33m%s\x1b[0m', `   Missing variables: ${missingEnvVars.join(', ')}`);
+  console.warn('\x1b[33m%s\x1b[0m', '   Please add them to your server/.env file.');
+}
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -56,6 +67,7 @@ app.use('/api/auth', oauthRoutes);
 app.use('/api/feed', feedRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/balance', balanceRoutes);
+app.use('/api/ai', aiRoutes);
 import notificationRoutes from './routes/notificationRoutes.js';
 app.use('/api/notifications', notificationRoutes);
 

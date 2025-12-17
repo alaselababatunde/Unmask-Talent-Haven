@@ -42,7 +42,7 @@ export const createPost = async (req, res) => {
     const { caption, tags, category, mediaType } = req.body;
 
     // Validate media type
-    const validMediaTypes = ['video', 'audio', 'text', 'sign-language'];
+    const validMediaTypes = ['video', 'audio', 'text', 'sign-language', 'image'];
     if (!validMediaTypes.includes(mediaType)) {
       return res.status(400).json({ message: 'Invalid media type' });
     }

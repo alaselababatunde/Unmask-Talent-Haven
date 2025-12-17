@@ -3,12 +3,13 @@ import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import Navbar from '../components/Navbar';
+import GenerateImage from '../components/GenerateImage';
 import { useAuth } from '../context/AuthContext';
-import { Upload as UploadIcon, Video, Music, FileText, Languages, X, AlertCircle } from 'lucide-react';
+import { Upload as UploadIcon, Video, Music, FileText, Languages, X, AlertCircle, Sparkles } from 'lucide-react';
 
 const Upload = () => {
   const { user } = useAuth();
-  const [mediaType, setMediaType] = useState<'video' | 'audio' | 'text' | 'sign-language'>('video');
+  const [mediaType, setMediaType] = useState<'video' | 'audio' | 'text' | 'sign-language' | 'ai-art'>('video');
   const [file, setFile] = useState<File | null>(null);
   const [caption, setCaption] = useState('');
   const [tags, setTags] = useState('');
@@ -189,6 +190,7 @@ const Upload = () => {
                 { type: 'audio' as const, icon: Music, label: 'Audio', desc: 'MP3, WAV' },
                 { type: 'text' as const, icon: FileText, label: 'Poetry', desc: 'Written Art' },
                 { type: 'sign-language' as const, icon: Languages, label: 'Sign', desc: 'Visual Lang' },
+                { type: 'ai-art' as const, icon: Sparkles, label: 'AI Art', desc: 'Generate' },
               ].map(({ type, icon: Icon, label, desc }) => (
                 <button
                   key={type}
@@ -217,185 +219,231 @@ const Upload = () => {
             </div>
           </div>
 
-          {/* File Upload or Text Input */}
-          <div className="animate-fade-in">
-            {mediaType === 'text' ? (
-              <div>
-                <label className="block text-accent-beige/90 mb-2 text-lg font-bold">Your Masterpiece</label>
-                <div className="relative">
-                  <textarea
-                    value={textContent}
-                    onChange={(e) => setTextContent(e.target.value)}
-                    className="w-full h-64 p-6 bg-black/40 border border-white/10 rounded-2xl text-accent-beige placeholder:text-accent-beige/20 focus:outline-none focus:border-deep-purple focus:ring-1 focus:ring-deep-purple/50 transition-all resize-none text-lg leading-relaxed"
-                    placeholder="Pour your heart out here..."
-                    required
-                  />
-                  <div className="absolute bottom-4 right-4 text-xs text-accent-beige/40 bg-black/60 px-2 py-1 rounded-lg backdrop-blur-sm">
-                    {textContent.length} / 1000
+
+
+          {/* AI Generation Interface */}
+          {mediaType === 'ai-art' ? (
+            <GenerateImage />
+          ) : (
+            <>
+              {/* File Upload or Text Input */}
+              <div className="animate-fade-in">
+                {mediaType === 'text' ? (
+                  <div>
+                    <label className="block text-accent-beige/90 mb-2 text-lg font-bold">Your Masterpiece</label>
+                    <div className="relative">
+                      <textarea
+                        value={textContent}
+                        onChange={(e) => setTextContent(e.target.value)}
+                        className="w-full h-64 p-6 bg-black/40 border border-white/10 rounded-2xl text-accent-beige placeholder:text-accent-beige/20 focus:outline-none focus:border-deep-purple focus:ring-1 focus:ring-deep-purple/50 transition-all resize-none text-lg leading-relaxed"
+                        placeholder="Pour your heart out here..."
+                        required
+                      />
+                      <div className="absolute bottom-4 right-4 text-xs text-accent-beige/40 bg-black/60 px-2 py-1 rounded-lg backdrop-blur-sm">
+                        {textContent.length} / 1000
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-accent-beige/90 mb-2 text-lg font-bold">
+                      Upload File
+                    </label>
+                    <div className="relative group">
+                      <input
+                        type="file"
+                        accept={
+                          mediaType === 'video' || mediaType === 'sign-language'
+                            ? 'video/mp4,video/webm,video/quicktime'
+                            : 'audio/mpeg,audio/wav,audio/mp3'
+                        }
+                        onChange={handleFileChange}
+                        className="hidden"
+                        id="file-upload"
+                        required={!file}
+                      />
+                      <label
+                        htmlFor="file-upload"
+                        className={`flex flex-col items-center justify-center w-full min-h-[16rem] border-2 border-dashed rounded-3xl cursor-pointer transition-all duration-300 overflow-hidden relative ${file
+                          ? 'border-green-500/50 bg-black/40'
+                          : 'border-white/10 hover:border-deep-purple hover:bg-deep-purple/5'
+                          }`}
+                      >
+                        {file ? (
+                          <div className="w-full h-full flex flex-col items-center justify-center p-4">
+                            {/* Preview Section */}
+                            <div className="w-full max-h-[400px] mb-4 rounded-xl overflow-hidden bg-black/50 shadow-2xl border border-white/5">
+                              {(mediaType === 'video' || mediaType === 'sign-language') ? (
+                                <video
+                                  src={URL.createObjectURL(file)}
+                                  controls
+                                  className="w-full h-full object-contain max-h-[400px]"
+                                />
+                              ) : (
+                                <div className="p-8 flex flex-col items-center justify-center bg-gradient-to-br from-deep-purple/20 to-transparent w-full">
+                                  <div className="w-20 h-20 bg-deep-purple/20 rounded-full flex items-center justify-center mb-4 animate-pulse">
+                                    <Music size={40} className="text-deep-purple" />
+                                  </div>
+                                  <audio
+                                    src={URL.createObjectURL(file)}
+                                    controls
+                                    className="w-full max-w-md"
+                                  />
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="text-center animate-fade-in">
+                              <div className="flex items-center justify-center gap-2 text-green-400 mb-1">
+                                <div className="w-5 h-5 bg-green-500/20 rounded-full flex items-center justify-center">
+                                  <UploadIcon size={12} />
+                                </div>
+                                <p className="font-bold text-lg">Ready to Upload</p>
+                              </div>
+                              <p className="text-accent-beige/80 text-sm font-medium">{file.name}</p>
+                              <p className="text-accent-beige/40 text-xs mt-1">{(file.size / (1024 * 1024)).toFixed(2)} MB</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-center group-hover:scale-105 transition-transform duration-300 p-8">
+                            <div className="w-24 h-24 mx-auto bg-gradient-to-br from-deep-purple/10 to-transparent border border-white/5 text-deep-purple rounded-full flex items-center justify-center mb-6 group-hover:bg-deep-purple group-hover:text-white group-hover:shadow-[0_0_30px_rgba(147,51,234,0.3)] transition-all duration-500">
+                              <UploadIcon size={40} />
+                            </div>
+                            <p className="text-accent-beige font-bold text-2xl mb-2">Drop your file here</p>
+                            <p className="text-accent-beige/50 text-base mb-6">or click to browse your files</p>
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 text-xs text-accent-beige/40 border border-white/5 font-mono">
+                              {mediaType === 'video' || mediaType === 'sign-language'
+                                ? (
+                                  <>
+                                    <Video size={12} />
+                                    <span>Max 100MB • MP4, WEBM</span>
+                                  </>
+                                )
+                                : (
+                                  <>
+                                    <Music size={12} />
+                                    <span>Max 50MB • MP3, WAV</span>
+                                  </>
+                                )}
+                            </div>
+                          </div>
+                        )}
+                      </label>
+                      {file && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setFile(null);
+                          }}
+                          className="absolute top-4 right-4 p-2 bg-black/60 hover:bg-red-500/80 text-white/80 hover:text-white rounded-full backdrop-blur-md transition-all shadow-lg border border-white/10 z-10"
+                          title="Remove file"
+                        >
+                          <X size={20} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Caption */}
+                {mediaType !== 'text' && (
+                  <div>
+                    <label className="block text-accent-beige/90 mb-2 text-sm font-bold uppercase tracking-wider">Caption</label>
+                    <textarea
+                      value={caption}
+                      onChange={(e) => setCaption(e.target.value)}
+                      className="w-full h-32 p-4 bg-black/40 border border-white/10 rounded-2xl text-accent-beige placeholder:text-accent-beige/20 focus:outline-none focus:border-deep-purple focus:ring-1 focus:ring-deep-purple/50 transition-all resize-none"
+                      placeholder="Tell us about this..."
+                      maxLength={1000}
+                    />
+                  </div>
+                )}
+
+                <div className="space-y-6">
+                  {/* Tags */}
+                  <div>
+                    <label className="block text-accent-beige/90 mb-2 text-sm font-bold uppercase tracking-wider">Tags</label>
+                    <input
+                      type="text"
+                      value={tags}
+                      onChange={(e) => setTags(e.target.value)}
+                      className="w-full p-4 bg-black/40 border border-white/10 rounded-2xl text-accent-beige placeholder:text-accent-beige/20 focus:outline-none focus:border-deep-purple focus:ring-1 focus:ring-deep-purple/50 transition-all"
+                      placeholder="#talent #art #creative"
+                    />
+                  </div>
+
+                  {/* Category */}
+                  <div>
+                    <label className="block text-accent-beige/90 mb-2 text-sm font-bold uppercase tracking-wider">Category</label>
+                    <div className="relative">
+                      <select
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
+                        className="w-full p-4 bg-black/40 border border-white/10 rounded-2xl text-accent-beige focus:outline-none focus:border-deep-purple focus:ring-1 focus:ring-deep-purple/50 transition-all appearance-none cursor-pointer"
+                      >
+                        <option value="Dance">Dance</option>
+                        <option value="Music">Music</option>
+                        <option value="Art">Art</option>
+                        <option value="Acting">Acting</option>
+                        <option value="Poetry">Poetry</option>
+                        <option value="Comedy">Comedy</option>
+                        <option value="Other">Other</option>
+                      </select>
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-accent-beige/50">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M2 4L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            ) : (
-              <div>
-                <label className="block text-accent-beige/90 mb-2 text-lg font-bold">
-                  Upload File
-                </label>
-                <div className="relative group">
-                  <input
-                    type="file"
-                    accept={
-                      mediaType === 'video' || mediaType === 'sign-language'
-                        ? 'video/mp4,video/webm,video/quicktime'
-                        : 'audio/mpeg,audio/wav,audio/mp3'
-                    }
-                    onChange={handleFileChange}
-                    className="hidden"
-                    id="file-upload"
-                    required
-                  />
-                  <label
-                    htmlFor="file-upload"
-                    className={`flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-3xl cursor-pointer transition-all duration-300 ${file
-                      ? 'border-green-500/50 bg-green-500/5'
-                      : 'border-white/10 hover:border-deep-purple hover:bg-deep-purple/5'
-                      }`}
-                  >
-                    {file ? (
-                      <div className="text-center animate-fade-in">
-                        <div className="w-16 h-16 mx-auto bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mb-4">
-                          <UploadIcon size={32} />
-                        </div>
-                        <p className="text-green-400 font-bold text-lg mb-1">File Selected!</p>
-                        <p className="text-accent-beige/60 text-sm">{file.name}</p>
-                        <p className="text-accent-beige/40 text-xs mt-1">{(file.size / (1024 * 1024)).toFixed(2)} MB</p>
-                      </div>
-                    ) : (
-                      <div className="text-center group-hover:scale-105 transition-transform duration-300">
-                        <div className="w-20 h-20 mx-auto bg-deep-purple/10 text-deep-purple rounded-full flex items-center justify-center mb-4 group-hover:bg-deep-purple group-hover:text-white transition-colors">
-                          <UploadIcon size={40} />
-                        </div>
-                        <p className="text-accent-beige font-bold text-xl mb-2">Drop your file here</p>
-                        <p className="text-accent-beige/50 text-sm">or click to browse</p>
-                        <div className="mt-4 inline-block px-4 py-1 rounded-full bg-white/5 text-xs text-accent-beige/40 border border-white/5">
-                          {mediaType === 'video' || mediaType === 'sign-language'
-                            ? 'Max 100MB • MP4, WEBM'
-                            : 'Max 50MB • MP3, WAV'}
-                        </div>
-                      </div>
-                    )}
-                  </label>
-                  {file && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setFile(null);
-                      }}
-                      className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-red-500/20 text-white/60 hover:text-red-400 rounded-full backdrop-blur-sm transition-all"
-                    >
-                      <X size={20} />
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Caption */}
-            {mediaType !== 'text' && (
-              <div>
-                <label className="block text-accent-beige/90 mb-2 text-sm font-bold uppercase tracking-wider">Caption</label>
-                <textarea
-                  value={caption}
-                  onChange={(e) => setCaption(e.target.value)}
-                  className="w-full h-32 p-4 bg-black/40 border border-white/10 rounded-2xl text-accent-beige placeholder:text-accent-beige/20 focus:outline-none focus:border-deep-purple focus:ring-1 focus:ring-deep-purple/50 transition-all resize-none"
-                  placeholder="Tell us about this..."
-                  maxLength={1000}
-                />
-              </div>
-            )}
-
-            <div className="space-y-6">
-              {/* Tags */}
-              <div>
-                <label className="block text-accent-beige/90 mb-2 text-sm font-bold uppercase tracking-wider">Tags</label>
-                <input
-                  type="text"
-                  value={tags}
-                  onChange={(e) => setTags(e.target.value)}
-                  className="w-full p-4 bg-black/40 border border-white/10 rounded-2xl text-accent-beige placeholder:text-accent-beige/20 focus:outline-none focus:border-deep-purple focus:ring-1 focus:ring-deep-purple/50 transition-all"
-                  placeholder="#talent #art #creative"
-                />
-              </div>
-
-              {/* Category */}
-              <div>
-                <label className="block text-accent-beige/90 mb-2 text-sm font-bold uppercase tracking-wider">Category</label>
-                <div className="relative">
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full p-4 bg-black/40 border border-white/10 rounded-2xl text-accent-beige focus:outline-none focus:border-deep-purple focus:ring-1 focus:ring-deep-purple/50 transition-all appearance-none cursor-pointer"
-                  >
-                    <option value="Dance">Dance</option>
-                    <option value="Music">Music</option>
-                    <option value="Art">Art</option>
-                    <option value="Acting">Acting</option>
-                    <option value="Poetry">Poetry</option>
-                    <option value="Comedy">Comedy</option>
-                    <option value="Other">Other</option>
-                  </select>
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-accent-beige/50">
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M2 4L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
+              {/* Upload Progress */}
+              {uploading && uploadProgress > 0 && (
+                <div className="bg-deep-purple/10 border border-deep-purple/30 rounded-2xl p-6 animate-fade-in">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-white font-bold">Uploading your talent...</span>
+                    <span className="text-deep-purple font-mono font-bold">{uploadProgress}%</span>
                   </div>
+                  <div className="w-full bg-black/50 rounded-full h-3 overflow-hidden p-0.5 border border-white/5">
+                    <div
+                      className="bg-gradient-to-r from-deep-purple to-purple-400 h-full rounded-full transition-all duration-300 shadow-[0_0_10px_rgba(147,51,234,0.5)]"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                  <p className="text-center text-xs text-accent-beige/40 mt-2">Please don't close this window</p>
                 </div>
-              </div>
-            </div>
-          </div>
+              )}
 
-          {/* Upload Progress */}
-          {uploading && uploadProgress > 0 && (
-            <div className="bg-deep-purple/10 border border-deep-purple/30 rounded-2xl p-6 animate-fade-in">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-white font-bold">Uploading your talent...</span>
-                <span className="text-deep-purple font-mono font-bold">{uploadProgress}%</span>
-              </div>
-              <div className="w-full bg-black/50 rounded-full h-3 overflow-hidden p-0.5 border border-white/5">
-                <div
-                  className="bg-gradient-to-r from-deep-purple to-purple-400 h-full rounded-full transition-all duration-300 shadow-[0_0_10px_rgba(147,51,234,0.5)]"
-                  style={{ width: `${uploadProgress}%` }}
-                />
-              </div>
-              <p className="text-center text-xs text-accent-beige/40 mt-2">Please don't close this window</p>
-            </div>
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={uploading || !user || (!file && mediaType !== 'text') || (mediaType === 'text' && !textContent.trim())}
+                className="w-full py-5 bg-gradient-to-r from-deep-purple to-[#7B4B27] hover:brightness-110 text-white rounded-2xl font-bold text-lg shadow-lg shadow-deep-purple/20 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3"
+              >
+                {uploading ? (
+                  <>
+                    <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <UploadIcon size={24} />
+                    Share with the World
+                  </>
+                )}
+              </button>
+            </>
           )}
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={uploading || !user || (!file && mediaType !== 'text') || (mediaType === 'text' && !textContent.trim())}
-            className="w-full py-5 bg-gradient-to-r from-deep-purple to-[#7B4B27] hover:brightness-110 text-white rounded-2xl font-bold text-lg shadow-lg shadow-deep-purple/20 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3"
-          >
-            {uploading ? (
-              <>
-                <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
-                Processing...
-              </>
-            ) : (
-              <>
-                <UploadIcon size={24} />
-                Share with the World
-              </>
-            )}
-          </button>
         </form>
-      </div>
+      </div >
 
       <Navbar />
-    </div>
+    </div >
   );
 };
 

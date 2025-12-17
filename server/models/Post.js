@@ -8,7 +8,7 @@ const postSchema = new mongoose.Schema({
   },
   mediaType: {
     type: String,
-    enum: ['video', 'audio', 'text', 'sign-language'],
+    enum: ['video', 'audio', 'text', 'sign-language', 'image'],
     required: true,
   },
   mediaUrl: {

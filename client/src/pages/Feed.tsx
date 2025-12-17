@@ -542,7 +542,7 @@ const Feed = () => {
             </div>
           ))}
 
-          ))}
+
 
           {!singlePostId && displayPosts.length === 0 && (
             <div className="snap-start h-[calc(100vh-80px)] w-full flex flex-col items-center justify-center text-center p-8">
