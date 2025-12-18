@@ -5,7 +5,7 @@ import api from '../api';
 import Navbar from '../components/Navbar';
 
 import { useAuth } from '../context/AuthContext';
-import { Upload as UploadIcon, Video, Music, FileText, Languages, X, AlertCircle, Sparkles } from 'lucide-react';
+import { Upload as UploadIcon, Video, Music, FileText, Languages, X, AlertCircle } from 'lucide-react';
 
 const Upload = () => {
   const { user } = useAuth();
