@@ -9,10 +9,12 @@ export const getFeed = async (req, res) => {
       filter.mediaType = req.query.mediaType;
     }
 
+    console.log('getFeed filter:', filter);
     const posts = await Post.find(filter)
       .populate('user', '_id username profileImage isLive')
       .sort({ createdAt: -1 })
       .limit(20);
+    console.log(`getFeed found ${posts.length} posts`);
 
     res.json(posts);
   } catch (error) {

@@ -12,7 +12,7 @@ import feedRoutes from './routes/feedRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import balanceRoutes from './routes/balanceRoutes.js';
 import oauthRoutes from './routes/oauthRoutes.js';
-import aiRoutes from './routes/aiRoutes.js';
+
 
 dotenv.config();
 
@@ -67,7 +67,7 @@ app.use('/api/auth', oauthRoutes);
 app.use('/api/feed', feedRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/balance', balanceRoutes);
-app.use('/api/ai', aiRoutes);
+
 import notificationRoutes from './routes/notificationRoutes.js';
 app.use('/api/notifications', notificationRoutes);
 
