@@ -1,12 +1,38 @@
 import { useState } from 'react';
 import Navbar from '../../components/Navbar';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Key, Smartphone } from 'lucide-react';
+import { ArrowLeft, Key, Smartphone, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { useMutation } from '@tanstack/react-query';
+import api from '../../api';
 
 const Security = () => {
     const navigate = useNavigate();
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
+    const [feedback, setFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+
+    const passwordMutation = useMutation({
+        mutationFn: async () => {
+            if (!currentPassword || !newPassword) throw new Error('Please fill all fields');
+            const response = await api.post('/auth/change-password', { currentPassword, newPassword });
+            return response.data;
+        },
+        onSuccess: () => {
+            setFeedback({ type: 'success', message: 'Password updated successfully' });
+            setCurrentPassword('');
+            setNewPassword('');
+            setTimeout(() => setFeedback(null), 5000);
+        },
+        onError: (error: any) => {
+            setFeedback({ type: 'error', message: error.response?.data?.message || error.message || 'Failed to update password' });
+            setTimeout(() => setFeedback(null), 5000);
+        }
+    });
+
+    const handle2FA = () => {
+        setFeedback({ type: 'error', message: 'Two-Factor Authentication is coming soon!' });
+        setTimeout(() => setFeedback(null), 3000);
+    };
 
     return (
         <div className="h-[100dvh] w-full bg-primary flex flex-col relative overflow-hidden">
@@ -55,9 +81,26 @@ const Security = () => {
                                     placeholder="••••••••"
                                 />
                             </div>
-                            <button className="w-full py-5 bg-neon-purple text-black rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-neon-purple/20 active:scale-95 transition-all">
-                                Update Password
+                            <button
+                                onClick={() => passwordMutation.mutate()}
+                                disabled={passwordMutation.isPending}
+                                className="w-full py-5 bg-neon-purple text-black rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-neon-purple/20 active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
+                            >
+                                {passwordMutation.isPending ? (
+                                    <>
+                                        <Loader2 size={16} className="animate-spin" />
+                                        Updating...
+                                    </>
+                                ) : 'Update Password'}
                             </button>
+
+                            {feedback && (
+                                <div className={`p-4 rounded-2xl flex items-center gap-3 text-[10px] font-black uppercase tracking-widest animate-scale-in ${feedback.type === 'success' ? 'bg-neon-purple/20 text-neon-purple' : 'bg-red-500/20 text-red-500'
+                                    }`}>
+                                    {feedback.type === 'success' ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
+                                    {feedback.message}
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -72,7 +115,10 @@ const Security = () => {
                                     <p className="text-[10px] text-white/40 font-black uppercase tracking-widest mt-1">Extra layer of security</p>
                                 </div>
                             </div>
-                            <button className="px-6 py-3 glass-button rounded-full text-xs font-black uppercase tracking-widest hover:bg-neon-blue hover:text-black transition-all">
+                            <button
+                                onClick={handle2FA}
+                                className="px-6 py-3 glass-button rounded-full text-xs font-black uppercase tracking-widest hover:bg-neon-blue hover:text-black transition-all"
+                            >
                                 Enable
                             </button>
                         </div>

@@ -1,13 +1,62 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Heart, MessageCircle, UserPlus } from 'lucide-react';
+import { ArrowLeft, Heart, MessageCircle, UserPlus, Loader2 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { useMutation } from '@tanstack/react-query';
+import api from '../../api';
 
 const Notifications = () => {
     const navigate = useNavigate();
-    const [likes, setLikes] = useState(true);
-    const [comments, setComments] = useState(true);
-    const [follows, setFollows] = useState(true);
+    const { user, refreshUser } = useAuth();
+    const [likes, setLikes] = useState(user?.settings?.notifications?.newLikes ?? true);
+    const [comments, setComments] = useState(user?.settings?.notifications?.newComments ?? true);
+    const [follows, setFollows] = useState(user?.settings?.notifications?.newFollowers ?? true);
+    const [feedback, setFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+
+    useEffect(() => {
+        if (user?.settings?.notifications) {
+            setLikes(user.settings.notifications.newLikes);
+            setComments(user.settings.notifications.newComments);
+            setFollows(user.settings.notifications.newFollowers);
+        }
+    }, [user]);
+
+    const mutation = useMutation({
+        mutationFn: async (newNotifSettings: any) => {
+            const response = await api.put('/auth/settings', {
+                settings: {
+                    notifications: newNotifSettings
+                }
+            });
+            return response.data;
+        },
+        onSuccess: () => {
+            setFeedback({ type: 'success', message: 'Notification preferences updated' });
+            refreshUser();
+            setTimeout(() => setFeedback(null), 3000);
+        },
+        onError: (error: any) => {
+            setFeedback({ type: 'error', message: error.response?.data?.message || 'Failed to update settings' });
+            setTimeout(() => setFeedback(null), 3000);
+        }
+    });
+
+    const handleToggle = (key: string, value: boolean) => {
+        const newNotifSettings = {
+            newLikes: key === 'likes' ? value : likes,
+            newComments: key === 'comments' ? value : comments,
+            newFollowers: key === 'follows' ? value : follows,
+            donations: user?.settings?.notifications?.donations ?? true,
+            system: user?.settings?.notifications?.system ?? true,
+        };
+
+        if (key === 'likes') setLikes(value);
+        if (key === 'comments') setComments(value);
+        if (key === 'follows') setFollows(value);
+
+        mutation.mutate(newNotifSettings);
+    };
 
     return (
         <div className="h-[100dvh] w-full bg-primary flex flex-col relative overflow-hidden">
@@ -38,7 +87,13 @@ const Notifications = () => {
                             </div>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer group">
-                            <input type="checkbox" checked={likes} onChange={(e) => setLikes(e.target.checked)} className="sr-only peer" />
+                            <input
+                                type="checkbox"
+                                checked={likes}
+                                onChange={(e) => handleToggle('likes', e.target.checked)}
+                                className="sr-only peer"
+                                disabled={mutation.isPending}
+                            />
                             <div className="w-14 h-8 bg-white/5 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white/20 after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-neon-purple peer-checked:after:bg-black peer-checked:after:shadow-lg peer-checked:after:shadow-neon-purple/50"></div>
                         </label>
                     </div>
@@ -54,7 +109,13 @@ const Notifications = () => {
                             </div>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer group">
-                            <input type="checkbox" checked={comments} onChange={(e) => setComments(e.target.checked)} className="sr-only peer" />
+                            <input
+                                type="checkbox"
+                                checked={comments}
+                                onChange={(e) => handleToggle('comments', e.target.checked)}
+                                className="sr-only peer"
+                                disabled={mutation.isPending}
+                            />
                             <div className="w-14 h-8 bg-white/5 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white/20 after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-neon-blue peer-checked:after:bg-black peer-checked:after:shadow-lg peer-checked:after:shadow-neon-blue/50"></div>
                         </label>
                     </div>
@@ -70,10 +131,30 @@ const Notifications = () => {
                             </div>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer group">
-                            <input type="checkbox" checked={follows} onChange={(e) => setFollows(e.target.checked)} className="sr-only peer" />
+                            <input
+                                type="checkbox"
+                                checked={follows}
+                                onChange={(e) => handleToggle('follows', e.target.checked)}
+                                className="sr-only peer"
+                                disabled={mutation.isPending}
+                            />
                             <div className="w-14 h-8 bg-white/5 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white/20 after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-white/20 peer-checked:after:bg-black"></div>
                         </label>
                     </div>
+
+                    {feedback && (
+                        <div className={`p-4 rounded-2xl text-center text-xs font-black uppercase tracking-widest animate-scale-in ${feedback.type === 'success' ? 'bg-neon-purple/20 text-neon-purple' : 'bg-red-500/20 text-red-500'
+                            }`}>
+                            {feedback.message}
+                        </div>
+                    )}
+
+                    {mutation.isPending && (
+                        <div className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/20">
+                            <Loader2 size={14} className="animate-spin" />
+                            Saving changes...
+                        </div>
+                    )}
                 </div>
             </div>
             <Navbar />

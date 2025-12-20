@@ -105,6 +105,33 @@ export const getRecommendedFeed = async (req, res) => {
   }
 };
 
+export const getFollowingFeed = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const user = await User.findById(userId).select('following').lean();
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const followingIds = user.following;
+    const filter = {
+      isArchived: false,
+      user: { $in: followingIds }
+    };
+
+    if (req.query.mediaType) {
+      filter.mediaType = req.query.mediaType;
+    }
+
+    const posts = await Post.find(filter)
+      .populate('user', '_id username profileImage isLive')
+      .sort({ createdAt: -1 })
+      .limit(20);
+
+    res.json(posts);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const getFeed = async (req, res) => {
   try {
     const filter = { isArchived: false };
@@ -337,35 +364,51 @@ export const commentPost = async (req, res) => {
 
 export const searchContent = async (req, res) => {
   try {
-    const { q } = req.query;
+    const { q, onlyMine } = req.query;
+    const currentUserId = req.user?._id;
+
     if (!q || !q.trim()) {
-      return res.json([]);
+      return res.json({ users: [], posts: [] });
     }
 
-    // Search for users matching the query
-    const users = await User.find({
-      $or: [
-        { username: { $regex: q, $options: 'i' } },
-        { firstName: { $regex: q, $options: 'i' } },
-        { lastName: { $regex: q, $options: 'i' } }
-      ]
-    }).select('_id');
+    // 1. Search for Users (Creators)
+    let users = [];
+    if (!onlyMine) {
+      users = await User.find({
+        $or: [
+          { username: { $regex: q, $options: 'i' } },
+          { firstName: { $regex: q, $options: 'i' } },
+          { lastName: { $regex: q, $options: 'i' } }
+        ]
+      })
+        .select('_id username profileImage bio followers isLive')
+        .limit(10)
+        .lean();
+    }
 
-    const userIds = users.map(user => user._id);
-
-    // Search for posts matching caption/tags OR belonging to found users
-    const posts = await Post.find({
+    // 2. Search for Posts (Content)
+    const postFilter = {
       $or: [
         { caption: { $regex: q, $options: 'i' } },
-        { tags: { $regex: q, $options: 'i' } },
-        { user: { $in: userIds } }
-      ],
-    })
+        { tags: { $regex: q, $options: 'i' } }
+      ]
+    };
+
+    if (onlyMine && currentUserId) {
+      postFilter.user = currentUserId;
+    } else {
+      // If not only mine, also include posts from users found by name
+      const userIds = users.map(u => u._id);
+      postFilter.$or.push({ user: { $in: userIds } });
+    }
+
+    const posts = await Post.find(postFilter)
       .populate('user', '_id username profileImage isLive')
       .sort({ createdAt: -1 })
-      .limit(20);
+      .limit(20)
+      .lean();
 
-    res.json(posts);
+    res.json({ users, posts });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

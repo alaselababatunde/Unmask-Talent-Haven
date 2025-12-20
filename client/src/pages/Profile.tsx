@@ -36,7 +36,7 @@ interface UserData {
 
 const Profile = () => {
   const { id } = useParams();
-  const { user: currentUser, login, signup } = useAuth();
+  const { user: currentUser, login, signup, updateFollowing } = useAuth();
   const navigate = useNavigate();
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const [editFirstName, setEditFirstName] = useState('');
@@ -104,6 +104,12 @@ const Profile = () => {
       const response = await api.post(`/user/${userId}/follow`);
       return response.data;
     },
+    onMutate: () => {
+      if (userId) updateFollowing(userId, true);
+    },
+    onError: () => {
+      if (userId) updateFollowing(userId, false);
+    },
     onSuccess: () => {
       refetch();
     },
@@ -113,6 +119,12 @@ const Profile = () => {
     mutationFn: async () => {
       const response = await api.post(`/user/${userId}/unfollow`);
       return response.data;
+    },
+    onMutate: () => {
+      if (userId) updateFollowing(userId, false);
+    },
+    onError: () => {
+      if (userId) updateFollowing(userId, true);
     },
     onSuccess: () => {
       refetch();
@@ -398,11 +410,17 @@ const Profile = () => {
                     <p className="text-2xl font-black">{data.posts.length}</p>
                     <p className="text-white/30 text-xs font-bold uppercase tracking-widest">Posts</p>
                   </div>
-                  <div className="text-center md:text-left">
+                  <div
+                    className="text-center md:text-left cursor-pointer hover:opacity-70 transition-opacity"
+                    onClick={() => navigate(`/profile/${userId}/follows?tab=followers`)}
+                  >
                     <p className="text-2xl font-black">{data.user.followers.length}</p>
                     <p className="text-white/30 text-xs font-bold uppercase tracking-widest">Followers</p>
                   </div>
-                  <div className="text-center md:text-left">
+                  <div
+                    className="text-center md:text-left cursor-pointer hover:opacity-70 transition-opacity"
+                    onClick={() => navigate(`/profile/${userId}/follows?tab=following`)}
+                  >
                     <p className="text-2xl font-black">{data.user.following.length}</p>
                     <p className="text-white/30 text-xs font-bold uppercase tracking-widest">Following</p>
                   </div>

@@ -45,8 +45,6 @@ const Settings = () => {
       items: [
         { icon: Bell, label: 'Notifications', onClick: () => navigate('/settings/notifications'), color: 'text-neon-purple' },
         { icon: Radio, label: 'Go Live', onClick: () => navigate('/live'), color: 'text-red-500' },
-        { icon: Music, label: 'Music Library', onClick: () => navigate('/settings/music'), color: 'text-neon-blue' },
-        { icon: Clock, label: 'Activity Center', onClick: () => navigate('/settings/activity'), color: 'text-white/40' },
       ],
     },
   ];

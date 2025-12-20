@@ -82,6 +82,30 @@ export const followUser = async (req, res) => {
       return res.status(400).json({ message: 'Already following' });
     }
 
+    if (target.settings?.isPrivate) {
+      if (target.followRequests.includes(userId)) {
+        return res.status(400).json({ message: 'Follow request already sent' });
+      }
+      target.followRequests.push(userId);
+      await target.save();
+
+      // create notification
+      try {
+        const notif = await Notification.create({
+          user: target._id,
+          from: user._id,
+          type: 'follow_request',
+          message: `${user.username} requested to follow you`,
+        });
+        const io = req.app.get('io');
+        if (io) io.to(`user:${target._id}`).emit('notification', notif);
+      } catch (e) {
+        console.error('Notification error', e.message || e);
+      }
+
+      return res.json({ message: 'Follow request sent' });
+    }
+
     target.followers.push(userId);
     user.following.push(targetId);
 
@@ -105,6 +129,69 @@ export const followUser = async (req, res) => {
     }
 
     res.json({ message: 'Followed successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const acceptFollowRequest = async (req, res) => {
+  try {
+    const requesterId = req.params.id;
+    const userId = req.user._id;
+
+    const user = await User.findById(userId);
+    const requester = await User.findById(requesterId);
+
+    if (!user || !requester) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (!user.followRequests.includes(requesterId)) {
+      return res.status(400).json({ message: 'No follow request found' });
+    }
+
+    // Remove from requests
+    user.followRequests = user.followRequests.filter(id => id.toString() !== requesterId.toString());
+
+    // Add to followers/following
+    user.followers.push(requesterId);
+    requester.following.push(userId);
+
+    await user.save();
+    await requester.save();
+
+    // create notification
+    try {
+      const notif = await Notification.create({
+        user: requester._id,
+        from: user._id,
+        type: 'follow_accept',
+        message: `${user.username} accepted your follow request`,
+      });
+      const io = req.app.get('io');
+      if (io) io.to(`user:${requester._id}`).emit('notification', notif);
+    } catch (e) {
+      console.error('Notification error', e.message || e);
+    }
+
+    res.json({ message: 'Follow request accepted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const declineFollowRequest = async (req, res) => {
+  try {
+    const requesterId = req.params.id;
+    const userId = req.user._id;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.followRequests = user.followRequests.filter(id => id.toString() !== requesterId.toString());
+    await user.save();
+
+    res.json({ message: 'Follow request declined' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

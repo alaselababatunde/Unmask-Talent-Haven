@@ -1,13 +1,56 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Lock, Eye, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Lock, Eye, MessageCircle, Loader2 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { useMutation } from '@tanstack/react-query';
+import api from '../../api';
 
 const Privacy = () => {
     const navigate = useNavigate();
-    const [isPrivate, setIsPrivate] = useState(false);
-    const [allowComments, setAllowComments] = useState(true);
-    const [showActivity, setShowActivity] = useState(true);
+    const { user, refreshUser } = useAuth();
+    const [isPrivate, setIsPrivate] = useState(user?.settings?.isPrivate || false);
+    const [allowComments, setAllowComments] = useState(user?.settings?.allowComments || true);
+    const [showActivity, setShowActivity] = useState(user?.settings?.showActivity || true);
+    const [feedback, setFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+
+    useEffect(() => {
+        if (user?.settings) {
+            setIsPrivate(user.settings.isPrivate);
+            setAllowComments(user.settings.allowComments);
+            setShowActivity(user.settings.showActivity);
+        }
+    }, [user]);
+
+    const mutation = useMutation({
+        mutationFn: async (newSettings: any) => {
+            const response = await api.put('/auth/settings', { settings: newSettings });
+            return response.data;
+        },
+        onSuccess: () => {
+            setFeedback({ type: 'success', message: 'Privacy settings updated' });
+            refreshUser();
+            setTimeout(() => setFeedback(null), 3000);
+        },
+        onError: (error: any) => {
+            setFeedback({ type: 'error', message: error.response?.data?.message || 'Failed to update settings' });
+            setTimeout(() => setFeedback(null), 3000);
+        }
+    });
+
+    const handleToggle = (key: string, value: boolean) => {
+        const newSettings = {
+            isPrivate: key === 'isPrivate' ? value : isPrivate,
+            allowComments: key === 'allowComments' ? value : allowComments,
+            showActivity: key === 'showActivity' ? value : showActivity,
+        };
+
+        if (key === 'isPrivate') setIsPrivate(value);
+        if (key === 'allowComments') setAllowComments(value);
+        if (key === 'showActivity') setShowActivity(value);
+
+        mutation.mutate(newSettings);
+    };
 
     return (
         <div className="h-[100dvh] w-full bg-primary flex flex-col relative overflow-hidden">
@@ -39,7 +82,13 @@ const Privacy = () => {
                                 </div>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer group">
-                                <input type="checkbox" checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} className="sr-only peer" />
+                                <input
+                                    type="checkbox"
+                                    checked={isPrivate}
+                                    onChange={(e) => handleToggle('isPrivate', e.target.checked)}
+                                    className="sr-only peer"
+                                    disabled={mutation.isPending}
+                                />
                                 <div className="w-14 h-8 bg-white/5 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white/20 after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-neon-purple peer-checked:after:bg-black peer-checked:after:shadow-lg peer-checked:after:shadow-neon-purple/50"></div>
                             </label>
                         </div>
@@ -57,7 +106,13 @@ const Privacy = () => {
                                 </div>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer group">
-                                <input type="checkbox" checked={allowComments} onChange={(e) => setAllowComments(e.target.checked)} className="sr-only peer" />
+                                <input
+                                    type="checkbox"
+                                    checked={allowComments}
+                                    onChange={(e) => handleToggle('allowComments', e.target.checked)}
+                                    className="sr-only peer"
+                                    disabled={mutation.isPending}
+                                />
                                 <div className="w-14 h-8 bg-white/5 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white/20 after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-neon-blue peer-checked:after:bg-black peer-checked:after:shadow-lg peer-checked:after:shadow-neon-blue/50"></div>
                             </label>
                         </div>
@@ -73,11 +128,31 @@ const Privacy = () => {
                                 </div>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer group">
-                                <input type="checkbox" checked={showActivity} onChange={(e) => setShowActivity(e.target.checked)} className="sr-only peer" />
+                                <input
+                                    type="checkbox"
+                                    checked={showActivity}
+                                    onChange={(e) => handleToggle('showActivity', e.target.checked)}
+                                    className="sr-only peer"
+                                    disabled={mutation.isPending}
+                                />
                                 <div className="w-14 h-8 bg-white/5 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white/20 after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-white/20 peer-checked:after:bg-black"></div>
                             </label>
                         </div>
                     </div>
+
+                    {feedback && (
+                        <div className={`p-4 rounded-2xl text-center text-xs font-black uppercase tracking-widest animate-scale-in ${feedback.type === 'success' ? 'bg-neon-purple/20 text-neon-purple' : 'bg-red-500/20 text-red-500'
+                            }`}>
+                            {feedback.message}
+                        </div>
+                    )}
+
+                    {mutation.isPending && (
+                        <div className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/20">
+                            <Loader2 size={14} className="animate-spin" />
+                            Saving changes...
+                        </div>
+                    )}
                 </div>
             </div>
             <Navbar />

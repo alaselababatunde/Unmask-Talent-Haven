@@ -3,7 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '../api';
 import Navbar from '../components/Navbar';
 import ReactPlayer from 'react-player';
-import { Heart, MessageCircle, Share2, Music, MoreVertical, Forward, X, Plus, Archive, Trash2, Edit, AlertCircle, Video as VideoIcon } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Music, MoreVertical, Forward, X, Plus, Check, Archive, Trash2, Edit, AlertCircle, Video as VideoIcon } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -38,6 +38,7 @@ const Feed = () => {
   const [searchParams] = useSearchParams();
   const singlePostId = searchParams.get('post');
   const { user: currentUser, updateFollowing } = useAuth();
+  const [activeTab, setActiveTab] = useState<'recommended' | 'following'>('recommended');
   const [playingIndex, setPlayingIndex] = useState(0);
   const playerRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [openCommentsPostId, setOpenCommentsPostId] = useState<string | null>(null);
@@ -55,10 +56,11 @@ const Feed = () => {
   const [editTags, setEditTags] = useState('');
 
 
-  const { data: posts = [], refetch } = useQuery<Post[]>({
-    queryKey: ['feed'],
+  const { data: posts = [], refetch, isLoading } = useQuery<Post[]>({
+    queryKey: ['feed', activeTab],
     queryFn: async () => {
-      const response = await api.get('/feed/recommended', { params: { mediaType: 'video' } });
+      const endpoint = activeTab === 'following' ? '/feed/following' : '/feed/recommended';
+      const response = await api.get(endpoint, { params: { mediaType: 'video' } });
       return response.data;
     },
     enabled: !singlePostId,
@@ -86,20 +88,17 @@ const Feed = () => {
     },
   });
 
-  const followMutation = useMutation<string, any, string>({
-    mutationFn: async (targetId: string) => {
-      const res = await api.post(`/user/${targetId}/follow`);
+  const followMutation = useMutation({
+    mutationFn: async ({ targetId, isFollowing }: { targetId: string, isFollowing: boolean }) => {
+      const endpoint = isFollowing ? `/user/${targetId}/unfollow` : `/user/${targetId}/follow`;
+      const res = await api.post(endpoint);
       return res.data;
     },
-    onMutate: async (targetId: string) => {
-      // optimistic update
-      try {
-        updateFollowing(targetId, true);
-      } catch (e) { }
+    onMutate: async ({ targetId, isFollowing }) => {
+      updateFollowing(targetId, !isFollowing);
     },
-    onError: (_, targetId) => {
-      // rollback
-      try { updateFollowing(targetId, false); } catch (e) { }
+    onError: (_, { targetId, isFollowing }) => {
+      updateFollowing(targetId, isFollowing);
     },
     onSuccess: () => {
       refetch();
@@ -238,27 +237,46 @@ const Feed = () => {
       {/* Floating Header */}
       <div className="fixed top-0 left-0 right-0 z-50 flex justify-center items-center py-8 px-6 pointer-events-none">
         <div className="flex gap-8 pointer-events-auto">
-          {['For You', 'Following'].map((tab) => (
-            <button
-              key={tab}
-              className={`text-lg font-bold transition-all duration-300 ${tab === 'For You' ? 'text-white scale-110' : 'text-white/40 hover:text-white/60'
-                }`}
-            >
-              {tab}
-            </button>
-          ))}
+          <button
+            onClick={() => setActiveTab('recommended')}
+            className={`text-lg font-bold transition-all duration-300 ${activeTab === 'recommended' ? 'text-white scale-110' : 'text-white/40 hover:text-white/60'}`}
+          >
+            For You
+          </button>
+          <button
+            onClick={() => setActiveTab('following')}
+            className={`text-lg font-bold transition-all duration-300 ${activeTab === 'following' ? 'text-white scale-110' : 'text-white/40 hover:text-white/60'}`}
+          >
+            Following
+          </button>
         </div>
       </div>
 
       {/* Feed Container */}
       <div className="h-full w-full overflow-y-scroll snap-y snap-mandatory no-scrollbar">
-        {displayPosts.length === 0 ? (
-          <div className="h-full w-full flex flex-col items-center justify-center text-center p-10 opacity-20">
+        {isLoading ? (
+          <div className="h-full w-full flex items-center justify-center">
+            <div className="w-12 h-12 border-4 border-neon-purple/20 border-t-neon-purple rounded-full animate-spin" />
+          </div>
+        ) : displayPosts.length === 0 ? (
+          <div className="h-full w-full flex flex-col items-center justify-center text-center p-10">
             <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center mb-6">
-              <VideoIcon size={40} />
+              <VideoIcon size={40} className="text-white/20" />
             </div>
-            <p className="text-xl font-bold">No talent discovered yet</p>
-            <p className="text-sm mt-2">Follow more creators to fill your feed</p>
+            <p className="text-xl font-bold">
+              {activeTab === 'following' ? "You're not following anyone yet." : "No talent discovered yet"}
+            </p>
+            <p className="text-sm mt-2 text-white/40">
+              {activeTab === 'following' ? "Follow more creators to see their latest talent here." : "Follow more creators to fill your feed"}
+            </p>
+            {activeTab === 'following' && (
+              <button
+                onClick={() => setActiveTab('recommended')}
+                className="mt-8 px-8 py-3 bg-neon-purple text-black rounded-2xl font-bold shadow-lg shadow-neon-purple/20 active:scale-95 transition-all"
+              >
+                Discover Creators
+              </button>
+            )}
           </div>
         ) : (
           displayPosts.map((post: Post, index: number) => (
@@ -341,131 +359,144 @@ const Feed = () => {
                 )}
               </div>
 
-              {/* Right Side Actions */}
-              <div className="absolute right-4 bottom-32 flex flex-col items-center gap-6 z-20">
+              {/* Right Side Actions - Thumb Zone Optimized */}
+              <div className="absolute right-4 bottom-32 flex flex-col items-center gap-8 z-20">
                 {/* Creator Avatar */}
-                <div className="relative mb-2">
+                <div className="relative mb-4">
                   <button
                     onClick={() => navigate(`/profile/${post.user._id}`)}
-                    className="w-14 h-14 rounded-full border-2 border-white p-0.5 overflow-hidden shadow-xl"
+                    className="w-16 h-16 rounded-full border-2 border-white p-0.5 overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.5)] active:scale-90 transition-transform"
                   >
                     {post.user.profileImage ? (
                       <img src={post.user.profileImage} alt={post.user.username} className="w-full h-full rounded-full object-cover" />
                     ) : (
-                      <div className="w-full h-full rounded-full bg-neon-purple flex items-center justify-center text-black font-bold text-xl">
+                      <div className="w-full h-full rounded-full bg-gradient-to-br from-neon-purple to-neon-blue flex items-center justify-center text-black font-black text-xl">
                         {post.user.username[0].toUpperCase()}
                       </div>
                     )}
                   </button>
                   {currentUser?.id !== post.user._id && (
                     <button
-                      onClick={() => followMutation.mutate(post.user._id)}
-                      className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-neon-purple text-black rounded-full p-1 shadow-lg hover:scale-110 transition-transform"
+                      onClick={() => followMutation.mutate({
+                        targetId: post.user._id,
+                        isFollowing: currentUser?.following?.some((f: any) => f._id === post.user._id) || false
+                      })}
+                      className={`absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full p-1.5 shadow-lg hover:scale-110 active:scale-90 transition-all ${currentUser?.following?.some((f: any) => f._id === post.user._id)
+                          ? 'bg-white text-black'
+                          : 'bg-neon-purple text-black'
+                        }`}
                     >
-                      <Plus size={14} strokeWidth={3} />
+                      {currentUser?.following?.some((f: any) => f._id === post.user._id) ? (
+                        <Check size={16} strokeWidth={4} />
+                      ) : (
+                        <Plus size={16} strokeWidth={4} />
+                      )}
                     </button>
                   )}
                 </div>
 
-                {/* Like */}
-                <button
-                  onClick={() => handleLike(post._id)}
-                  className="flex flex-col items-center gap-1 group"
-                >
-                  <div className={`p-3 rounded-full glass-button ${post.likes.includes(currentUser?.id || '') ? 'text-neon-purple' : 'text-white'}`}>
-                    <Heart className={`w-7 h-7 ${post.likes.includes(currentUser?.id || '') ? 'fill-current' : ''}`} />
-                  </div>
-                  <span className="text-xs font-bold drop-shadow-md">{post.likes.length}</span>
-                </button>
-
-                {/* Comment */}
-                <button
-                  onClick={() => setOpenCommentsPostId(post._id)}
-                  className="flex flex-col items-center gap-1 group"
-                >
-                  <div className="p-3 rounded-full glass-button text-white">
-                    <MessageCircle className="w-7 h-7" />
-                  </div>
-                  <span className="text-xs font-bold drop-shadow-md">{post.comments.length}</span>
-                </button>
-
-                {/* Share */}
-                <button
-                  onClick={() => {
-                    if (navigator.share) {
-                      navigator.share({ title: post.caption, url: window.location.href });
-                    } else {
-                      navigator.clipboard.writeText(window.location.href);
-                    }
-                  }}
-                  className="flex flex-col items-center gap-1 group"
-                >
-                  <div className="p-3 rounded-full glass-button text-white">
-                    <Share2 className="w-7 h-7" />
-                  </div>
-                  <span className="text-xs font-bold drop-shadow-md">Share</span>
-                </button>
-
-                {/* More */}
-                <div className="relative post-menu">
+                {/* Action Stack with Glass Backdrop */}
+                <div className="flex flex-col items-center gap-6 p-2 rounded-full bg-black/20 backdrop-blur-md border border-white/5">
+                  {/* Like */}
                   <button
-                    onClick={() => setPostMenuOpen(postMenuOpen === post._id ? null : post._id)}
-                    className="p-3 rounded-full glass-button text-white"
+                    onClick={() => handleLike(post._id)}
+                    className="flex flex-col items-center gap-1.5 group active:scale-90 transition-transform"
                   >
-                    <MoreVertical className="w-7 h-7" />
+                    <div className={`p-4 rounded-full glass-button ${post.likes.includes(currentUser?.id || '') ? 'text-neon-purple bg-neon-purple/10' : 'text-white'}`}>
+                      <Heart className={`w-8 h-8 ${post.likes.includes(currentUser?.id || '') ? 'fill-current' : ''}`} />
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-widest drop-shadow-md">{post.likes.length}</span>
                   </button>
 
-                  {postMenuOpen === post._id && (
-                    <div className="absolute right-0 bottom-full mb-4 w-56 glass-panel rounded-3xl border-white/10 shadow-2xl overflow-hidden animate-scale-in origin-bottom-right z-[100]">
-                      {post.user._id === currentUser?.id ? (
-                        <>
-                          <button
-                            onClick={() => {
-                              setIsEditing(post);
-                              setEditCaption(post.caption);
-                              setEditTags(post.tags.join(', '));
-                              setPostMenuOpen(null);
-                            }}
-                            className="w-full flex items-center gap-4 px-6 py-4 hover:bg-white/5 transition-colors text-white font-bold"
-                          >
-                            <Edit size={18} className="text-neon-blue" />
-                            <span>Edit Post</span>
-                          </button>
-                          <button
-                            onClick={() => archiveMutation.mutate(post._id)}
-                            className="w-full flex items-center gap-4 px-6 py-4 hover:bg-white/5 transition-colors text-white font-bold"
-                          >
-                            <Archive size={18} className="text-neon-purple" />
-                            <span>{post.isArchived ? 'Unarchive' : 'Archive'}</span>
-                          </button>
-                          <button
-                            onClick={() => setIsDeleting(post._id)}
-                            className="w-full flex items-center gap-4 px-6 py-4 hover:bg-white/5 transition-colors text-red-500 font-bold"
-                          >
-                            <Trash2 size={18} />
-                            <span>Delete</span>
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => handleNotInterested(post._id)}
-                            className="w-full flex items-center gap-4 px-6 py-4 hover:bg-white/5 transition-colors text-white font-bold"
-                          >
-                            <AlertCircle size={18} className="text-white/40" />
-                            <span>Not Interested</span>
-                          </button>
-                          <button
-                            onClick={() => handleReport(post._id)}
-                            className="w-full flex items-center gap-4 px-6 py-4 hover:bg-white/5 transition-colors text-red-500 font-bold"
-                          >
-                            <AlertCircle size={18} />
-                            <span>Report</span>
-                          </button>
-                        </>
-                      )}
+                  {/* Comment */}
+                  <button
+                    onClick={() => setOpenCommentsPostId(post._id)}
+                    className="flex flex-col items-center gap-1.5 group active:scale-90 transition-transform"
+                  >
+                    <div className="p-4 rounded-full glass-button text-white">
+                      <MessageCircle className="w-8 h-8" />
                     </div>
-                  )}
+                    <span className="text-[10px] font-black uppercase tracking-widest drop-shadow-md">{post.comments.length}</span>
+                  </button>
+
+                  {/* Share */}
+                  <button
+                    onClick={() => {
+                      if (navigator.share) {
+                        navigator.share({ title: post.caption, url: window.location.href });
+                      } else {
+                        navigator.clipboard.writeText(window.location.href);
+                      }
+                    }}
+                    className="flex flex-col items-center gap-1.5 group active:scale-90 transition-transform"
+                  >
+                    <div className="p-4 rounded-full glass-button text-white">
+                      <Share2 className="w-8 h-8" />
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-widest drop-shadow-md">Share</span>
+                  </button>
+
+                  {/* More */}
+                  <div className="relative post-menu">
+                    <button
+                      onClick={() => setPostMenuOpen(postMenuOpen === post._id ? null : post._id)}
+                      className="p-4 rounded-full glass-button text-white active:scale-90 transition-transform"
+                    >
+                      <MoreVertical className="w-8 h-8" />
+                    </button>
+
+                    {postMenuOpen === post._id && (
+                      <div className="absolute right-0 bottom-full mb-6 w-64 glass-panel rounded-[2.5rem] border-white/10 shadow-2xl overflow-hidden animate-scale-in origin-bottom-right z-[100]">
+                        {post.user._id === currentUser?.id ? (
+                          <>
+                            <button
+                              onClick={() => {
+                                setIsEditing(post);
+                                setEditCaption(post.caption);
+                                setEditTags(post.tags.join(', '));
+                                setPostMenuOpen(null);
+                              }}
+                              className="w-full flex items-center gap-4 px-8 py-5 hover:bg-white/5 transition-colors text-white font-bold"
+                            >
+                              <Edit size={20} className="text-neon-blue" />
+                              <span className="text-sm">Edit Post</span>
+                            </button>
+                            <button
+                              onClick={() => archiveMutation.mutate(post._id)}
+                              className="w-full flex items-center gap-4 px-8 py-5 hover:bg-white/5 transition-colors text-white font-bold"
+                            >
+                              <Archive size={20} className="text-neon-purple" />
+                              <span className="text-sm">{post.isArchived ? 'Unarchive' : 'Archive'}</span>
+                            </button>
+                            <button
+                              onClick={() => setIsDeleting(post._id)}
+                              className="w-full flex items-center gap-4 px-8 py-5 hover:bg-white/5 transition-colors text-red-500 font-bold"
+                            >
+                              <Trash2 size={20} />
+                              <span className="text-sm">Delete</span>
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => handleNotInterested(post._id)}
+                              className="w-full flex items-center gap-4 px-8 py-5 hover:bg-white/5 transition-colors text-white font-bold"
+                            >
+                              <AlertCircle size={20} className="text-white/40" />
+                              <span className="text-sm">Not Interested</span>
+                            </button>
+                            <button
+                              onClick={() => handleReport(post._id)}
+                              className="w-full flex items-center gap-4 px-8 py-5 hover:bg-white/5 transition-colors text-red-500 font-bold"
+                            >
+                              <AlertCircle size={20} />
+                              <span className="text-sm">Report</span>
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 

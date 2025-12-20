@@ -85,3 +85,42 @@ export const logout = async (req, res) => {
   res.json({ message: 'Logged out successfully' });
 };
 
+export const updateSettings = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (req.body.settings) {
+      user.settings = { ...user.settings, ...req.body.settings };
+    }
+
+    await user.save();
+    res.json(user.settings);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const user = await User.findById(req.user._id);
+
+    if (!user.password) {
+      return res.status(400).json({ message: 'Social accounts cannot change password' });
+    }
+
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Incorrect current password' });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+

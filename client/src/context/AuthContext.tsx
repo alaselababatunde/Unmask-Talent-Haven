@@ -9,6 +9,20 @@ interface User {
   username: string;
   email: string;
   profileImage?: string;
+  settings?: {
+    isPrivate: boolean;
+    allowComments: boolean;
+    showActivity: boolean;
+    notifications: {
+      newFollowers: boolean;
+      newComments: boolean;
+      newLikes: boolean;
+      donations: boolean;
+      system: boolean;
+    };
+  };
+  following?: Array<{ _id: string }>;
+  followRequests?: Array<{ _id: string }>;
 }
 
 interface AuthContextType {
@@ -25,6 +39,8 @@ interface AuthContextType {
   loading: boolean;
   refreshUser: (id?: string) => Promise<void>;
   updateFollowing: (targetId: string, add?: boolean) => void;
+  acceptFollowRequest: (requesterId: string) => Promise<void>;
+  declineFollowRequest: (requesterId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -120,6 +136,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           // include followers/following arrays for UI
           followers: res.data.user.followers || [],
           following: res.data.user.following || [],
+          followRequests: res.data.user.followRequests || [],
+          settings: res.data.user.settings || {
+            isPrivate: false,
+            allowComments: true,
+            showActivity: true,
+            notifications: {
+              newFollowers: true,
+              newComments: true,
+              newLikes: true,
+              donations: true,
+              system: true,
+            }
+          }
         } as any;
         setUser(fullUser as User);
         localStorage.setItem('user', JSON.stringify(fullUser));
@@ -181,8 +210,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const acceptFollowRequest = async (requesterId: string) => {
+    await api.post(`/user/follow-request/${requesterId}/accept`);
+    await refreshUser();
+  };
+
+  const declineFollowRequest = async (requesterId: string) => {
+    await api.post(`/user/follow-request/${requesterId}/decline`);
+    await refreshUser();
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, login, signup, logout, setAuth, loading, socket: socketRef.current, notifications, fetchNotifications, markNotificationRead, refreshUser, updateFollowing }}>
+    <AuthContext.Provider value={{ user, token, login, signup, logout, setAuth, loading, socket: socketRef.current, notifications, fetchNotifications, markNotificationRead, refreshUser, updateFollowing, acceptFollowRequest, declineFollowRequest }}>
       {children}
     </AuthContext.Provider>
   );
