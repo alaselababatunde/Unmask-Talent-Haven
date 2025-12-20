@@ -41,7 +41,6 @@ const Feed = () => {
   const playerRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [openCommentsPostId, setOpenCommentsPostId] = useState<string | null>(null);
   const [newCommentText, setNewCommentText] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
   const [postMenuOpen, setPostMenuOpen] = useState<string | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [lastTap, setLastTap] = useState(0);
@@ -67,7 +66,7 @@ const Feed = () => {
     enabled: !!singlePostId,
   });
 
-  const displayPosts = singlePostId && singlePost ? [singlePost] : (searchResults.length > 0 ? searchResults : posts);
+  const displayPosts = singlePostId && singlePost ? [singlePost] : posts;
 
   const likeMutation = useMutation({
     mutationFn: async (postId: string) => {
