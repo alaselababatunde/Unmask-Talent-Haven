@@ -18,13 +18,13 @@ const Navbar = () => {
   return (
     <>
       {/* Top Bar for Notifications - Mobile Only */}
-      <div className="fixed top-0 right-0 p-4 z-50 md:hidden">
+      <div className="fixed top-4 right-4 z-50 md:hidden">
         <BellButton />
       </div>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-matte-black/90 backdrop-blur-lg border-t border-white/10 z-50 pb-safe">
-        <div className="max-w-3xl mx-auto px-4">
-          <div className="flex justify-between items-center py-2">
+      <nav className="fixed bottom-6 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-2xl glass-panel rounded-3xl z-50 pb-safe">
+        <div className="px-2">
+          <div className="flex justify-between items-center py-3 px-2">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path ||
@@ -36,25 +36,25 @@ const Navbar = () => {
                   key={item.path}
                   to={item.path}
                   className={`flex flex-col items-center gap-1 p-2 rounded-2xl transition-all duration-300 relative group ${isActive
-                      ? 'text-deep-purple'
-                      : 'text-accent-beige/60 hover:text-accent-beige'
+                    ? 'text-neon-purple'
+                    : 'text-gray-400 hover:text-white'
                     }`}
                 >
                   {isActive && (
-                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-1 bg-deep-purple rounded-b-full shadow-[0_0_10px_rgba(147,51,234,0.5)]" />
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-12 h-1 bg-neon-purple rounded-b-full shadow-[0_0_15px_#B026FF]" />
                   )}
 
                   {isCreate ? (
-                    <div className="bg-gradient-to-br from-deep-purple to-[#7B4B27] p-3 rounded-full -mt-8 shadow-lg shadow-deep-purple/30 border-4 border-matte-black transform transition-transform group-hover:scale-110 group-active:scale-95">
-                      <Icon size={24} className="text-white" />
+                    <div className="bg-gradient-to-br from-neon-purple to-neon-blue p-3 rounded-full -mt-10 shadow-[0_0_20px_rgba(176,38,255,0.4)] border-4 border-matte-black transform transition-transform group-hover:scale-110 group-active:scale-95">
+                      <Icon size={24} className="text-black" />
                     </div>
                   ) : (
                     <div className={`p-1 transition-transform group-hover:scale-110 ${isActive ? 'scale-110' : ''}`}>
-                      <Icon size={24} className={isActive ? 'drop-shadow-[0_0_8px_rgba(147,51,234,0.5)]' : ''} />
+                      <Icon size={24} className={isActive ? 'drop-shadow-[0_0_10px_rgba(176,38,255,0.6)]' : ''} />
                     </div>
                   )}
 
-                  <span className={`text-[10px] font-medium transition-opacity ${isCreate ? 'mt-1' : ''} ${isActive ? 'opacity-100' : 'opacity-70'}`}>
+                  <span className={`text-[10px] font-medium transition-opacity ${isCreate ? 'mt-1' : ''} ${isActive ? 'opacity-100 text-transparent bg-clip-text bg-gradient-to-r from-neon-purple to-neon-blue' : 'opacity-70'}`}>
                     {item.label}
                   </span>
                 </Link>
