@@ -66,7 +66,7 @@ const Feed = () => {
   const { data: posts = [], refetch } = useQuery<Post[]>({
     queryKey: ['feed', activeTab],
     queryFn: async () => {
-      const response = await api.get('/feed', { params: { mediaType: activeTab } });
+      const response = await api.get('/feed/recommended', { params: { mediaType: activeTab } });
       return response.data;
     },
     enabled: !singlePostId,

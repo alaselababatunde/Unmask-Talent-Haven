@@ -2,6 +2,109 @@ import Post from '../models/Post.js';
 import Notification from '../models/Notification.js';
 import User from '../models/User.js';
 
+// Smart recommendation algorithm
+export const getRecommendedFeed = async (req, res) => {
+  try {
+    const userId = req.user?._id;
+    const filter = {};
+    if (req.query.mediaType) {
+      filter.mediaType = req.query.mediaType;
+    }
+
+    let recommendedPosts = [];
+
+    if (userId) {
+      // Get user data for personalization
+      const user = await User.findById(userId).populate('following', '_id').lean();
+      if (!user) return res.status(404).json({ message: 'User not found' });
+
+      // 1. Posts from followed users (60% weight)
+      const followingIds = user.following.map(f => f._id);
+      const followedPosts = await Post.find({ ...filter, user: { $in: followingIds } })
+        .populate('user', '_id username profileImage isLive')
+        .sort({ createdAt: -1 })
+        .limit(12)
+        .lean();
+
+      // 2. Get user's liked posts to find favorite tags
+      const userLikedPosts = await Post.find({ likes: userId }).select('tags').limit(50).lean();
+      const tagCounts = {};
+      userLikedPosts.forEach(post => {
+        post.tags.forEach(tag => {
+          tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+        });
+      });
+      const favoriteTags = Object.entries(tagCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([tag]) => tag);
+
+      // 3. Trending posts with favorite tags (30% weight)
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      let trendingPosts = [];
+      if (favoriteTags.length > 0) {
+        trendingPosts = await Post.find({
+          ...filter,
+          tags: { $in: favoriteTags },
+          createdAt: { $gte: oneDayAgo },
+          user: { $ne: userId }
+        })
+          .populate('user', '_id username profileImage isLive')
+          .lean();
+
+        trendingPosts = trendingPosts
+          .map(post => ({ ...post, score: (post.likes?.length || 0) * 2 + (post.comments?.length || 0) }))
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 6);
+      }
+
+      // 4. Discover new content (10% weight)
+      const discoverPosts = await Post.find({
+        ...filter,
+        user: { $nin: [...followingIds, userId] },
+        createdAt: { $gte: oneDayAgo }
+      })
+        .populate('user', '_id username profileImage isLive')
+        .lean();
+
+      const scoredDiscoverPosts = discoverPosts
+        .map(post => ({ ...post, score: (post.likes?.length || 0) * 2 + (post.comments?.length || 0) }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 2);
+
+      // Merge and remove duplicates
+      recommendedPosts = [...followedPosts, ...trendingPosts, ...scoredDiscoverPosts];
+      const seen = new Set();
+      recommendedPosts = recommendedPosts
+        .filter(post => {
+          if (seen.has(post._id.toString())) return false;
+          seen.add(post._id.toString());
+          return true;
+        })
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 20);
+
+    } else {
+      // Not logged in - show trending
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const trendingPosts = await Post.find({ ...filter, createdAt: { $gte: oneDayAgo } })
+        .populate('user', '_id username profileImage isLive')
+        .lean();
+
+      recommendedPosts = trendingPosts
+        .map(post => ({ ...post, score: (post.likes?.length || 0) * 2 + (post.comments?.length || 0) }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 20);
+    }
+
+    console.log(`Recommended ${recommendedPosts.length} posts for user ${userId || 'anonymous'}`);
+    res.json(recommendedPosts);
+  } catch (error) {
+    console.error('Recommendation error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const getFeed = async (req, res) => {
   try {
     const filter = {};

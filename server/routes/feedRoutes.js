@@ -1,5 +1,5 @@
 import express from 'express';
-import { getFeed, createPost, likePost, commentPost, searchContent, deletePost, updatePost, getSinglePost } from '../controllers/feedController.js';
+import { getFeed, getRecommendedFeed, createPost, likePost, commentPost, searchContent, deletePost, updatePost, getSinglePost } from '../controllers/feedController.js';
 import { protect } from '../middleware/auth.js';
 import { upload } from '../config/cloudinary.js';
 import multer from 'multer';
@@ -7,6 +7,7 @@ import multer from 'multer';
 const router = express.Router();
 
 router.get('/', getFeed);
+router.get('/recommended', getRecommendedFeed);
 router.get('/search', searchContent);
 // Wrap multer upload middleware to catch file/Cloudinary errors and respond with JSON
 const uploadHandler = (req, res, next) => {
