@@ -52,6 +52,18 @@ export const createPost = async (req, res) => {
     // Support a few possible properties Multer/Cloudinary storage might return
     let mediaUrl = req.file ? (req.file.path || req.file.url || req.file.secure_url || req.file.filename) : req.body.mediaUrl;
 
+    // Generate thumbnail for videos
+    let thumbnail = '';
+    if (req.file && (mediaType === 'video' || mediaType === 'sign-language')) {
+      // Cloudinary auto-generates thumbnails for videos
+      // We can get the thumbnail by replacing the file extension with .jpg and adding transformation
+      const publicId = req.file.filename || req.file.path?.split('/').pop()?.split('.')[0];
+      if (publicId) {
+        // Generate thumbnail URL: first frame as JPG
+        thumbnail = mediaUrl.replace(/\.(mp4|webm|mov|avi|mkv)$/, '.jpg');
+      }
+    }
+
     // For text posts, use the text content as mediaUrl
     if (mediaType === 'text' && req.body.mediaUrl) {
       mediaUrl = req.body.mediaUrl;
@@ -85,6 +97,7 @@ export const createPost = async (req, res) => {
       user: req.user._id,
       mediaType: mediaType || 'video',
       mediaUrl,
+      thumbnail: thumbnail || '',
       caption: mediaType === 'text' ? mediaUrl : (caption || ''),
       tags: tags ? tags.split(',').map(t => t.trim()).filter(t => t) : [],
       category: category || 'Other',

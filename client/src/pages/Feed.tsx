@@ -334,7 +334,7 @@ const Feed = () => {
                     <ReactPlayer
                       url={post.mediaUrl}
                       playing={playingIndex === index}
-                      controls={false}
+                      controls={true}
                       loop
                       width="100%"
                       height="100%"
