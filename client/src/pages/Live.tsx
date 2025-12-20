@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
-import { Radio, Video, VideoOff, Mic, MicOff, Users, Heart, MessageCircle, Share2, Settings, ArrowLeft } from 'lucide-react';
+import { Radio, Video, VideoOff, Mic, MicOff, Users, Heart, MessageCircle, Share2, Settings, ArrowLeft, Send } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
 

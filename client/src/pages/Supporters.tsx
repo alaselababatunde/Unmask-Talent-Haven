@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import Navbar from '../components/Navbar';
-import { Users, DollarSign, Heart, MessageSquare, Trophy } from 'lucide-react';
+import { Users, DollarSign, Heart, MessageSquare, Trophy, ArrowLeft } from 'lucide-react';
 
 interface Supporter {
   user: {

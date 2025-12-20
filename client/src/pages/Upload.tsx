@@ -5,7 +5,7 @@ import api from '../api';
 import Navbar from '../components/Navbar';
 
 import { useAuth } from '../context/AuthContext';
-import { Upload as UploadIcon, Video, Music, FileText, Languages, X, AlertCircle } from 'lucide-react';
+import { Upload as UploadIcon, X } from 'lucide-react';
 
 const Upload = () => {
   const { user } = useAuth();
@@ -17,7 +17,6 @@ const Upload = () => {
   const [textContent, setTextContent] = useState('');
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const uploadMutation = useMutation({
@@ -36,14 +35,13 @@ const Upload = () => {
       navigate('/feed');
     },
     onError: (err: any) => {
-      setError(err.response?.data?.message || 'Upload failed');
+      console.error(err.response?.data?.message || 'Upload failed');
     },
   });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
-      setError('');
     }
   };
 

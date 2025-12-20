@@ -3,7 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '../api';
 import Navbar from '../components/Navbar';
 import ReactPlayer from 'react-player';
-import { Heart, MessageCircle, Share2, Video, Music, FileText, Hand, Search, MoreVertical, Trash2, Edit, Forward, X, Plus } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Music, MoreVertical, Forward, X, Plus } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -41,42 +41,24 @@ const Feed = () => {
   const playerRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [openCommentsPostId, setOpenCommentsPostId] = useState<string | null>(null);
   const [newCommentText, setNewCommentText] = useState('');
-  const [activeTab, setActiveTab] = useState<'video' | 'audio' | 'text' | 'sign-language'>('video');
-  const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [showSearch, setShowSearch] = useState(false);
   const [postMenuOpen, setPostMenuOpen] = useState<string | null>(null);
-  const [editPostId, setEditPostId] = useState<string | null>(null);
-  const [editCaption, setEditCaption] = useState('');
-  const [editTags, setEditTags] = useState('');
   const [isPaused, setIsPaused] = useState(false);
   const [lastTap, setLastTap] = useState(0);
   const [showHeart, setShowHeart] = useState(false);
   const [heartPos, setHeartPos] = useState({ x: 0, y: 0 });
 
-  const handleSearch = async (query: string) => {
-    if (!query.trim()) {
-      setSearchResults([]);
-      return;
-    }
-    try {
-      const res = await api.get('/feed/search', { params: { q: query } });
-      setSearchResults(res.data);
-    } catch (err) {
-      console.error('Search failed', err);
-    }
-  };
 
   const { data: posts = [], refetch } = useQuery<Post[]>({
-    queryKey: ['feed', activeTab],
+    queryKey: ['feed'],
     queryFn: async () => {
-      const response = await api.get('/feed/recommended', { params: { mediaType: activeTab } });
+      const response = await api.get('/feed/recommended', { params: { mediaType: 'video' } });
       return response.data;
     },
     enabled: !singlePostId,
   });
 
-  const { data: singlePost, isLoading: isLoadingSingle } = useQuery<Post>({
+  const { data: singlePost } = useQuery<Post>({
     queryKey: ['post', singlePostId],
     queryFn: async () => {
       const response = await api.get(`/feed/${singlePostId}`);
@@ -85,7 +67,7 @@ const Feed = () => {
     enabled: !!singlePostId,
   });
 
-  const displayPosts = singlePostId && singlePost ? [singlePost] : (searchQuery.trim() && searchResults.length > 0 ? searchResults : posts);
+  const displayPosts = singlePostId && singlePost ? [singlePost] : (searchResults.length > 0 ? searchResults : posts);
 
   const likeMutation = useMutation({
     mutationFn: async (postId: string) => {
@@ -117,21 +99,6 @@ const Feed = () => {
     },
   });
 
-  const unfollowMutation = useMutation<string, any, string>({
-    mutationFn: async (targetId: string) => {
-      const res = await api.post(`/user/${targetId}/unfollow`);
-      return res.data;
-    },
-    onMutate: async (targetId: string) => {
-      try { updateFollowing(targetId, false); } catch (e) { }
-    },
-    onError: (_, targetId) => {
-      try { updateFollowing(targetId, true); } catch (e) { }
-    },
-    onSuccess: () => {
-      refetch();
-    },
-  });
 
   const commentMutation = useMutation({
     mutationFn: async ({ postId, text }: { postId: string; text: string }) => {
@@ -143,32 +110,12 @@ const Feed = () => {
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: async (postId: string) => {
-      await api.delete(`/feed/${postId}`);
-    },
-    onSuccess: () => {
-      if (singlePostId) {
-        navigate('/profile'); // Go back to profile if deleted from single view
-      } else {
-        refetch();
-      }
-      setPostMenuOpen(null);
-    },
-  });
 
-  const updateMutation = useMutation({
-    mutationFn: async ({ postId, caption, tags }: { postId: string; caption: string; tags: string }) => {
-      const response = await api.put(`/feed/${postId}`, { caption, tags });
-      return response.data;
-    },
-    onSuccess: () => {
-      refetch();
-      setEditPostId(null);
-      setEditCaption('');
-      setEditTags('');
-    },
-  });
+  const handleComment = (postId: string, text: string) => {
+    if (!text.trim()) return;
+    commentMutation.mutate({ postId, text });
+    setNewCommentText('');
+  };
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -239,7 +186,6 @@ const Feed = () => {
     setLastTap(now);
   };
 
-  const isVideoTab = activeTab === 'video' || activeTab === 'sign-language';
   // displayPosts is already defined above
 
   return (

@@ -3,7 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '../api';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
-import { Edit, Trophy, Heart, Video, MoreVertical, User, Image as ImageIcon, X, FileText, Music } from 'lucide-react';
+import { Trophy, Heart, Video, MoreVertical, Image as ImageIcon, X, Music } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 interface UserData {
@@ -36,9 +36,7 @@ const Profile = () => {
   const { id } = useParams();
   const { user: currentUser, login, signup } = useAuth();
   const navigate = useNavigate();
-  const [isEditing, setIsEditing] = useState(false);
   const [customizeOpen, setCustomizeOpen] = useState(false);
-  const [bio, setBio] = useState('');
   const [editFirstName, setEditFirstName] = useState('');
   const [editLastName, setEditLastName] = useState('');
   const [editUsername, setEditUsername] = useState('');
@@ -69,15 +67,6 @@ const Profile = () => {
 
   const isOwnProfile = userId === currentUser?.id;
 
-  const handleSaveBio = async () => {
-    try {
-      await api.put(`/user/${userId}`, { bio });
-      setIsEditing(false);
-      refetch();
-    } catch (error) {
-      console.error('Failed to update bio');
-    }
-  };
 
   const handleCustomizeSave = async () => {
     if (!userId) return;

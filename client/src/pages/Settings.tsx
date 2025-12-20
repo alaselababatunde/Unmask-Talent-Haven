@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
-import { Lock, Shield, Share2, Bell, Radio, Music, Clock, LogOut } from 'lucide-react';
+import { Lock, Shield, Share2, Bell, Radio, Music, Clock, LogOut, ArrowLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Settings = () => {

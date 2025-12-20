@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import Navbar from '../components/Navbar';
-import { Send, ArrowLeft, MoreHorizontal, Phone, Video as VideoIcon, Info, Heart, Smile } from 'lucide-react';
+import { Send, ArrowLeft, MoreHorizontal, Phone, Video as VideoIcon, Smile } from 'lucide-react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
