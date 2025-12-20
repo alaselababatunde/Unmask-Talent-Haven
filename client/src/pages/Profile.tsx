@@ -3,7 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '../api';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
-import { Trophy, Heart, Video, MoreVertical, Image as ImageIcon, X, Music, Archive, Trash2, Edit, AlertCircle, BarChart2, Users, Activity } from 'lucide-react';
+import { Trophy, Heart, Video, MoreVertical, Image as ImageIcon, X, Music, Archive, Trash2, Edit, BarChart2, Users, Activity } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 interface UserData {
