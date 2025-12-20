@@ -312,7 +312,7 @@ const Feed = () => {
       )}
 
       {(isVideoTab || singlePostId) && !(searchQuery.trim() && searchResults.length > 0) && (
-        <div className="h-[calc(100vh-80px)] overflow-y-scroll snap-y snap-mandatory no-scrollbar relative">
+        <div className="h-[100dvh] md:h-[calc(100vh-80px)] overflow-y-scroll snap-y snap-mandatory no-scrollbar relative">
           {singlePostId && isLoadingSingle && (
             <div className="h-full flex items-center justify-center">
               <div className="w-12 h-12 border-4 border-deep-purple border-t-transparent rounded-full animate-spin" />
@@ -325,7 +325,7 @@ const Feed = () => {
               ref={(el) => {
                 playerRefs.current[index] = el;
               }}
-              className="snap-start h-[calc(100vh-80px)] w-full relative bg-black flex items-center justify-center"
+              className="snap-start h-[100dvh] md:h-[calc(100vh-80px)] w-full relative bg-black flex items-center justify-center"
             >
               {/* Media layer */}
               <div className="w-full h-full relative">
@@ -388,11 +388,11 @@ const Feed = () => {
               </div>
 
               {/* Right-side actions */}
-              <div className="absolute right-4 bottom-32 flex flex-col items-center gap-6 z-20">
+              <div className="absolute right-3 md:right-4 bottom-24 md:bottom-32 flex flex-col items-center gap-5 md:gap-7 z-20">
                 <div className="relative group">
                   <button
                     onClick={() => navigate(`/profile/${post.user._id}`)}
-                    className="w-12 h-12 rounded-full border-2 border-white/20 p-0.5 overflow-hidden transition-transform hover:scale-110 hover:border-deep-purple"
+                    className="w-14 h-14 md:w-12 md:h-12 rounded-full border-2 border-white/20 p-0.5 overflow-hidden transition-transform active:scale-95 hover:scale-110 hover:border-deep-purple"
                   >
                     {post.user.profileImage ? (
                       <img src={post.user.profileImage} alt={post.user.username} className="w-full h-full rounded-full object-cover" />
@@ -412,31 +412,31 @@ const Feed = () => {
                           followMutation.mutate(post.user._id);
                         }
                       }}
-                      className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-deep-purple text-white rounded-full p-1 shadow-lg hover:scale-110 transition-transform"
+                      className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-deep-purple text-white rounded-full p-1.5 shadow-lg hover:scale-110 active:scale-95 transition-transform"
                     >
-                      <Plus size={12} />
+                      <Plus size={14} />
                     </button>
                   )}
                 </div>
 
                 <button
                   onClick={() => handleLike(post._id)}
-                  className="flex flex-col items-center gap-1 group"
+                  className="flex flex-col items-center gap-1.5 group min-w-[48px]"
                 >
-                  <div className={`p-3 rounded-full bg-black/20 backdrop-blur-sm border border-white/10 transition-all group-hover:scale-110 group-hover:bg-black/40 ${post.likes.length > 0 ? 'text-red-500' : 'text-white'}`}>
-                    <Heart className={post.likes.length > 0 ? 'fill-current' : ''} size={28} />
+                  <div className={`p-3.5 md:p-3 rounded-full bg-black/30 backdrop-blur-sm border border-white/10 transition-all active:scale-95 group-hover:scale-110 group-hover:bg-black/40 ${post.likes.length > 0 ? 'text-red-500' : 'text-white'}`}>
+                    <Heart className={`${post.likes.length > 0 ? 'fill-current' : ''} w-8 h-8 md:w-7 md:h-7`} />
                   </div>
-                  <span className="text-xs font-medium text-white shadow-black drop-shadow-md">{post.likes.length}</span>
+                  <span className="text-sm md:text-xs font-bold text-white shadow-black drop-shadow-md">{post.likes.length}</span>
                 </button>
 
                 <button
                   onClick={() => setOpenCommentsPostId(post._id)}
-                  className="flex flex-col items-center gap-1 group"
+                  className="flex flex-col items-center gap-1.5 group min-w-[48px]"
                 >
-                  <div className="p-3 rounded-full bg-black/20 backdrop-blur-sm border border-white/10 text-white transition-all group-hover:scale-110 group-hover:bg-black/40">
-                    <MessageCircle size={28} />
+                  <div className="p-3.5 md:p-3 rounded-full bg-black/30 backdrop-blur-sm border border-white/10 text-white transition-all active:scale-95 group-hover:scale-110 group-hover:bg-black/40">
+                    <MessageCircle className="w-8 h-8 md:w-7 md:h-7" />
                   </div>
-                  <span className="text-xs font-medium text-white shadow-black drop-shadow-md">{post.comments.length}</span>
+                  <span className="text-sm md:text-xs font-bold text-white shadow-black drop-shadow-md">{post.comments.length}</span>
                 </button>
 
                 <button
@@ -451,20 +451,20 @@ const Feed = () => {
                       alert('Link copied to clipboard!');
                     }
                   }}
-                  className="flex flex-col items-center gap-1 group"
+                  className="flex flex-col items-center gap-1.5 group min-w-[48px]"
                 >
-                  <div className="p-3 rounded-full bg-black/20 backdrop-blur-sm border border-white/10 text-white transition-all group-hover:scale-110 group-hover:bg-black/40">
-                    <Share2 size={28} />
+                  <div className="p-3.5 md:p-3 rounded-full bg-black/30 backdrop-blur-sm border border-white/10 text-white transition-all active:scale-95 group-hover:scale-110 group-hover:bg-black/40">
+                    <Share2 className="w-8 h-8 md:w-7 md:h-7" />
                   </div>
-                  <span className="text-xs font-medium text-white shadow-black drop-shadow-md">Share</span>
+                  <span className="text-sm md:text-xs font-bold text-white shadow-black drop-shadow-md">Share</span>
                 </button>
 
                 <div className="relative post-menu">
                   <button
                     onClick={() => setPostMenuOpen(postMenuOpen === post._id ? null : post._id)}
-                    className="p-3 rounded-full bg-black/20 backdrop-blur-sm border border-white/10 text-white transition-all hover:bg-black/40"
+                    className="p-3.5 md:p-3 rounded-full bg-black/30 backdrop-blur-sm border border-white/10 text-white transition-all active:scale-95 hover:bg-black/40 min-w-[48px] min-h-[48px] flex items-center justify-center"
                   >
-                    <MoreVertical size={24} />
+                    <MoreVertical className="w-7 h-7 md:w-6 md:h-6" />
                   </button>
                   {postMenuOpen === post._id && (
                     <div className="absolute right-12 bottom-0 w-48 bg-matte-black/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-fade-in z-50">
@@ -501,7 +501,7 @@ const Feed = () => {
               </div>
 
               {/* Bottom caption area */}
-              <div className="absolute left-0 right-16 bottom-0 p-4 bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-20">
+              <div className="absolute left-0 right-20 md:right-16 bottom-0 p-3 md:p-4 pb-20 md:pb-4 bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-20">
                 <div className="max-w-2xl">
                   <div className="flex items-center gap-2 mb-2">
                     <h3 className="text-white font-bold text-lg shadow-black drop-shadow-md cursor-pointer hover:underline" onClick={() => navigate(`/profile/${post.user._id}`)}>
