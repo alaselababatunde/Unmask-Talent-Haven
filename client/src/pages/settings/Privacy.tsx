@@ -9,9 +9,9 @@ import api from '../../api';
 const Privacy = () => {
     const navigate = useNavigate();
     const { user, refreshUser } = useAuth();
-    const [isPrivate, setIsPrivate] = useState(user?.settings?.isPrivate || false);
-    const [allowComments, setAllowComments] = useState(user?.settings?.allowComments || true);
-    const [showActivity, setShowActivity] = useState(user?.settings?.showActivity || true);
+    const [isPrivate, setIsPrivate] = useState<boolean>(user?.settings?.isPrivate ?? false);
+    const [allowComments, setAllowComments] = useState<boolean>(user?.settings?.allowComments ?? true);
+    const [showActivity, setShowActivity] = useState<boolean>(user?.settings?.showActivity ?? true);
     const [feedback, setFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
     useEffect(() => {
