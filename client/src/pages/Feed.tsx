@@ -50,6 +50,9 @@ const Feed = () => {
   const [editCaption, setEditCaption] = useState('');
   const [editTags, setEditTags] = useState('');
   const [isPaused, setIsPaused] = useState(false);
+  const [lastTap, setLastTap] = useState(0);
+  const [showHeart, setShowHeart] = useState(false);
+  const [heartPos, setHeartPos] = useState({ x: 0, y: 0 });
 
   const handleSearch = async (query: string) => {
     if (!query.trim()) {
@@ -218,531 +221,278 @@ const Feed = () => {
     });
   };
 
-  const handleComment = (postId: string, text: string) => {
-    if (text.trim()) {
-      commentMutation.mutate({ postId, text });
+  const handleDoubleTap = (e: React.MouseEvent | React.TouchEvent, postId: string) => {
+    const now = Date.now();
+    if (now - lastTap < 300) {
+      // Double tap detected
+      handleLike(postId);
+
+      // Show heart animation
+      const clientX = 'touches' in e ? (e as React.TouchEvent).touches[0].clientX : (e as React.MouseEvent).clientX;
+      const clientY = 'touches' in e ? (e as React.TouchEvent).touches[0].clientY : (e as React.MouseEvent).clientY;
+      setHeartPos({ x: clientX, y: clientY });
+      setShowHeart(true);
+      setTimeout(() => setShowHeart(false), 800);
+    } else {
+      setIsPaused(!isPaused);
     }
+    setLastTap(now);
   };
 
   const isVideoTab = activeTab === 'video' || activeTab === 'sign-language';
   // displayPosts is already defined above
 
   return (
-    <div className="min-h-screen bg-matte-black pb-20 md:pb-0">
-      {/* Tab Navigation - Hidden on mobile for full-screen */}
-      <div className="hidden md:flex sticky top-0 z-30 bg-matte-black/95 backdrop-blur-sm border-b border-white/10 px-4 justify-center">
-        <div className="max-w-4xl w-full py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3 overflow-x-auto flex-1 no-scrollbar mask-linear-fade">
-            {[
-              { key: 'video', label: 'Video', icon: Video },
-              { key: 'audio', label: 'Audio', icon: Music },
-              { key: 'text', label: 'Poetry', icon: FileText },
-              { key: 'sign-language', label: 'Sign', icon: Hand },
-            ].map((t: { key: string; label: string; icon: any }) => {
-              const Icon = t.icon;
-              const isActive = activeTab === (t.key as any);
-              return (
-                <button
-                  key={t.key}
-                  onClick={() => {
-                    setActiveTab(t.key as any);
-                    setSearchQuery('');
-                    setSearchResults([]);
-                  }}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-300 whitespace-nowrap ${isActive
-                    ? 'bg-gradient-to-r from-deep-purple to-[#7B4B27] text-white shadow-lg shadow-deep-purple/25 scale-105'
-                    : 'bg-white/5 text-accent-beige/60 hover:bg-white/10 hover:text-accent-beige'
-                    }`}
-                >
-                  {Icon ? <Icon size={16} /> : null}
-                  {t.label}
-                </button>
-              );
-            })}
-          </div>
-          <button
-            onClick={() => setShowSearch(!showSearch)}
-            className={`p-3 rounded-full transition-all duration-300 ${showSearch
-              ? 'bg-deep-purple text-white rotate-90'
-              : 'bg-white/5 text-accent-beige/60 hover:bg-white/10 hover:text-accent-beige'
-              }`}
-          >
-            <Search size={20} />
-          </button>
-        </div>
-
-        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${showSearch ? 'max-h-20 opacity-100 pb-4' : 'max-h-0 opacity-0'}`}>
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-accent-beige/40" size={18} />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                handleSearch(e.target.value);
-              }}
-              placeholder="Search profiles, tags, or content..."
-              className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-2xl text-accent-beige focus:outline-none focus:border-deep-purple/50 focus:bg-white/10 transition-all placeholder:text-accent-beige/20"
-            />
-          </div>
+    <div className="h-[100dvh] w-full bg-primary overflow-hidden relative">
+      {/* Floating Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 flex justify-center items-center py-8 px-6 pointer-events-none">
+        <div className="flex gap-8 pointer-events-auto">
+          {['For You', 'Following'].map((tab) => (
+            <button
+              key={tab}
+              className={`text-lg font-bold transition-all duration-300 ${tab === 'For You' ? 'text-white scale-110' : 'text-white/40 hover:text-white/60'
+                }`}
+            >
+              {tab}
+            </button>
+          ))}
         </div>
       </div>
 
-      {
-        searchQuery.trim() && searchResults.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-in">
-            <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-4">
-              <Search size={32} className="text-accent-beige/20" />
-            </div>
-            <p className="text-accent-beige/60 text-lg">No results found for "{searchQuery}"</p>
-            <p className="text-accent-beige/40 text-sm mt-2">Try searching for something else</p>
-          </div>
-        )
-      }
-
-      {/* Single Post View Header */}
-      {
-        singlePostId && (
-          <div className="fixed top-0 left-0 right-0 z-50 bg-matte-black/90 backdrop-blur-md border-b border-white/10 px-4 py-3 flex items-center gap-4">
-            <button
-              onClick={() => navigate(-1)}
-              className="p-2 hover:bg-white/10 rounded-full text-white transition-colors"
+      {/* Feed Container */}
+      <div className="h-full w-full overflow-y-scroll snap-y snap-mandatory no-scrollbar">
+        {displayPosts.map((post: Post, index: number) => (
+          <div
+            key={post._id}
+            ref={(el) => {
+              playerRefs.current[index] = el;
+            }}
+            className="snap-start h-[100dvh] w-full relative bg-black flex items-center justify-center overflow-hidden"
+          >
+            {/* Media Layer */}
+            <div
+              className="w-full h-full relative cursor-pointer"
+              onClick={(e) => handleDoubleTap(e, post._id)}
             >
-              <X size={24} />
-            </button>
-            <span className="text-white font-bold text-lg">Post</span>
-          </div>
-        )
-      }
+              {post.mediaType === 'video' || post.mediaType === 'sign-language' ? (
+                <ReactPlayer
+                  url={post.mediaUrl}
+                  playing={playingIndex === index && !isPaused}
+                  controls={false}
+                  loop
+                  muted={playingIndex === index}
+                  width="100%"
+                  height="100%"
+                  className="!h-full !w-full object-cover"
+                  playsinline
+                  config={{
+                    file: {
+                      attributes: {
+                        playsInline: true,
+                        preload: 'metadata',
+                        controlsList: 'nodownload',
+                      }
+                    }
+                  }}
+                />
+              ) : post.mediaType === 'audio' ? (
+                <div className="w-full h-full bg-obsidian flex flex-col items-center justify-center p-8">
+                  <div className="w-64 h-64 bg-gradient-to-br from-neon-purple to-neon-blue rounded-3xl flex items-center justify-center shadow-[0_0_50px_rgba(176,38,255,0.3)] mb-12 animate-float">
+                    <Music size={80} className="text-black" />
+                  </div>
+                  <ReactPlayer
+                    url={post.mediaUrl}
+                    playing={playingIndex === index && !isPaused}
+                    width="100%"
+                    height="4px"
+                    className="max-w-xs"
+                  />
+                </div>
+              ) : (
+                <div className="w-full h-full bg-obsidian flex items-center justify-center p-6">
+                  <div className="max-w-md w-full glass-panel p-10 rounded-[2.5rem] border-white/5">
+                    <p className="text-2xl md:text-3xl font-display leading-relaxed text-center">
+                      {post.caption}
+                    </p>
+                  </div>
+                </div>
+              )}
 
-      {
-        (isVideoTab || singlePostId) && !(searchQuery.trim() && searchResults.length > 0) && (
-          <div className="h-[100dvh] md:h-[calc(100vh-80px)] overflow-y-scroll snap-y snap-mandatory no-scrollbar relative">
-            {singlePostId && isLoadingSingle && (
-              <div className="h-full flex items-center justify-center">
-                <div className="w-12 h-12 border-4 border-deep-purple border-t-transparent rounded-full animate-spin" />
-              </div>
-            )}
+              {/* Overlays */}
+              <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 pointer-events-none" />
 
-            {!isLoadingSingle && displayPosts.map((post: Post, index: number) => (
-              <div
-                key={post._id}
-                ref={(el) => {
-                  playerRefs.current[index] = el;
-                }}
-                className="snap-start h-[100dvh] md:h-[calc(100vh-80px)] w-full relative bg-black flex items-center justify-center"
-              >
-                {/* Media layer */}
-                <div className="w-full h-full relative">
-                  {post.mediaType === 'video' || post.mediaType === 'sign-language' ? (
-                    <div
-                      className="w-full h-full bg-black cursor-pointer relative group"
-                      onClick={() => setIsPaused(!isPaused)}
-                    >
-                      <ReactPlayer
-                        url={post.mediaUrl}
-                        playing={playingIndex === index && !isPaused}
-                        controls={false}
-                        loop
-                        muted={playingIndex === index}
-                        width="100%"
-                        height="100%"
-                        className="!h-full !w-full object-contain"
-                        playsinline
-                        config={{
-                          file: {
-                            attributes: {
-                              playsInline: true,
-                              preload: 'metadata',
-                              controlsList: 'nodownload',
-                            }
-                          }
-                        }}
-                      />
+              {/* Double Tap Heart Animation */}
+              {showHeart && (
+                <div
+                  className="fixed z-[100] pointer-events-none animate-ping"
+                  style={{ left: heartPos.x - 40, top: heartPos.y - 40 }}
+                >
+                  <Heart size={80} className="text-neon-purple fill-neon-purple drop-shadow-[0_0_20px_rgba(176,38,255,0.8)]" />
+                </div>
+              )}
 
-                      {/* Play/Pause Overlay */}
-                      {isPaused && (
-                        <div className="absolute inset-0 flex items-center justify-center z-10 animate-fade-in">
-                          <div className="w-20 h-20 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20">
-                            <div className="w-0 h-0 border-t-[15px] border-t-transparent border-l-[25px] border-l-white border-b-[15px] border-b-transparent ml-2" />
-                          </div>
-                        </div>
-                      )}
+              {/* Pause Indicator */}
+              {isPaused && (
+                <div className="absolute inset-0 flex items-center justify-center z-10 animate-fade-in">
+                  <div className="w-24 h-24 bg-black/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/10">
+                    <div className="w-0 h-0 border-t-[15px] border-t-transparent border-l-[25px] border-l-white border-b-[15px] border-b-transparent ml-2" />
+                  </div>
+                </div>
+              )}
+            </div>
 
-                      {/* Gradient Overlay for better text visibility */}
-                      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80 pointer-events-none" />
-                    </div>
-                  ) : post.mediaType === 'audio' ? (
-                    <div className="flex flex-col items-center justify-center w-full h-full bg-gradient-to-br from-deep-purple/20 to-black relative overflow-hidden">
-                      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-20 blur-xl" />
-                      <div className="relative z-10 w-full max-w-md px-8">
-                        <div className="w-48 h-48 mx-auto bg-gradient-to-br from-deep-purple to-[#7B4B27] rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(147,51,234,0.3)] mb-8 animate-pulse">
-                          <Music size={64} className="text-white" />
-                        </div>
-                        <ReactPlayer
-                          url={post.mediaUrl}
-                          playing={playingIndex === index}
-                          controls
-                          width="100%"
-                          height="50px"
-                          className="!bg-transparent"
-                        />
-                      </div>
-                    </div>
+            {/* Right Side Actions */}
+            <div className="absolute right-4 bottom-32 flex flex-col items-center gap-6 z-20">
+              {/* Creator Avatar */}
+              <div className="relative mb-2">
+                <button
+                  onClick={() => navigate(`/profile/${post.user._id}`)}
+                  className="w-14 h-14 rounded-full border-2 border-white p-0.5 overflow-hidden shadow-xl"
+                >
+                  {post.user.profileImage ? (
+                    <img src={post.user.profileImage} alt={post.user.username} className="w-full h-full rounded-full object-cover" />
                   ) : (
-                    <div className="flex items-center justify-center w-full h-full p-4 md:p-8 bg-gradient-to-br from-black to-deep-purple/10">
-                      <div className="w-full max-w-2xl glass-panel p-6 md:p-12 rounded-3xl shadow-2xl relative overflow-hidden flex flex-col items-center justify-center min-h-[50vh]">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-deep-purple to-[#7B4B27]" />
-                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 pointer-events-none" />
-                        <FileText size={40} className="text-deep-purple/20 absolute top-8 right-8" />
-                        <div className="overflow-y-auto max-h-[60vh] w-full custom-scrollbar">
-                          <p className="text-accent-beige text-xl md:text-3xl leading-relaxed whitespace-pre-wrap font-serif text-center drop-shadow-lg">
-                            {post.caption}
-                          </p>
-                        </div>
-                      </div>
+                    <div className="w-full h-full rounded-full bg-neon-purple flex items-center justify-center text-black font-bold text-xl">
+                      {post.user.username[0].toUpperCase()}
                     </div>
                   )}
-                </div>
-
-                {/* Right-side actions */}
-                <div className="absolute right-3 md:right-4 bottom-24 md:bottom-32 flex flex-col items-center gap-5 md:gap-7 z-20">
-                  <div className="relative group">
-                    <button
-                      onClick={() => navigate(`/profile/${post.user._id}`)}
-                      className="w-14 h-14 md:w-12 md:h-12 rounded-full border-2 border-white/20 p-0.5 overflow-hidden transition-transform active:scale-95 hover:scale-110 hover:border-deep-purple"
-                    >
-                      {post.user.profileImage ? (
-                        <img src={post.user.profileImage} alt={post.user.username} className="w-full h-full rounded-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full rounded-full bg-deep-purple flex items-center justify-center text-white font-bold">
-                          {post.user.username[0].toUpperCase()}
-                        </div>
-                      )}
-                    </button>
-                    {currentUser && currentUser.id !== post.user._id && (
-                      <button
-                        onClick={() => {
-                          const isFollowing = !!(currentUser as any)?.following?.find((f: any) => f._id === post.user._id || f === post.user._id);
-                          if (isFollowing) {
-                            unfollowMutation.mutate(post.user._id);
-                          } else {
-                            followMutation.mutate(post.user._id);
-                          }
-                        }}
-                        className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-deep-purple text-white rounded-full p-1.5 shadow-lg hover:scale-110 active:scale-95 transition-transform"
-                      >
-                        <Plus size={14} />
-                      </button>
-                    )}
-                  </div>
-
-                  <button
-                    onClick={() => handleLike(post._id)}
-                    className="flex flex-col items-center gap-1.5 group min-w-[48px]"
-                  >
-                    <div className={`p-3.5 md:p-3 rounded-full bg-white/5 backdrop-blur-md border border-white/10 transition-all active:scale-95 group-hover:scale-110 group-hover:bg-white/10 ${post.likes.length > 0 ? 'text-red-500' : 'text-white'}`}>
-                      <Heart className={`${post.likes.length > 0 ? 'fill-current' : ''} w-8 h-8 md:w-7 md:h-7`} />
-                    </div>
-                    <span className="text-sm md:text-xs font-bold text-white shadow-black drop-shadow-md">{post.likes.length}</span>
-                  </button>
-
-                  <button
-                    onClick={() => setOpenCommentsPostId(post._id)}
-                    className="flex flex-col items-center gap-1.5 group min-w-[48px]"
-                  >
-                    <div className="p-3.5 md:p-3 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-white transition-all active:scale-95 group-hover:scale-110 group-hover:bg-white/10">
-                      <MessageCircle className="w-8 h-8 md:w-7 md:h-7" />
-                    </div>
-                    <span className="text-sm md:text-xs font-bold text-white shadow-black drop-shadow-md">{post.comments.length}</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      if (navigator.share) {
-                        navigator.share({
-                          title: post.caption,
-                          url: window.location.href,
-                        }).catch(() => { });
-                      } else {
-                        navigator.clipboard.writeText(window.location.href);
-                        alert('Link copied to clipboard!');
-                      }
-                    }}
-                    className="flex flex-col items-center gap-1.5 group min-w-[48px]"
-                  >
-                    <div className="p-3.5 md:p-3 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-white transition-all active:scale-95 group-hover:scale-110 group-hover:bg-white/10">
-                      <Share2 className="w-8 h-8 md:w-7 md:h-7" />
-                    </div>
-                    <span className="text-sm md:text-xs font-bold text-white shadow-black drop-shadow-md">Share</span>
-                  </button>
-
-                  <div className="relative post-menu">
-                    <button
-                      onClick={() => setPostMenuOpen(postMenuOpen === post._id ? null : post._id)}
-                      className="p-3.5 md:p-3 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-white transition-all active:scale-95 hover:bg-white/10 min-w-[48px] min-h-[48px] flex items-center justify-center"
-                    >
-                      <MoreVertical className="w-7 h-7 md:w-6 md:h-6" />
-                    </button>
-                    {postMenuOpen === post._id && (
-                      <div className="absolute right-12 bottom-0 w-48 bg-matte-black/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-fade-in z-50">
-                        {currentUser?.id === post.user._id && (
-                          <>
-                            <button
-                              onClick={() => {
-                                setEditPostId(post._id);
-                                setEditCaption(post.caption);
-                                setEditTags(post.tags.join(', '));
-                                setPostMenuOpen(null);
-                              }}
-                              className="w-full flex items-center gap-3 px-4 py-3 text-accent-beige hover:bg-white/10 transition-colors"
-                            >
-                              <Edit size={18} />
-                              <span className="text-sm font-medium">Edit Post</span>
-                            </button>
-                            <button
-                              onClick={() => {
-                                if (confirm('Delete this post?')) {
-                                  deleteMutation.mutate(post._id);
-                                }
-                              }}
-                              className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 transition-colors"
-                            >
-                              <Trash2 size={18} />
-                              <span className="text-sm font-medium">Delete</span>
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Bottom caption area */}
-                <div className="absolute left-0 right-20 md:right-16 bottom-0 p-3 md:p-4 pb-28 md:pb-4 bg-gradient-to-t from-black/95 via-black/60 to-transparent pt-24 md:pt-20">
-                  <div className="max-w-2xl">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="text-white font-bold text-lg md:text-lg shadow-black drop-shadow-md cursor-pointer hover:underline" onClick={() => navigate(`/profile/${post.user._id}`)}>
-                        @{post.user.username}
-                      </h3>
-                      {post.category && (
-                        <span className="px-2 py-0.5 rounded-md bg-white/10 text-white/80 text-xs md:text-[10px] font-medium uppercase tracking-wider border border-white/5 backdrop-blur-sm">
-                          {post.category}
-                        </span>
-                      )}
-                    </div>
-
-                    {post.caption && (
-                      <p className="text-white/90 text-base md:text-sm leading-relaxed mb-2 line-clamp-2 shadow-black drop-shadow-sm">
-                        {post.caption}
-                      </p>
-                    )}
-
-                    {post.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {post.tags.map((tag: string, i: number) => (
-                          <span key={i} className="text-white/80 text-xs font-medium hover:text-deep-purple transition-colors cursor-pointer">
-                            #{tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Inline comment input */}
-                    <div className="relative max-w-sm">
-                      <input
-                        type="text"
-                        placeholder="Add a comment..."
-                        className="w-full bg-white/10 border border-white/10 rounded-full pl-4 pr-10 py-2 text-white text-sm focus:outline-none focus:bg-black/60 focus:border-deep-purple/50 transition-all placeholder:text-white/40"
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter') {
-                            handleComment(post._id, e.currentTarget.value);
-                            e.currentTarget.value = '';
-                          }
-                        }}
-                      />
-                      <button className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-deep-purple transition-colors">
-                        <MessageCircle size={16} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-
-
-
-            {!singlePostId && displayPosts.length === 0 && (
-              <div className="snap-start h-[calc(100vh-80px)] w-full flex flex-col items-center justify-center text-center p-8">
-                <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-6 animate-pulse">
-                  <Video size={48} className="text-accent-beige/20" />
-                </div>
-                <h3 className="text-2xl font-bold text-accent-beige mb-2">No posts yet</h3>
-                <p className="text-accent-beige/60 max-w-xs mx-auto mb-8">Be the first to share your talent with the world!</p>
-                <button
-                  onClick={() => navigate('/upload')}
-                  className="px-8 py-3 bg-deep-purple text-white rounded-2xl font-bold shadow-lg shadow-deep-purple/20 hover:scale-105 transition-transform"
-                >
-                  Create Post
                 </button>
-              </div>
-            )}
-          </div>
-        )
-      }
-
-      <Navbar />
-
-      {/* Edit Post Modal */}
-      {
-        editPostId && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-            <div className="bg-matte-black border border-white/10 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden animate-slide-up">
-              <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/5">
-                <h2 className="text-xl font-bold text-accent-beige">Edit Post</h2>
-                <button
-                  onClick={() => {
-                    setEditPostId(null);
-                    setEditCaption('');
-                    setEditTags('');
-                  }}
-                  className="text-accent-beige/60 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-              <div className="p-6 space-y-5">
-                <div>
-                  <label className="block text-accent-beige/80 mb-2 text-sm font-bold uppercase tracking-wider">Caption</label>
-                  <textarea
-                    value={editCaption}
-                    onChange={(e) => setEditCaption(e.target.value)}
-                    className="w-full h-32 p-4 bg-black/40 border border-white/10 rounded-2xl text-accent-beige focus:outline-none focus:border-deep-purple focus:ring-1 focus:ring-deep-purple/50 resize-none transition-all"
-                    maxLength={1000}
-                  />
-                </div>
-                <div>
-                  <label className="block text-accent-beige/80 mb-2 text-sm font-bold uppercase tracking-wider">Tags</label>
-                  <input
-                    type="text"
-                    value={editTags}
-                    onChange={(e) => setEditTags(e.target.value)}
-                    className="w-full p-4 bg-black/40 border border-white/10 rounded-2xl text-accent-beige focus:outline-none focus:border-deep-purple focus:ring-1 focus:ring-deep-purple/50 transition-all"
-                    placeholder="tag1, tag2, tag3"
-                  />
-                </div>
-                <div className="flex gap-3 pt-2">
+                {currentUser?.id !== post.user._id && (
                   <button
-                    onClick={() => {
-                      if (editPostId) {
-                        updateMutation.mutate({
-                          postId: editPostId,
-                          caption: editCaption,
-                          tags: editTags,
-                        });
-                      }
-                    }}
-                    disabled={updateMutation.isPending}
-                    className="flex-1 px-4 py-3.5 bg-deep-purple hover:bg-deep-purple/80 text-white rounded-2xl font-bold disabled:opacity-50 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                    onClick={() => followMutation.mutate(post.user._id)}
+                    className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-neon-purple text-black rounded-full p-1 shadow-lg hover:scale-110 transition-transform"
                   >
-                    {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+                    <Plus size={14} strokeWidth={3} />
                   </button>
-                  <button
-                    onClick={() => {
-                      setEditPostId(null);
-                      setEditCaption('');
-                      setEditTags('');
-                    }}
-                    className="flex-1 px-4 py-3.5 bg-transparent border border-white/10 hover:bg-white/5 text-accent-beige rounded-2xl font-bold transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )
-      }
-
-      {/* Comments Drawer */}
-      {
-        openCommentsPostId && (
-          <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
-            <div
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
-              onClick={() => setOpenCommentsPostId(null)}
-            />
-            <div className="relative w-full max-w-lg bg-matte-black border-t sm:border border-white/10 rounded-t-3xl sm:rounded-3xl max-h-[80vh] shadow-2xl flex flex-col animate-slide-up">
-              <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/5 rounded-t-3xl">
-                <span className="text-accent-beige font-bold text-lg">Comments</span>
-                <button
-                  onClick={() => setOpenCommentsPostId(null)}
-                  className="text-accent-beige/60 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[300px]">
-                {posts
-                  .find((p) => p._id === openCommentsPostId)?.comments.map((comment: Post['comments'][0], i: number) => (
-                    <div key={i} className="flex gap-3 animate-fade-in" style={{ animationDelay: `${i * 0.05}s` }}>
-                      <div className="w-10 h-10 rounded-full bg-deep-purple/20 flex-shrink-0 flex items-center justify-center border border-deep-purple/30 text-deep-purple font-bold">
-                        {comment.user.username[0].toUpperCase()}
-                      </div>
-                      <div className="flex-1 bg-white/5 p-3 rounded-2xl rounded-tl-none border border-white/5">
-                        <span className="font-bold text-accent-beige text-sm block mb-1">{comment.user.username}</span>
-                        <p className="text-accent-beige/80 text-sm leading-relaxed">{comment.text}</p>
-                      </div>
-                    </div>
-                  ))}
-                {posts.find((p) => p._id === openCommentsPostId)?.comments.length === 0 && (
-                  <div className="flex flex-col items-center justify-center h-full py-12 text-center opacity-60">
-                    <MessageCircle size={48} className="mb-4 text-accent-beige/20" />
-                    <p className="text-accent-beige/60">No comments yet</p>
-                    <p className="text-accent-beige/40 text-sm">Start the conversation!</p>
-                  </div>
                 )}
               </div>
 
-              <div className="p-4 border-t border-white/5 bg-matte-black/95 backdrop-blur rounded-b-3xl">
-                <div className="flex gap-3 items-center">
-                  <div className="w-8 h-8 rounded-full bg-deep-purple/20 flex items-center justify-center text-deep-purple text-xs font-bold">
-                    {currentUser?.username?.[0]?.toUpperCase() || 'U'}
-                  </div>
-                  <div className="flex-1 relative">
-                    <input
-                      type="text"
-                      value={newCommentText}
-                      onChange={(e) => setNewCommentText(e.target.value)}
-                      placeholder="Add a comment..."
-                      className="w-full bg-white/5 border border-white/10 rounded-full pl-4 pr-12 py-3 text-accent-beige text-sm focus:outline-none focus:bg-black/40 focus:border-deep-purple/50 transition-all placeholder:text-accent-beige/30"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && newCommentText.trim() && openCommentsPostId) {
-                          handleComment(openCommentsPostId, newCommentText.trim());
-                          setNewCommentText('');
-                        }
-                      }}
-                    />
-                    <button
-                      onClick={() => {
-                        if (newCommentText.trim() && openCommentsPostId) {
-                          handleComment(openCommentsPostId, newCommentText.trim());
-                          setNewCommentText('');
-                        }
-                      }}
-                      disabled={!newCommentText.trim()}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-deep-purple text-white rounded-full disabled:opacity-50 disabled:bg-white/10 transition-all hover:scale-110"
-                    >
-                      <Forward size={16} className={newCommentText.trim() ? 'ml-0.5' : ''} />
-                    </button>
-                  </div>
+              {/* Like */}
+              <button
+                onClick={() => handleLike(post._id)}
+                className="flex flex-col items-center gap-1 group"
+              >
+                <div className={`p-3 rounded-full glass-button ${post.likes.includes(currentUser?.id || '') ? 'text-neon-purple' : 'text-white'}`}>
+                  <Heart className={`w-7 h-7 ${post.likes.includes(currentUser?.id || '') ? 'fill-current' : ''}`} />
                 </div>
+                <span className="text-xs font-bold drop-shadow-md">{post.likes.length}</span>
+              </button>
+
+              {/* Comment */}
+              <button
+                onClick={() => setOpenCommentsPostId(post._id)}
+                className="flex flex-col items-center gap-1 group"
+              >
+                <div className="p-3 rounded-full glass-button text-white">
+                  <MessageCircle className="w-7 h-7" />
+                </div>
+                <span className="text-xs font-bold drop-shadow-md">{post.comments.length}</span>
+              </button>
+
+              {/* Share */}
+              <button
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({ title: post.caption, url: window.location.href });
+                  } else {
+                    navigator.clipboard.writeText(window.location.href);
+                  }
+                }}
+                className="flex flex-col items-center gap-1 group"
+              >
+                <div className="p-3 rounded-full glass-button text-white">
+                  <Share2 className="w-7 h-7" />
+                </div>
+                <span className="text-xs font-bold drop-shadow-md">Share</span>
+              </button>
+
+              {/* More */}
+              <button
+                onClick={() => setPostMenuOpen(postMenuOpen === post._id ? null : post._id)}
+                className="p-3 rounded-full glass-button text-white"
+              >
+                <MoreVertical className="w-7 h-7" />
+              </button>
+            </div>
+
+            {/* Bottom Info */}
+            <div className="absolute left-0 right-20 bottom-0 p-6 pb-32 bg-gradient-to-t from-black/80 via-black/40 to-transparent pt-20">
+              <div className="max-w-xl">
+                <h3
+                  className="text-xl font-bold mb-2 cursor-pointer hover:text-neon-blue transition-colors"
+                  onClick={() => navigate(`/profile/${post.user._id}`)}
+                >
+                  @{post.user.username}
+                </h3>
+                <p className="text-white/90 text-base leading-relaxed mb-3 line-clamp-3">
+                  {post.caption}
+                </p>
+                {post.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {post.tags.map((tag, i) => (
+                      <span key={i} className="text-neon-blue font-medium text-sm">
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
-        )
-      }
+        ))}
+      </div>
+
+      <Navbar />
+
+      {/* Modals & Drawers */}
+      {openCommentsPostId && (
+        <div className="fixed inset-0 z-[60] flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setOpenCommentsPostId(null)} />
+          <div className="relative w-full max-w-lg bg-obsidian rounded-t-[2.5rem] h-[70vh] flex flex-col animate-slide-up border-t border-white/10">
+            <div className="p-6 flex items-center justify-between border-b border-white/5">
+              <h2 className="text-xl font-bold font-display">Comments</h2>
+              <button onClick={() => setOpenCommentsPostId(null)} className="p-2 hover:bg-white/5 rounded-full">
+                <X size={24} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {posts.find(p => p._id === openCommentsPostId)?.comments.map((comment, i) => (
+                <div key={i} className="flex gap-4">
+                  <div className="w-10 h-10 rounded-full bg-neon-purple/20 flex-shrink-0 flex items-center justify-center text-neon-purple font-bold">
+                    {comment.user.username[0].toUpperCase()}
+                  </div>
+                  <div>
+                    <span className="font-bold text-sm block mb-1">{comment.user.username}</span>
+                    <p className="text-white/70 text-sm">{comment.text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="p-6 border-t border-white/5 bg-obsidian/80 backdrop-blur pb-10">
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={newCommentText}
+                  onChange={(e) => setNewCommentText(e.target.value)}
+                  placeholder="Add a comment..."
+                  className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-5 py-3 focus:outline-none focus:border-neon-purple transition-all"
+                />
+                <button
+                  onClick={() => {
+                    if (newCommentText.trim()) {
+                      handleComment(openCommentsPostId, newCommentText);
+                      setNewCommentText('');
+                    }
+                  }}
+                  className="bg-neon-purple text-black p-3 rounded-2xl font-bold"
+                >
+                  <Forward size={20} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

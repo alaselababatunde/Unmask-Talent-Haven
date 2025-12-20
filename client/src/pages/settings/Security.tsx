@@ -9,61 +9,70 @@ const Security = () => {
     const [newPassword, setNewPassword] = useState('');
 
     return (
-        <div className="min-h-[100dvh] bg-matte-black pb-24">
-            <div className="max-w-2xl mx-auto px-4 md:px-6 py-6 md:py-8">
-                <div className="flex items-center gap-3 mb-8">
-                    <button onClick={() => navigate('/settings')} className="text-accent-beige hover:text-white transition-colors">
-                        <ArrowLeft size={24} />
-                    </button>
-                    <h1 className="text-xl md:text-2xl font-bold text-accent-beige">Security</h1>
-                </div>
+        <div className="h-[100dvh] w-full bg-primary flex flex-col relative overflow-hidden">
+            {/* Background Glows */}
+            <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-neon-purple/10 rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-neon-blue/10 rounded-full blur-[120px] pointer-events-none" />
 
+            {/* Header */}
+            <div className="px-6 py-8 flex items-center justify-between relative z-10">
+                <div className="flex items-center gap-4">
+                    <button onClick={() => navigate('/settings')} className="p-3 glass-button rounded-full text-white/40 hover:text-white transition-all">
+                        <ArrowLeft size={20} />
+                    </button>
+                    <h1 className="text-3xl font-bold font-display tracking-tight">Security</h1>
+                </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-6 pb-32 no-scrollbar relative z-10">
                 <div className="space-y-6">
-                    <div className="bg-white/5 rounded-2xl p-5 md:p-6 border border-white/10">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="p-2 bg-deep-purple/20 rounded-lg text-deep-purple">
-                                <Key size={20} />
+                    <div className="glass-panel p-8 rounded-[3rem] border-white/5 animate-scale-in">
+                        <div className="flex items-center gap-4 mb-8">
+                            <div className="w-12 h-12 rounded-2xl bg-neon-purple/10 flex items-center justify-center">
+                                <Key className="text-neon-purple" size={24} />
                             </div>
-                            <h3 className="text-white font-bold">Change Password</h3>
+                            <h3 className="font-bold">Change Password</h3>
                         </div>
 
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-accent-beige/60 text-sm mb-2">Current Password</label>
+                        <div className="space-y-6">
+                            <div className="space-y-2">
+                                <label className="block text-white/40 text-[10px] font-black uppercase tracking-widest ml-4">Current Password</label>
                                 <input
                                     type="password"
                                     value={currentPassword}
                                     onChange={(e) => setCurrentPassword(e.target.value)}
-                                    className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-deep-purple"
+                                    className="w-full p-5 bg-obsidian/40 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-neon-purple transition-all"
+                                    placeholder="••••••••"
                                 />
                             </div>
-                            <div>
-                                <label className="block text-accent-beige/60 text-sm mb-2">New Password</label>
+                            <div className="space-y-2">
+                                <label className="block text-white/40 text-[10px] font-black uppercase tracking-widest ml-4">New Password</label>
                                 <input
                                     type="password"
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
-                                    className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-deep-purple"
+                                    className="w-full p-5 bg-obsidian/40 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-neon-purple transition-all"
+                                    placeholder="••••••••"
                                 />
                             </div>
-                            <button className="w-full py-3 bg-deep-purple text-white rounded-xl font-bold hover:bg-deep-purple/80 transition-colors">
+                            <button className="w-full py-5 bg-neon-purple text-black rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-neon-purple/20 active:scale-95 transition-all">
                                 Update Password
                             </button>
                         </div>
                     </div>
 
-                    <div className="bg-white/5 rounded-2xl p-5 md:p-6 border border-white/10">
+                    <div className="glass-panel p-8 rounded-[3rem] border-white/5 animate-scale-in" style={{ animationDelay: '0.1s' }}>
                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-deep-purple/20 rounded-lg text-deep-purple">
-                                    <Smartphone size={20} />
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-2xl bg-neon-blue/10 flex items-center justify-center">
+                                    <Smartphone className="text-neon-blue" size={24} />
                                 </div>
                                 <div>
-                                    <h3 className="text-white font-bold">Two-Factor Authentication</h3>
-                                    <p className="text-accent-beige/60 text-sm">Add an extra layer of security</p>
+                                    <h3 className="font-bold">Two-Factor Auth</h3>
+                                    <p className="text-[10px] text-white/40 font-black uppercase tracking-widest mt-1">Extra layer of security</p>
                                 </div>
                             </div>
-                            <button className="px-4 py-2 bg-white/10 text-white rounded-lg text-sm font-medium hover:bg-white/20 transition-colors">
+                            <button className="px-6 py-3 glass-button rounded-full text-xs font-black uppercase tracking-widest hover:bg-neon-blue hover:text-black transition-all">
                                 Enable
                             </button>
                         </div>

@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Plus, MessageCircle, User, Users, Bell } from 'lucide-react';
+import { Home, Plus, MessageCircle, User, Search, Bell } from 'lucide-react';
 import { useState } from 'react';
 import NotificationsPanel from './NotificationsPanel';
 import { useAuth } from '../context/AuthContext';
@@ -9,58 +9,50 @@ const Navbar = () => {
 
   const navItems = [
     { icon: Home, label: 'Home', path: '/feed' },
-    { icon: Users, label: 'Supporters', path: '/supporters' },
+    { icon: Search, label: 'Discover', path: '/search' },
     { icon: Plus, label: 'Create', path: '/upload' },
-    { icon: MessageCircle, label: 'Chat', path: '/chat' },
+    { icon: MessageCircle, label: 'Inbox', path: '/chat' },
     { icon: User, label: 'Profile', path: '/profile' },
   ];
 
   return (
     <>
       {/* Top Bar for Notifications - Mobile Only */}
-      <div className="fixed top-4 right-4 z-50 md:hidden">
+      <div className="fixed top-6 right-6 z-50 md:hidden">
         <BellButton />
       </div>
 
-      <nav className="fixed bottom-6 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-2xl glass-panel rounded-3xl z-50 pb-safe">
-        <div className="px-2">
-          <div className="flex justify-between items-center py-3 px-2">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = location.pathname === item.path ||
-                (item.path === '/profile' && location.pathname.startsWith('/profile'));
-              const isCreate = item.label === 'Create';
+      <nav className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-md glass-panel rounded-[2.5rem] z-50 px-2 py-2">
+        <div className="flex justify-between items-center">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.path ||
+              (item.path === '/profile' && location.pathname.startsWith('/profile'));
+            const isCreate = item.label === 'Create';
 
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`flex flex-col items-center gap-1 p-2.5 md:p-2 rounded-2xl transition-all duration-300 relative group min-w-[48px] min-h-[48px] justify-center active:scale-95 ${isActive
-                    ? 'text-neon-purple'
-                    : 'text-gray-400 hover:text-white'
-                    }`}
-                >
-                  {isActive && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-12 h-1 bg-neon-purple rounded-b-full shadow-[0_0_15px_#B026FF]" />
-                  )}
-
-                  {isCreate ? (
-                    <div className="bg-gradient-to-br from-neon-purple to-neon-blue p-3.5 md:p-3 rounded-full -mt-10 shadow-[0_0_20px_rgba(176,38,255,0.4)] border-4 border-matte-black transform transition-transform group-hover:scale-110 group-active:scale-95">
-                      <Icon size={24} className="text-black" />
-                    </div>
-                  ) : (
-                    <div className={`p-1 transition-transform group-hover:scale-110 ${isActive ? 'scale-110' : ''}`}>
-                      <Icon size={24} className={isActive ? 'drop-shadow-[0_0_10px_rgba(176,38,255,0.6)]' : ''} />
-                    </div>
-                  )}
-
-                  <span className={`text-[10px] font-medium transition-opacity ${isCreate ? 'mt-1' : ''} ${isActive ? 'opacity-100 text-transparent bg-clip-text bg-gradient-to-r from-neon-purple to-neon-blue' : 'opacity-70'}`}>
-                    {item.label}
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex flex-col items-center justify-center transition-all duration-300 relative group ${isCreate ? 'w-14 h-14' : 'w-12 h-12'
+                  }`}
+              >
+                {isCreate ? (
+                  <div className="w-full h-full bg-gradient-to-br from-neon-purple to-neon-blue rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(176,38,255,0.4)] transform transition-transform group-hover:scale-110 group-active:scale-90">
+                    <Icon size={24} className="text-black" />
+                  </div>
+                ) : (
+                  <div className={`flex flex-col items-center gap-1 transition-all duration-300 ${isActive ? 'text-white' : 'text-white/40 hover:text-white/70'
+                    }`}>
+                    <Icon size={22} className={isActive ? 'drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]' : ''} />
+                    {isActive && (
+                      <div className="absolute -bottom-1 w-1 h-1 bg-white rounded-full shadow-[0_0_8px_white]" />
+                    )}
+                  </div>
+                )}
+              </Link>
+            );
+          })}
         </div>
       </nav>
     </>

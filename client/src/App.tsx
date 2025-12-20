@@ -19,6 +19,7 @@ import Security from './pages/settings/Security';
 import Notifications from './pages/settings/Notifications';
 import MusicSettings from './pages/settings/Music';
 import Activity from './pages/settings/Activity';
+import Search from './pages/Search';
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ function App() {
             <Route path="/settings/activity" element={<Activity />} />
             <Route path="/supporters" element={<Supporters />} />
             <Route path="/live" element={<Live />} />
+            <Route path="/search" element={<Search />} />
             <Route path="/" element={<Navigate to="/feed" replace />} />
           </Routes>
         </Router>
