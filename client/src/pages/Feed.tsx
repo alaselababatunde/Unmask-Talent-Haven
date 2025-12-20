@@ -336,10 +336,20 @@ const Feed = () => {
                       playing={playingIndex === index}
                       controls={true}
                       loop
+                      muted={playingIndex === index}
                       width="100%"
                       height="100%"
                       className="!h-full !w-full object-contain"
                       playsinline
+                      config={{
+                        file: {
+                          attributes: {
+                            playsInline: true,
+                            preload: 'metadata',
+                            controlsList: 'nodownload',
+                          }
+                        }
+                      }}
                     />
                     {/* Gradient Overlay for better text visibility */}
                     <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80 pointer-events-none" />
