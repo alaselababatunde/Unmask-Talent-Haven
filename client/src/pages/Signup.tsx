@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, User, Github, Facebook, ChevronDown, ChevronUp, CheckCircle2, XCircle } from 'lucide-react';
+import { Mail, Lock, User, Github, Facebook, ChevronDown, ChevronUp, CheckCircle2, XCircle, ShieldCheck } from 'lucide-react';
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 const Signup = () => {
@@ -16,6 +16,7 @@ const Signup = () => {
   const { signup } = useAuth();
   const navigate = useNavigate();
   const [showReqs, setShowReqs] = useState(false);
+  const [rightsAccepted, setRightsAccepted] = useState(false);
 
   const nameOk = firstName.trim().length >= 1 && lastName.trim().length >= 1;
   const usernameOk = username.trim().length >= 3;
@@ -26,6 +27,13 @@ const Signup = () => {
     e.preventDefault();
     setError('');
     setLoading(true);
+
+    if (!rightsAccepted) {
+      setError('Please acknowledge your Creator Rights');
+      setLoading(true);
+      setTimeout(() => setLoading(false), 500);
+      return;
+    }
 
     try {
       await signup(firstName, lastName, username, email, password);
@@ -173,6 +181,32 @@ const Signup = () => {
             {loading ? 'Creating account...' : 'Create Account'}
           </button>
         </form>
+
+        {/* Creator Rights Card */}
+        <div className="mt-8 p-6 glass-panel rounded-3xl border-neon-blue/20 bg-neon-blue/5 space-y-4 animate-slide-up">
+          <div className="flex items-center gap-3 text-neon-blue">
+            <ShieldCheck size={20} />
+            <span className="text-sm font-black uppercase tracking-widest">Creator Sovereignty</span>
+          </div>
+          <p className="text-xs text-white/60 leading-relaxed">
+            At UTH, <span className="text-white font-bold">you own your talent</span>. You have the absolute right to edit, archive, or permanently delete your content at any time. We only host your work to help the world discover you.
+          </p>
+          <label className="flex items-center gap-3 cursor-pointer group">
+            <div className="relative">
+              <input
+                type="checkbox"
+                checked={rightsAccepted}
+                onChange={(e) => setRightsAccepted(e.target.checked)}
+                className="peer sr-only"
+              />
+              <div className="w-5 h-5 border-2 border-white/10 rounded-md peer-checked:bg-neon-blue peer-checked:border-neon-blue transition-all group-hover:border-white/30" />
+              <CheckCircle2 className="absolute inset-0 text-black opacity-0 peer-checked:opacity-100 transition-opacity p-0.5" size={20} />
+            </div>
+            <span className="text-[10px] font-bold text-white/40 group-hover:text-white/60 transition-colors uppercase tracking-widest">
+              I understand my rights as a creator
+            </span>
+          </label>
+        </div>
 
         <div className="mt-10 space-y-8">
           <div className="relative flex items-center">

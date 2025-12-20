@@ -14,13 +14,8 @@ const Search = () => {
         { name: 'Trending', icon: TrendingUp, color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
     ];
 
-    const trendingTags = ['#unmasktalent', '#vocalist', '#dancechallenge', '#producerlife', '#newartist'];
-
-    const suggestedCreators = [
-        { id: '1', username: 'alex_beats', followers: '12.4K', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=alex' },
-        { id: '2', username: 'sarah_vocal', followers: '45.2K', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=sarah' },
-        { id: '3', username: 'dance_king', followers: '8.9K', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=king' },
-    ];
+    const trendingTags: string[] = [];
+    const suggestedCreators: any[] = [];
 
     return (
         <div className="h-[100dvh] w-full bg-primary flex flex-col relative overflow-hidden">
@@ -61,45 +56,56 @@ const Search = () => {
                 </div>
 
                 {/* Trending Tags */}
-                <div className="mb-10">
-                    <div className="flex items-center justify-between mb-4 px-2">
-                        <h2 className="text-[10px] font-black uppercase tracking-widest text-white/20">Trending Now</h2>
-                        <TrendingUp size={14} className="text-neon-purple" />
+                {trendingTags.length > 0 && (
+                    <div className="mb-10">
+                        <div className="flex items-center justify-between mb-4 px-2">
+                            <h2 className="text-[10px] font-black uppercase tracking-widest text-white/20">Trending Now</h2>
+                            <TrendingUp size={14} className="text-neon-purple" />
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {trendingTags.map((tag, i) => (
+                                <button key={i} className="px-4 py-2 glass-button rounded-full text-[10px] font-bold text-white/60 hover:text-white transition-all">
+                                    {tag}
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                        {trendingTags.map((tag, i) => (
-                            <button key={i} className="px-4 py-2 glass-button rounded-full text-[10px] font-bold text-white/60 hover:text-white transition-all">
-                                {tag}
-                            </button>
-                        ))}
-                    </div>
-                </div>
+                )}
 
                 {/* Suggested Creators */}
-                <div className="mb-10">
-                    <div className="flex items-center justify-between mb-4 px-2">
-                        <h2 className="text-[10px] font-black uppercase tracking-widest text-white/20">Suggested Creators</h2>
-                        <Users size={14} className="text-neon-blue" />
-                    </div>
-                    <div className="space-y-3">
-                        {suggestedCreators.map((creator) => (
-                            <div key={creator.id} className="glass-panel p-4 rounded-[2rem] border-white/5 flex items-center justify-between hover:bg-white/5 transition-all group">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-2xl overflow-hidden border border-white/10 group-hover:border-neon-blue/50 transition-colors">
-                                        <img src={creator.avatar} alt={creator.username} className="w-full h-full object-cover" />
+                {suggestedCreators.length > 0 && (
+                    <div className="mb-10">
+                        <div className="flex items-center justify-between mb-4 px-2">
+                            <h2 className="text-[10px] font-black uppercase tracking-widest text-white/20">Suggested Creators</h2>
+                            <Users size={14} className="text-neon-blue" />
+                        </div>
+                        <div className="space-y-3">
+                            {suggestedCreators.map((creator) => (
+                                <div key={creator.id} className="glass-panel p-4 rounded-[2rem] border-white/5 flex items-center justify-between hover:bg-white/5 transition-all group">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 rounded-2xl overflow-hidden border border-white/10 group-hover:border-neon-blue/50 transition-colors">
+                                            <img src={creator.avatar} alt={creator.username} className="w-full h-full object-cover" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-sm font-bold text-white/80">@{creator.username}</h3>
+                                            <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">{creator.followers} followers</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h3 className="text-sm font-bold text-white/80">@{creator.username}</h3>
-                                        <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">{creator.followers} followers</p>
-                                    </div>
+                                    <button onClick={() => navigate(`/profile/${creator.id}`)} className="px-5 py-2 glass-button rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-neon-blue hover:text-black transition-all">
+                                        View
+                                    </button>
                                 </div>
-                                <button onClick={() => navigate(`/profile/${creator.id}`)} className="px-5 py-2 glass-button rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-neon-blue hover:text-black transition-all">
-                                    View
-                                </button>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
-                </div>
+                )}
+
+                {trendingTags.length === 0 && suggestedCreators.length === 0 && !searchQuery && (
+                    <div className="text-center py-20 opacity-20">
+                        <SearchIcon size={48} className="mx-auto mb-6 text-white/20" />
+                        <p className="text-lg font-bold">Search to discover talent</p>
+                    </div>
+                )}
             </div>
 
             <Navbar />

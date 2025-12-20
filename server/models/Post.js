@@ -76,6 +76,10 @@ const postSchema = new mongoose.Schema({
       default: Date.now,
     },
   }],
+  isArchived: {
+    type: Boolean,
+    default: false,
+  },
 }, {
   timestamps: true,
 });

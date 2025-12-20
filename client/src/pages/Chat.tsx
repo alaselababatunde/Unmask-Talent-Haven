@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import Navbar from '../components/Navbar';
-import { Send, ArrowLeft, MoreHorizontal, Phone, Video as VideoIcon, Smile } from 'lucide-react';
+import { Send, ArrowLeft, MoreHorizontal, Phone, Video as VideoIcon, Trash2, Edit2, AlertCircle, ShieldOff, X, Mic, Image as ImageIcon } from 'lucide-react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
@@ -31,8 +31,11 @@ const Chat = () => {
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
+  const [activeTab, setActiveTab] = useState<'messages' | 'requests'>('messages');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
+  const [editingMessage, setEditingMessage] = useState<string | null>(null);
+  const [contextMenuMessage, setContextMenuMessage] = useState<string | null>(null);
   const { user } = useAuth();
 
   const SOCKET_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/?api\/?$/i, '');
@@ -62,6 +65,7 @@ const Chat = () => {
           isLive: u.isLive,
           isOnline: false
         }));
+
         setConversations(convs);
       } catch (err) {
         console.error('Failed to fetch conversations', err);
@@ -123,6 +127,29 @@ const Chat = () => {
     setInput('');
   };
 
+  const handleDeleteMessage = (messageId: string) => {
+    setMessages(prev => prev.filter(m => m.id !== messageId));
+    setContextMenuMessage(null);
+  };
+
+  const handleEditMessage = (messageId: string, newText: string) => {
+    setMessages(prev => prev.map(m => m.id === messageId ? { ...m, text: newText } : m));
+    setEditingMessage(null);
+    setInput('');
+  };
+
+  const handleReportUser = (userId: string) => {
+    // Logic to report user
+    alert(`User ${userId} reported.`);
+  };
+
+  const handleBlockUser = (userId: string) => {
+    // Logic to block user
+    setConversations(prev => prev.filter(c => c.userId !== userId));
+    setSelectedChat(null);
+    alert(`User ${userId} blocked.`);
+  };
+
   const handleBackToInbox = () => {
     setSelectedChat(null);
     setMessages([]);
@@ -138,11 +165,26 @@ const Chat = () => {
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-neon-blue/10 rounded-full blur-[120px] pointer-events-none" />
 
         {/* Header */}
-        <div className="px-6 py-8 flex items-center justify-between relative z-10">
-          <h1 className="text-4xl font-bold font-display tracking-tight">Messages</h1>
-          <button className="p-3 glass-button rounded-full">
-            <Smile size={24} />
-          </button>
+        <div className="px-6 pt-8 pb-4 relative z-10">
+          <h1 className="text-4xl font-bold font-display tracking-tight mb-6">Messages</h1>
+
+          {/* Tab Switcher */}
+          <div className="flex gap-8 border-b border-white/5">
+            <button
+              onClick={() => setActiveTab('messages')}
+              className={`pb-4 text-sm font-bold transition-all relative ${activeTab === 'messages' ? 'text-white' : 'text-white/20'}`}
+            >
+              All Messages
+              {activeTab === 'messages' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neon-purple" />}
+            </button>
+            <button
+              onClick={() => setActiveTab('requests')}
+              className={`pb-4 text-sm font-bold transition-all relative ${activeTab === 'requests' ? 'text-white' : 'text-white/20'}`}
+            >
+              Requests
+              {activeTab === 'requests' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neon-purple" />}
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto px-6 pb-32 no-scrollbar relative z-10">
@@ -179,6 +221,10 @@ const Chat = () => {
           <div className="space-y-4">
             {loading ? (
               <div className="text-center py-20 text-white/20 font-bold">Loading...</div>
+            ) : activeTab === 'requests' ? (
+              <div className="text-center py-20 glass-panel rounded-[2rem] border-white/5">
+                <p className="text-white/40">No message requests</p>
+              </div>
             ) : conversations.length === 0 ? (
               <div className="text-center py-20 glass-panel rounded-[2rem] border-white/5">
                 <p className="text-white/40">No messages yet</p>
@@ -191,7 +237,7 @@ const Chat = () => {
                   className="w-full glass-panel p-5 rounded-[2rem] border-white/5 flex items-center gap-5 hover:bg-white/5 transition-all active:scale-[0.98]"
                 >
                   <div className="relative flex-shrink-0">
-                    <div className="w-16 h-16 rounded-full bg-obsidian overflow-hidden flex items-center justify-center border border-white/5">
+                    <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center border bg-obsidian border-white/5">
                       {conv.profileImage ? (
                         <img src={conv.profileImage} alt={conv.username} className="w-full h-full object-cover" />
                       ) : (
@@ -236,7 +282,7 @@ const Chat = () => {
             <ArrowLeft size={24} />
           </button>
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-obsidian overflow-hidden border border-white/5">
+            <div className="w-12 h-12 rounded-full overflow-hidden border bg-obsidian border-white/5">
               {selectedConversation?.profileImage ? (
                 <img src={selectedConversation.profileImage} alt="" className="w-full h-full object-cover" />
               ) : (
@@ -256,6 +302,32 @@ const Chat = () => {
         <div className="flex gap-2">
           <button className="p-3 glass-button rounded-full"><Phone size={20} /></button>
           <button className="p-3 glass-button rounded-full"><VideoIcon size={20} /></button>
+          <div className="relative">
+            <button
+              onClick={() => setContextMenuMessage(contextMenuMessage === 'header' ? null : 'header')}
+              className="p-3 glass-button rounded-full"
+            >
+              <MoreHorizontal size={20} />
+            </button>
+            {contextMenuMessage === 'header' && (
+              <div className="absolute right-0 mt-2 w-48 glass-panel rounded-2xl border-white/10 shadow-2xl overflow-hidden z-[100] animate-scale-in origin-top-right">
+                <button
+                  onClick={() => handleReportUser(selectedChat!)}
+                  className="w-full flex items-center gap-3 px-5 py-3 hover:bg-white/5 transition-colors text-white text-sm font-bold"
+                >
+                  <AlertCircle size={14} className="text-white/40" />
+                  <span>Report</span>
+                </button>
+                <button
+                  onClick={() => handleBlockUser(selectedChat!)}
+                  className="w-full flex items-center gap-3 px-5 py-3 hover:bg-white/5 transition-colors text-red-500 text-sm font-bold"
+                >
+                  <ShieldOff size={14} />
+                  <span>Block</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -273,11 +345,55 @@ const Chat = () => {
             const isMe = message.userId === (user?.id || 'me');
             return (
               <div key={message.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} animate-scale-in`}>
-                <div className={`max-w-[80%] ${isMe ? 'bg-neon-purple text-black' : 'bg-white/5 text-white'} px-6 py-4 rounded-[2rem] ${isMe ? 'rounded-tr-none' : 'rounded-tl-none'} shadow-xl`}>
+                <div
+                  className={`max-w-[80%] ${isMe ? 'bg-neon-purple text-black' : 'bg-white/5 text-white'} px-6 py-4 rounded-[2rem] ${isMe ? 'rounded-tr-none' : 'rounded-tl-none'} shadow-xl relative overflow-hidden group cursor-pointer`}
+                  onClick={() => setContextMenuMessage(contextMenuMessage === message.id ? null : message.id)}
+                >
                   <p className="text-sm leading-relaxed font-medium">{message.text}</p>
                   <p className={`text-[8px] font-black uppercase mt-2 opacity-40 ${isMe ? 'text-black' : 'text-white'}`}>
                     {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
+
+                  {contextMenuMessage === message.id && (
+                    <div className={`absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center gap-4 animate-fade-in`}>
+                      {isMe && (
+                        <>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingMessage(message.id);
+                              setInput(message.text);
+                              setContextMenuMessage(null);
+                            }}
+                            className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                          >
+                            <Edit2 size={16} className="text-neon-blue" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteMessage(message.id);
+                            }}
+                            className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                          >
+                            <Trash2 size={16} className="text-red-500" />
+                          </button>
+                        </>
+                      )}
+                      {!isMe && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleReportUser(message.userId);
+                            setContextMenuMessage(null);
+                          }}
+                          className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                        >
+                          <AlertCircle size={16} className="text-white/40" />
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -289,20 +405,43 @@ const Chat = () => {
       {/* Input Area */}
       <div className="p-6 pb-10 relative z-20">
         <form onSubmit={handleSend} className="glass-panel p-2 rounded-[2.5rem] border-white/5 flex items-center gap-2">
-          <button type="button" className="p-4 text-white/20 hover:text-white transition-colors">
-            <MoreHorizontal size={24} />
-          </button>
+          <div className="flex items-center gap-1 px-2">
+            <button type="button" className="p-3 text-white/20 hover:text-white transition-colors">
+              <ImageIcon size={20} />
+            </button>
+            <button type="button" className="p-3 text-white/20 hover:text-white transition-colors">
+              <Mic size={20} />
+            </button>
+          </div>
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             className="flex-1 bg-transparent px-2 py-4 text-sm focus:outline-none placeholder:text-white/10"
-            placeholder="Type a message..."
+            placeholder={editingMessage ? "Edit message..." : "Type a message..."}
           />
+          {editingMessage && (
+            <button
+              type="button"
+              onClick={() => {
+                setEditingMessage(null);
+                setInput('');
+              }}
+              className="p-2 text-white/40 hover:text-white transition-colors"
+            >
+              <X size={20} />
+            </button>
+          )}
           <button
             type="submit"
             disabled={!input.trim()}
             className={`p-4 rounded-full transition-all ${input.trim() ? 'bg-neon-purple text-black shadow-lg shadow-neon-purple/20' : 'bg-white/5 text-white/20'}`}
+            onClick={(e) => {
+              if (editingMessage) {
+                e.preventDefault();
+                handleEditMessage(editingMessage, input);
+              }
+            }}
           >
             <Send size={20} />
           </button>

@@ -6,7 +6,7 @@ import User from '../models/User.js';
 export const getRecommendedFeed = async (req, res) => {
   try {
     const userId = req.user?._id;
-    const filter = {};
+    const filter = { isArchived: false };
     if (req.query.mediaType) {
       filter.mediaType = req.query.mediaType;
     }
@@ -107,7 +107,7 @@ export const getRecommendedFeed = async (req, res) => {
 
 export const getFeed = async (req, res) => {
   try {
-    const filter = {};
+    const filter = { isArchived: false };
     if (req.query.mediaType) {
       filter.mediaType = req.query.mediaType;
     }
@@ -411,4 +411,21 @@ export const updatePost = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+export const archivePost = async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
 
+    if (post.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    post.isArchived = !post.isArchived;
+    await post.save();
+    res.json(post);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
