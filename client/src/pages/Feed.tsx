@@ -49,6 +49,7 @@ const Feed = () => {
   const [editPostId, setEditPostId] = useState<string | null>(null);
   const [editCaption, setEditCaption] = useState('');
   const [editTags, setEditTags] = useState('');
+  const [isPaused, setIsPaused] = useState(false);
 
   const handleSearch = async (query: string) => {
     if (!query.trim()) {
@@ -174,6 +175,7 @@ const Feed = () => {
             const index = playerRefs.current.indexOf(entry.target as HTMLDivElement);
             if (index !== -1) {
               setPlayingIndex(index);
+              setIsPaused(false); // Reset pause when scrolling
             }
           }
         });
@@ -333,11 +335,14 @@ const Feed = () => {
                 {/* Media layer */}
                 <div className="w-full h-full relative">
                   {post.mediaType === 'video' || post.mediaType === 'sign-language' ? (
-                    <div className="w-full h-full bg-black">
+                    <div
+                      className="w-full h-full bg-black cursor-pointer relative group"
+                      onClick={() => setIsPaused(!isPaused)}
+                    >
                       <ReactPlayer
                         url={post.mediaUrl}
-                        playing={playingIndex === index}
-                        controls={true}
+                        playing={playingIndex === index && !isPaused}
+                        controls={false}
                         loop
                         muted={playingIndex === index}
                         width="100%"
@@ -354,6 +359,16 @@ const Feed = () => {
                           }
                         }}
                       />
+
+                      {/* Play/Pause Overlay */}
+                      {isPaused && (
+                        <div className="absolute inset-0 flex items-center justify-center z-10 animate-fade-in">
+                          <div className="w-20 h-20 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20">
+                            <div className="w-0 h-0 border-t-[15px] border-t-transparent border-l-[25px] border-l-white border-b-[15px] border-b-transparent ml-2" />
+                          </div>
+                        </div>
+                      )}
+
                       {/* Gradient Overlay for better text visibility */}
                       <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80 pointer-events-none" />
                     </div>
@@ -426,7 +441,7 @@ const Feed = () => {
                     onClick={() => handleLike(post._id)}
                     className="flex flex-col items-center gap-1.5 group min-w-[48px]"
                   >
-                    <div className={`p-3.5 md:p-3 rounded-full bg-black/30 backdrop-blur-sm border border-white/10 transition-all active:scale-95 group-hover:scale-110 group-hover:bg-black/40 ${post.likes.length > 0 ? 'text-red-500' : 'text-white'}`}>
+                    <div className={`p-3.5 md:p-3 rounded-full bg-white/5 backdrop-blur-md border border-white/10 transition-all active:scale-95 group-hover:scale-110 group-hover:bg-white/10 ${post.likes.length > 0 ? 'text-red-500' : 'text-white'}`}>
                       <Heart className={`${post.likes.length > 0 ? 'fill-current' : ''} w-8 h-8 md:w-7 md:h-7`} />
                     </div>
                     <span className="text-sm md:text-xs font-bold text-white shadow-black drop-shadow-md">{post.likes.length}</span>
@@ -436,7 +451,7 @@ const Feed = () => {
                     onClick={() => setOpenCommentsPostId(post._id)}
                     className="flex flex-col items-center gap-1.5 group min-w-[48px]"
                   >
-                    <div className="p-3.5 md:p-3 rounded-full bg-black/30 backdrop-blur-sm border border-white/10 text-white transition-all active:scale-95 group-hover:scale-110 group-hover:bg-black/40">
+                    <div className="p-3.5 md:p-3 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-white transition-all active:scale-95 group-hover:scale-110 group-hover:bg-white/10">
                       <MessageCircle className="w-8 h-8 md:w-7 md:h-7" />
                     </div>
                     <span className="text-sm md:text-xs font-bold text-white shadow-black drop-shadow-md">{post.comments.length}</span>
@@ -456,7 +471,7 @@ const Feed = () => {
                     }}
                     className="flex flex-col items-center gap-1.5 group min-w-[48px]"
                   >
-                    <div className="p-3.5 md:p-3 rounded-full bg-black/30 backdrop-blur-sm border border-white/10 text-white transition-all active:scale-95 group-hover:scale-110 group-hover:bg-black/40">
+                    <div className="p-3.5 md:p-3 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-white transition-all active:scale-95 group-hover:scale-110 group-hover:bg-white/10">
                       <Share2 className="w-8 h-8 md:w-7 md:h-7" />
                     </div>
                     <span className="text-sm md:text-xs font-bold text-white shadow-black drop-shadow-md">Share</span>
@@ -465,7 +480,7 @@ const Feed = () => {
                   <div className="relative post-menu">
                     <button
                       onClick={() => setPostMenuOpen(postMenuOpen === post._id ? null : post._id)}
-                      className="p-3.5 md:p-3 rounded-full bg-black/30 backdrop-blur-sm border border-white/10 text-white transition-all active:scale-95 hover:bg-black/40 min-w-[48px] min-h-[48px] flex items-center justify-center"
+                      className="p-3.5 md:p-3 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-white transition-all active:scale-95 hover:bg-white/10 min-w-[48px] min-h-[48px] flex items-center justify-center"
                     >
                       <MoreVertical className="w-7 h-7 md:w-6 md:h-6" />
                     </button>
