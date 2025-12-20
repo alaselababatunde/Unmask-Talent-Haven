@@ -371,138 +371,140 @@ const Profile = () => {
                 </div>
               </div>
             </div>
-            {/* Achievements & Badges */}
-            {(data.user.achievements?.length > 0 || data.user.badges?.length > 0) && (
-              <div className="mb-10 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-                <div className="flex items-center justify-between mb-4 px-4">
-                  <h2 className="text-[10px] font-black uppercase tracking-widest text-white/20">Achievements & Badges</h2>
-                  <Trophy size={14} className="text-neon-purple" />
-                </div>
-                <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 px-2">
-                  {data.user.badges?.map((badge, i) => (
-                    <div key={`badge-${i}`} className="flex-shrink-0 w-32 h-32 glass-panel rounded-3xl border-white/5 flex flex-col items-center justify-center gap-2 group hover:bg-white/5 transition-all">
-                      <div className="w-12 h-12 rounded-2xl bg-neon-blue/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Trophy className="text-neon-blue" size={24} />
-                      </div>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-white/60 text-center px-2">{badge}</span>
-                    </div>
-                  ))}
-                  {data.user.achievements?.map((achievement, i) => (
-                    <div key={`ach-${i}`} className="flex-shrink-0 w-32 h-32 glass-panel rounded-3xl border-white/5 flex flex-col items-center justify-center gap-2 group hover:bg-white/5 transition-all">
-                      <div className="w-12 h-12 rounded-2xl bg-neon-purple/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Trophy className="text-neon-purple" size={24} />
-                      </div>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-white/60 text-center px-2">{achievement}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+          </div>
 
-            {/* Posts Grid */}
-            <div className="flex items-center justify-between mb-6 px-4">
-              <h2 className="text-[10px] font-black uppercase tracking-widest text-white/20">Talent Showcase</h2>
-              <Video size={14} className="text-white/20" />
-            </div>
-            <div className="grid grid-cols-3 gap-2 md:gap-6">
-              {data.posts.map((post) => (
-                <div
-                  key={post._id}
-                  onClick={() => navigate(`/feed?post=${post._id}`)}
-                  className="aspect-[3/4] rounded-3xl overflow-hidden relative group cursor-pointer bg-obsidian/40 border border-white/5"
-                >
-                  {post.mediaType === 'text' ? (
-                    <div className="w-full h-full p-6 flex items-center justify-center text-center">
-                      <p className="text-sm font-display line-clamp-6 leading-relaxed">{post.caption}</p>
+          {/* Achievements & Badges */}
+          {(data.user.achievements?.length > 0 || data.user.badges?.length > 0) && (
+            <div className="mb-10 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+              <div className="flex items-center justify-between mb-4 px-4">
+                <h2 className="text-[10px] font-black uppercase tracking-widest text-white/20">Achievements & Badges</h2>
+                <Trophy size={14} className="text-neon-purple" />
+              </div>
+              <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 px-2">
+                {data.user.badges?.map((badge, i) => (
+                  <div key={`badge-${i}`} className="flex-shrink-0 w-32 h-32 glass-panel rounded-3xl border-white/5 flex flex-col items-center justify-center gap-2 group hover:bg-white/5 transition-all">
+                    <div className="w-12 h-12 rounded-2xl bg-neon-blue/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Trophy className="text-neon-blue" size={24} />
                     </div>
-                  ) : (
-                    <img src={post.thumbnail || post.mediaUrl} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end p-6">
-                    <div className="flex items-center gap-4 text-white font-bold">
-                      <div className="flex items-center gap-1.5">
-                        <Heart size={18} className="fill-white" />
-                        <span>{post.likes.length}</span>
-                      </div>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-white/60 text-center px-2">{badge}</span>
+                  </div>
+                ))}
+                {data.user.achievements?.map((achievement, i) => (
+                  <div key={`ach-${i}`} className="flex-shrink-0 w-32 h-32 glass-panel rounded-3xl border-white/5 flex flex-col items-center justify-center gap-2 group hover:bg-white/5 transition-all">
+                    <div className="w-12 h-12 rounded-2xl bg-neon-purple/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Trophy className="text-neon-purple" size={24} />
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-white/60 text-center px-2">{achievement}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Posts Grid */}
+          <div className="flex items-center justify-between mb-6 px-4">
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-white/20">Talent Showcase</h2>
+            <Video size={14} className="text-white/20" />
+          </div>
+          <div className="grid grid-cols-3 gap-2 md:gap-6">
+            {data.posts.map((post) => (
+              <div
+                key={post._id}
+                onClick={() => navigate(`/feed?post=${post._id}`)}
+                className="aspect-[3/4] rounded-3xl overflow-hidden relative group cursor-pointer bg-obsidian/40 border border-white/5"
+              >
+                {post.mediaType === 'text' ? (
+                  <div className="w-full h-full p-6 flex items-center justify-center text-center">
+                    <p className="text-sm font-display line-clamp-6 leading-relaxed">{post.caption}</p>
+                  </div>
+                ) : (
+                  <img src={post.thumbnail || post.mediaUrl} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end p-6">
+                  <div className="flex items-center gap-4 text-white font-bold">
+                    <div className="flex items-center gap-1.5">
+                      <Heart size={18} className="fill-white" />
+                      <span>{post.likes.length}</span>
                     </div>
                   </div>
                 </div>
-              ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <Navbar />
+
+      {/* Customize Modal */}
+      {customizeOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setCustomizeOpen(false)} />
+          <div className="relative w-full max-w-2xl glass-panel rounded-[3rem] border-white/5 shadow-2xl overflow-hidden animate-scale-in">
+            <div className="p-8 border-b border-white/5 flex items-center justify-between">
+              <h2 className="text-2xl font-bold font-display">Edit Profile</h2>
+              <button onClick={() => setCustomizeOpen(false)} className="p-2 hover:bg-white/5 rounded-full transition-colors">
+                <X size={24} />
+              </button>
+            </div>
+            <div className="p-10 space-y-8 max-h-[70vh] overflow-y-auto no-scrollbar">
+              <div className="flex justify-center">
+                <div className="relative group cursor-pointer">
+                  <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-neon-purple bg-obsidian">
+                    {avatarFile ? (
+                      <img src={URL.createObjectURL(avatarFile)} className="w-full h-full object-cover" />
+                    ) : (
+                      <img src={data.user.profileImage} className="w-full h-full object-cover" />
+                    )}
+                  </div>
+                  <label className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-all rounded-full cursor-pointer">
+                    <ImageIcon className="text-white" size={32} />
+                    <input type="file" className="hidden" onChange={(e) => e.target.files && setAvatarFile(e.target.files[0])} />
+                  </label>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <input
+                  value={editFirstName}
+                  onChange={(e) => setEditFirstName(e.target.value)}
+                  className="w-full bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all"
+                  placeholder="First Name"
+                />
+                <input
+                  value={editLastName}
+                  onChange={(e) => setEditLastName(e.target.value)}
+                  className="w-full bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all"
+                  placeholder="Last Name"
+                />
+              </div>
+              <input
+                value={editUsername}
+                onChange={(e) => setEditUsername(e.target.value)}
+                className="w-full bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all"
+                placeholder="Username"
+              />
+              <textarea
+                value={editBio}
+                onChange={(e) => setEditBio(e.target.value)}
+                className="w-full h-32 bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all resize-none"
+                placeholder="Bio"
+              />
+
+              <button
+                onClick={handleCustomizeSave}
+                disabled={saving}
+                className="w-full py-5 bg-neon-purple text-black rounded-[2rem] font-bold text-lg shadow-xl shadow-neon-purple/20 active:scale-95 transition-all"
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
             </div>
           </div>
         </div>
-
-        <Navbar />
-
-        {/* Customize Modal */}
-        {customizeOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setCustomizeOpen(false)} />
-            <div className="relative w-full max-w-2xl glass-panel rounded-[3rem] border-white/5 shadow-2xl overflow-hidden animate-scale-in">
-              <div className="p-8 border-b border-white/5 flex items-center justify-between">
-                <h2 className="text-2xl font-bold font-display">Edit Profile</h2>
-                <button onClick={() => setCustomizeOpen(false)} className="p-2 hover:bg-white/5 rounded-full transition-colors">
-                  <X size={24} />
-                </button>
-              </div>
-              <div className="p-10 space-y-8 max-h-[70vh] overflow-y-auto no-scrollbar">
-                <div className="flex justify-center">
-                  <div className="relative group cursor-pointer">
-                    <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-neon-purple bg-obsidian">
-                      {avatarFile ? (
-                        <img src={URL.createObjectURL(avatarFile)} className="w-full h-full object-cover" />
-                      ) : (
-                        <img src={data.user.profileImage} className="w-full h-full object-cover" />
-                      )}
-                    </div>
-                    <label className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-all rounded-full cursor-pointer">
-                      <ImageIcon className="text-white" size={32} />
-                      <input type="file" className="hidden" onChange={(e) => e.target.files && setAvatarFile(e.target.files[0])} />
-                    </label>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-6">
-                  <input
-                    value={editFirstName}
-                    onChange={(e) => setEditFirstName(e.target.value)}
-                    className="w-full bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all"
-                    placeholder="First Name"
-                  />
-                  <input
-                    value={editLastName}
-                    onChange={(e) => setEditLastName(e.target.value)}
-                    className="w-full bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all"
-                    placeholder="Last Name"
-                  />
-                </div>
-                <input
-                  value={editUsername}
-                  onChange={(e) => setEditUsername(e.target.value)}
-                  className="w-full bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all"
-                  placeholder="Username"
-                />
-                <textarea
-                  value={editBio}
-                  onChange={(e) => setEditBio(e.target.value)}
-                  className="w-full h-32 bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all resize-none"
-                  placeholder="Bio"
-                />
-
-                <button
-                  onClick={handleCustomizeSave}
-                  disabled={saving}
-                  className="w-full py-5 bg-neon-purple text-black rounded-[2rem] font-bold text-lg shadow-xl shadow-neon-purple/20 active:scale-95 transition-all"
-                >
-                  {saving ? 'Saving...' : 'Save Changes'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-      );
+      )}
+    </div>
+  );
 };
 
-      export default Profile;
+export default Profile;
 
