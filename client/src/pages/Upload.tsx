@@ -130,17 +130,17 @@ const Upload = () => {
   };
 
   return (
-    <div className="min-h-screen bg-matte-black pb-24 relative overflow-hidden">
+    <div className="min-h-[100dvh] bg-matte-black pb-24 md:pb-20 relative overflow-hidden">
       {/* Background Elements */}
       <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-deep-purple/20 to-transparent pointer-events-none" />
       <div className="absolute -top-20 -right-20 w-96 h-96 bg-deep-purple/10 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="max-w-3xl mx-auto px-4 py-12 relative z-10 animate-fade-in">
+      <div className="max-w-3xl mx-auto px-4 md:px-6 py-8 md:py-12 relative z-10 animate-fade-in">
         <div className="text-center mb-10">
-          <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-accent-beige to-white mb-3">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-accent-beige to-white mb-2">
             Share Your Talent
           </h1>
-          <p className="text-accent-beige/60 text-lg">
+          <p className="text-accent-beige/60 text-base md:text-lg">
             Upload your masterpiece and let the world see what you can do.
           </p>
         </div>
@@ -163,7 +163,7 @@ const Upload = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-8 glass-panel p-8 rounded-3xl shadow-2xl animate-slide-up" style={{ animationDelay: '0.1s' }}>
+        <form onSubmit={handleSubmit} className="space-y-6 md:space-y-8 glass-panel p-5 md:p-8 rounded-3xl shadow-2xl animate-slide-up" style={{ animationDelay: '0.1s' }}>
           {error && (
             <div className="bg-red-500/10 border border-red-500/50 text-red-200 rounded-2xl p-4 flex items-start gap-3">
               <AlertCircle size={20} className="mt-0.5 flex-shrink-0 text-red-500" />
@@ -183,8 +183,8 @@ const Upload = () => {
 
           {/* Media Type Selection */}
           <div>
-            <label className="block text-accent-beige/90 mb-4 text-lg font-bold">What are you uploading?</label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <label className="block text-accent-beige/90 mb-3 md:mb-4 text-base md:text-lg font-bold">What are you uploading?</label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
               {[
                 { type: 'video' as const, icon: Video, label: 'Video', desc: 'MP4, WebM' },
                 { type: 'audio' as const, icon: Music, label: 'Audio', desc: 'MP3, WAV' },
@@ -200,7 +200,7 @@ const Upload = () => {
                     setTextContent('');
                     setError('');
                   }}
-                  className={`relative group p-4 rounded-2xl border transition-all duration-300 overflow-hidden ${mediaType === type
+                  className={`relative group p-4 md:p-5 rounded-2xl border transition-all duration-300 overflow-hidden min-h-[72px] active:scale-95 ${mediaType === type
                     ? 'border-deep-purple bg-deep-purple/20 shadow-[0_0_30px_rgba(90,42,131,0.3)]'
                     : 'border-white/10 bg-white/5 hover:border-deep-purple/50 hover:bg-white/10'
                     }`}
@@ -417,7 +417,7 @@ const Upload = () => {
           <button
             type="submit"
             disabled={uploading || !user || (!file && mediaType !== 'text') || (mediaType === 'text' && !textContent.trim())}
-            className="w-full py-5 bg-gradient-to-r from-deep-purple to-[#7B4B27] hover:brightness-110 text-white rounded-2xl font-bold text-lg shadow-lg shadow-deep-purple/20 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3"
+            className="w-full py-5 md:py-6 bg-gradient-to-r from-deep-purple to-[#7B4B27] hover:brightness-110 text-white rounded-2xl font-bold text-base md:text-lg shadow-lg shadow-deep-purple/20 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3 min-h-[56px]"
           >
             {uploading ? (
               <>

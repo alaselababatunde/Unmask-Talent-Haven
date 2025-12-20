@@ -9,17 +9,17 @@ const Security = () => {
     const [newPassword, setNewPassword] = useState('');
 
     return (
-        <div className="min-h-screen bg-matte-black pb-24">
-            <div className="max-w-2xl mx-auto px-4 py-8">
+        <div className="min-h-[100dvh] bg-matte-black pb-24">
+            <div className="max-w-2xl mx-auto px-4 md:px-6 py-6 md:py-8">
                 <div className="flex items-center gap-3 mb-8">
                     <button onClick={() => navigate('/settings')} className="text-accent-beige hover:text-white transition-colors">
                         <ArrowLeft size={24} />
                     </button>
-                    <h1 className="text-2xl font-bold text-accent-beige">Security</h1>
+                    <h1 className="text-xl md:text-2xl font-bold text-accent-beige">Security</h1>
                 </div>
 
                 <div className="space-y-6">
-                    <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                    <div className="bg-white/5 rounded-2xl p-5 md:p-6 border border-white/10">
                         <div className="flex items-center gap-3 mb-6">
                             <div className="p-2 bg-deep-purple/20 rounded-lg text-deep-purple">
                                 <Key size={20} />
@@ -52,7 +52,7 @@ const Security = () => {
                         </div>
                     </div>
 
-                    <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                    <div className="bg-white/5 rounded-2xl p-5 md:p-6 border border-white/10">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-deep-purple/20 rounded-lg text-deep-purple">

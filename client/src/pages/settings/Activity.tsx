@@ -13,13 +13,13 @@ const Activity = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-matte-black pb-24">
-            <div className="max-w-2xl mx-auto px-4 py-8">
+        <div className="min-h-[100dvh] bg-matte-black pb-24">
+            <div className="max-w-2xl mx-auto px-4 md:px-6 py-6 md:py-8">
                 <div className="flex items-center gap-3 mb-8">
                     <button onClick={() => navigate('/settings')} className="text-accent-beige hover:text-white transition-colors">
                         <ArrowLeft size={24} />
                     </button>
-                    <h1 className="text-2xl font-bold text-accent-beige">Activity Centre</h1>
+                    <h1 className="text-xl md:text-2xl font-bold text-accent-beige">Activity Centre</h1>
                 </div>
 
                 <div className="bg-white/5 rounded-2xl border border-white/10 overflow-hidden">

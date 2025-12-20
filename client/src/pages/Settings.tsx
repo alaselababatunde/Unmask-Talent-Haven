@@ -52,14 +52,14 @@ const Settings = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-matte-black pb-24">
-      <div className="max-w-2xl mx-auto px-4 py-8">
+    <div className="min-h-[100dvh] bg-matte-black pb-24">
+      <div className="max-w-2xl mx-auto px-4 md:px-6 py-6 md:py-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <button onClick={() => navigate('/profile')} className="text-accent-beige">
               ←
             </button>
-            <h1 className="text-3xl font-bold text-accent-beige">Settings and privacy</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-accent-beige">Settings and privacy</h1>
           </div>
         </div>
 
@@ -73,7 +73,7 @@ const Settings = () => {
                   <button
                     key={itemIdx}
                     onClick={item.onClick}
-                    className="w-full flex items-center justify-between p-4 hover:bg-deep-purple/5 transition border-b border-deep-purple/10 last:border-b-0"
+                    className="w-full flex items-center justify-between p-5 md:p-4 hover:bg-deep-purple/5 active:bg-deep-purple/10 transition border-b border-deep-purple/10 last:border-b-0 min-h-[56px]"
                   >
                     <div className="flex items-center gap-3">
                       <Icon className="text-deep-purple" size={20} />
@@ -93,7 +93,7 @@ const Settings = () => {
           <div className="bg-matte-black border border-deep-purple/20 rounded-2xl overflow-hidden">
             <button
               onClick={handleLogout}
-              className="w-full flex items-center justify-between p-4 hover:bg-red-500/10 transition border-b border-deep-purple/10 text-red-400"
+              className="w-full flex items-center justify-between p-5 md:p-4 hover:bg-red-500/10 active:bg-red-500/15 transition border-b border-deep-purple/10 text-red-400 min-h-[56px]"
             >
               <div className="flex items-center gap-3">
                 <LogOut className="text-red-400" size={20} />

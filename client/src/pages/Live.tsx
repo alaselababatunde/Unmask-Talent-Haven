@@ -90,7 +90,7 @@ const Live = () => {
   };
 
   return (
-    <div className="min-h-screen bg-matte-black pb-24">
+    <div className="min-h-[100dvh] bg-matte-black pb-24">
       {!isLive ? (
         <div className="h-screen flex items-center justify-center px-4">
           <div className="text-center max-w-md">

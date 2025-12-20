@@ -28,7 +28,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-matte-black flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-[100dvh] bg-matte-black flex items-center justify-center p-4 md:p-6 relative overflow-hidden">
       {/* Background Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-deep-purple/20 rounded-full blur-[100px]" />
@@ -56,7 +56,7 @@ const Login = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 bg-black/40 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-deep-purple focus:bg-black/60 transition-all placeholder:text-white/20"
+                className="w-full pl-12 pr-4 py-5 bg-black/40 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-deep-purple focus:bg-black/60 transition-all placeholder:text-white/20 text-base"
                 placeholder="your@email.com"
                 required
               />
@@ -71,7 +71,7 @@ const Login = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 bg-black/40 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-deep-purple focus:bg-black/60 transition-all placeholder:text-white/20"
+                className="w-full pl-12 pr-4 py-5 bg-black/40 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-deep-purple focus:bg-black/60 transition-all placeholder:text-white/20 text-base"
                 placeholder="••••••••"
                 required
               />
@@ -81,7 +81,7 @@ const Login = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 bg-gradient-to-r from-deep-purple to-[#7B4B27] hover:brightness-110 text-white rounded-2xl font-bold shadow-lg shadow-deep-purple/20 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-5 bg-gradient-to-r from-deep-purple to-[#7B4B27] hover:brightness-110 text-white rounded-2xl font-bold shadow-lg shadow-deep-purple/20 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed min-h-[56px] text-base"
           >
             {loading ? 'Logging in...' : 'Login'}
           </button>

@@ -35,7 +35,7 @@ const Navbar = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex flex-col items-center gap-1 p-2 rounded-2xl transition-all duration-300 relative group ${isActive
+                  className={`flex flex-col items-center gap-1 p-2.5 md:p-2 rounded-2xl transition-all duration-300 relative group min-w-[48px] min-h-[48px] justify-center active:scale-95 ${isActive
                     ? 'text-neon-purple'
                     : 'text-gray-400 hover:text-white'
                     }`}
@@ -45,7 +45,7 @@ const Navbar = () => {
                   )}
 
                   {isCreate ? (
-                    <div className="bg-gradient-to-br from-neon-purple to-neon-blue p-3 rounded-full -mt-10 shadow-[0_0_20px_rgba(176,38,255,0.4)] border-4 border-matte-black transform transition-transform group-hover:scale-110 group-active:scale-95">
+                    <div className="bg-gradient-to-br from-neon-purple to-neon-blue p-3.5 md:p-3 rounded-full -mt-10 shadow-[0_0_20px_rgba(176,38,255,0.4)] border-4 border-matte-black transform transition-transform group-hover:scale-110 group-active:scale-95">
                       <Icon size={24} className="text-black" />
                     </div>
                   ) : (

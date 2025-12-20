@@ -142,7 +142,7 @@ const Chat = () => {
   if (!selectedChat) {
     // INBOX VIEW - TikTok Style
     return (
-      <div className="min-h-screen bg-matte-black pb-24">
+      <div className="min-h-[100dvh] bg-matte-black pb-24">
         {/* Header */}
         <div className="sticky top-0 z-10 bg-matte-black/95 backdrop-blur-sm border-b border-deep-purple/20">
           <div className="max-w-4xl mx-auto px-4 py-4">
@@ -262,7 +262,7 @@ const Chat = () => {
 
   // CHAT VIEW - TikTok Style
   return (
-    <div className="h-screen bg-matte-black flex flex-col">
+    <div className="h-[100dvh] bg-matte-black flex flex-col">
       {/* Chat Header */}
       <div className="bg-matte-black/95 backdrop-blur-sm border-b border-deep-purple/20 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3 flex-1">

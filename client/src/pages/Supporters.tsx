@@ -42,7 +42,7 @@ const Supporters = () => {
   const topSupporter = supporters[0];
 
   return (
-    <div className="min-h-screen bg-matte-black pb-24">
+    <div className="min-h-[100dvh] bg-matte-black pb-24">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center gap-3 mb-8">
           <div className="p-3 bg-deep-purple/20 rounded-full glow-purple">
