@@ -136,14 +136,18 @@ export const likePost = async (req, res) => {
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    const likeIndex = post.likes.findIndex(id => id.toString() === req.user._id.toString());
+    const userId = req.user._id.toString();
+    const likeIndex = post.likes.findIndex(id => id.toString() === userId);
+
+    console.log(`[Like Debug] Post: ${post._id}, User: ${userId}, LikeIndex: ${likeIndex}, CurrentLikes: ${post.likes.length}`);
 
     if (likeIndex === -1) {
       // Like
       post.likes.push(req.user._id);
+      console.log(`[Like Debug] Added like for user ${userId}`);
 
       // Create and emit notification if liker is not the post owner
-      if (post.user._id.toString() !== req.user._id.toString()) {
+      if (post.user._id.toString() !== userId) {
         const notification = await Notification.create({
           user: post.user._id,
           from: req.user._id,
@@ -161,11 +165,13 @@ export const likePost = async (req, res) => {
     } else {
       // Unlike
       post.likes.splice(likeIndex, 1);
+      console.log(`[Like Debug] Removed like for user ${userId}`);
     }
 
     await post.save();
     res.json(post);
   } catch (error) {
+    console.error('[Like Error]', error);
     res.status(500).json({ message: error.message });
   }
 };
