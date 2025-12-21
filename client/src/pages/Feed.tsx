@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api';
 import Navbar from '../components/Navbar';
 import ReactPlayer from 'react-player';
-import { Heart, MessageCircle, Share2, Music, MoreVertical, Forward, X, Plus, Check, Archive, Trash2, Edit, AlertCircle, Video as VideoIcon, Search, MoreHorizontal, Send } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Music, MoreVertical, X, Plus, Check, Archive, Trash2, Edit, AlertCircle, Video as VideoIcon, Search, MoreHorizontal, Send } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -170,7 +170,7 @@ const Feed = () => {
 
       return { previousData, queryKey };
     },
-    onError: (err, __, context) => {
+    onError: (_err, __, context) => {
       if (context?.previousData) {
         queryClient.setQueryData(context.queryKey, context.previousData);
       }

@@ -1,6 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Home, Plus, MessageCircle, User, Search } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
   const location = useLocation();
