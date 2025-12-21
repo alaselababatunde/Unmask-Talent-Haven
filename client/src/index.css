@@ -28,6 +28,24 @@
     @apply bg-clip-text text-transparent bg-gradient-to-r from-neon-purple to-neon-blue;
   }
 
+  /* Global Layout Architecture */
+  .fixed-screen {
+    @apply h-[100dvh] w-full relative overflow-hidden bg-primary;
+  }
+
+  .scrollable-content {
+    @apply absolute inset-0 overflow-y-auto no-scrollbar;
+  }
+
+  .safe-bottom-area {
+    @apply pb-32;
+    /* Padding to avoid Navbar overlap */
+  }
+
+  .tap-target {
+    @apply min-h-[48px] min-w-[48px] flex items-center justify-center;
+  }
+
   .glow-purple {
     box-shadow: 0 0 20px rgba(176, 38, 255, 0.3);
   }

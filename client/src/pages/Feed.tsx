@@ -309,7 +309,7 @@ const Feed = () => {
   // displayPosts is already defined above
 
   return (
-    <div className="h-[100dvh] w-full bg-primary overflow-hidden relative">
+    <div className="fixed-screen">
       {/* Floating Header - Multi-FYP Tabs */}
       <div className="fixed top-0 left-0 right-0 z-50 flex flex-col items-center pt-8 pb-4 bg-gradient-to-b from-black/80 via-black/40 to-transparent">
         <div className="w-full overflow-x-auto no-scrollbar px-6">
@@ -340,7 +340,7 @@ const Feed = () => {
       </div>
 
       {/* Feed Container */}
-      <div className="h-full w-full overflow-y-scroll snap-y snap-mandatory no-scrollbar">
+      <div className="scrollable-content snap-y snap-mandatory">
         {isLoading ? (
           <div className="h-full w-full flex items-center justify-center">
             <div className="w-12 h-12 border-4 border-neon-purple/20 border-t-neon-purple rounded-full animate-spin" />
@@ -480,8 +480,8 @@ const Feed = () => {
 
               {/* Right Side Actions - Thumb Zone Optimized */}
               <div className="absolute right-4 bottom-32 flex flex-col items-center gap-8 z-20">
-                {/* Creator Avatar */}
-                <div className="relative mb-4">
+                {/* Creator Avatar & Follow Button */}
+                <div className="relative mb-6">
                   <button
                     onClick={() => navigate(`/profile/${post.user._id}`)}
                     className="w-16 h-16 rounded-full border-2 border-white p-0.5 overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.5)] active:scale-90 transition-transform"
@@ -500,28 +500,28 @@ const Feed = () => {
                         targetId: post.user._id,
                         isFollowing: currentUser?.following?.some((f: any) => f._id === post.user._id) || false
                       })}
-                      className={`absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full p-1.5 shadow-lg hover:scale-110 active:scale-90 transition-all ${currentUser?.following?.some((f: any) => f._id === post.user._id)
+                      className={`absolute -bottom-2 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full flex items-center justify-center shadow-lg hover:scale-110 active:scale-90 transition-all z-30 ${currentUser?.following?.some((f: any) => f._id === post.user._id)
                         ? 'bg-white text-black'
                         : 'bg-neon-purple text-black'
                         }`}
                     >
                       {currentUser?.following?.some((f: any) => f._id === post.user._id) ? (
-                        <Check size={16} strokeWidth={4} />
+                        <Check size={14} strokeWidth={4} />
                       ) : (
-                        <Plus size={16} strokeWidth={4} />
+                        <Plus size={14} strokeWidth={4} />
                       )}
                     </button>
                   )}
                 </div>
 
-                {/* Action Stack with Glass Backdrop */}
-                <div className="flex flex-col items-center gap-4 p-1.5 rounded-full bg-black/10 backdrop-blur-md border border-white/5">
+                {/* Action Stack - Fixed Position & Standardized Tap Targets */}
+                <div className="flex flex-col items-center gap-6 p-2 rounded-[2rem] bg-black/10 backdrop-blur-md border border-white/5">
                   {/* Like */}
                   <button
                     onClick={() => handleLike(post._id)}
-                    className="flex flex-col items-center gap-1 group active:scale-90 transition-transform"
+                    className="flex flex-col items-center gap-1 group active:scale-90 transition-transform tap-target"
                   >
-                    <div className={`p-3 rounded-full glass-button ${post.likes.includes(currentUser?.id || '') ? 'text-neon-purple bg-neon-purple/10' : 'text-white'}`}>
+                    <div className={`p-3.5 rounded-full glass-button ${post.likes.includes(currentUser?.id || '') ? 'text-neon-purple bg-neon-purple/10' : 'text-white'}`}>
                       <Heart className={`w-6 h-6 ${post.likes.includes(currentUser?.id || '') ? 'fill-current' : ''}`} />
                     </div>
                     <span className="text-[9px] font-black uppercase tracking-widest drop-shadow-md">{post.likes.length}</span>
@@ -530,9 +530,9 @@ const Feed = () => {
                   {/* Comment */}
                   <button
                     onClick={() => setOpenCommentsPostId(post._id)}
-                    className="flex flex-col items-center gap-1 group active:scale-90 transition-transform"
+                    className="flex flex-col items-center gap-1 group active:scale-90 transition-transform tap-target"
                   >
-                    <div className="p-3 rounded-full glass-button text-white">
+                    <div className="p-3.5 rounded-full glass-button text-white">
                       <MessageCircle className="w-6 h-6" />
                     </div>
                     <span className="text-[9px] font-black uppercase tracking-widest drop-shadow-md">{post.comments.length}</span>
@@ -541,19 +541,19 @@ const Feed = () => {
                   {/* Share */}
                   <button
                     onClick={() => setOpenSharePostId(post._id)}
-                    className="flex flex-col items-center gap-1 group active:scale-90 transition-transform"
+                    className="flex flex-col items-center gap-1 group active:scale-90 transition-transform tap-target"
                   >
-                    <div className="p-3 rounded-full glass-button text-white">
+                    <div className="p-3.5 rounded-full glass-button text-white">
                       <Share2 className="w-6 h-6" />
                     </div>
                     <span className="text-[9px] font-black uppercase tracking-widest drop-shadow-md">Share</span>
                   </button>
 
                   {/* More */}
-                  <div className="relative post-menu">
+                  <div className="relative post-menu tap-target">
                     <button
                       onClick={() => setPostMenuOpen(postMenuOpen === post._id ? null : post._id)}
-                      className="p-3 rounded-full glass-button text-white active:scale-90 transition-transform"
+                      className="p-3.5 rounded-full glass-button text-white active:scale-90 transition-transform"
                     >
                       <MoreVertical className="w-6 h-6" />
                     </button>

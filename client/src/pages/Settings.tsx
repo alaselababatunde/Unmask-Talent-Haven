@@ -50,13 +50,13 @@ const Settings = () => {
   ];
 
   return (
-    <div className="h-[100dvh] w-full bg-primary flex flex-col relative overflow-hidden">
+    <div className="fixed-screen">
       {/* Background Glows */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-neon-purple/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-neon-blue/10 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Fixed Glassy Header */}
-      <div className="sticky top-0 z-[100] bg-primary/40 backdrop-blur-xl border-b border-white/5 px-6 pt-12 pb-6">
+      <div className="absolute top-0 left-0 right-0 z-[100] bg-primary/40 backdrop-blur-xl border-b border-white/5 px-6 pt-12 pb-6">
         <div className="flex items-center gap-4 max-w-4xl mx-auto">
           <button
             onClick={() => navigate('/profile')}
@@ -68,56 +68,57 @@ const Settings = () => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 pb-32 no-scrollbar relative z-10">
-        {settingsSections.map((section, idx) => (
-          <div key={idx} className="mb-10">
-            <h2 className="text-[10px] font-black uppercase tracking-widest text-white/20 ml-4 mb-4">{section.title}</h2>
-            <div className="glass-panel rounded-[2.5rem] border-white/5 overflow-hidden">
-              {section.items.map((item, itemIdx) => {
-                const Icon = item.icon;
-                return (
-                  <button
-                    key={itemIdx}
-                    onClick={item.onClick}
-                    className="w-full flex items-center justify-between p-6 hover:bg-white/5 active:bg-white/10 transition-all border-b border-white/5 last:border-b-0 group"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                        <Icon className={item.color} size={20} />
+      <div className="scrollable-content px-6 pb-32 no-scrollbar">
+        <div className="max-w-4xl mx-auto pt-32">
+          {settingsSections.map((section, idx) => (
+            <div key={idx} className="mb-10">
+              <h2 className="text-[10px] font-black uppercase tracking-widest text-white/20 ml-4 mb-4">{section.title}</h2>
+              <div className="glass-panel rounded-[2.5rem] border-white/5 overflow-hidden">
+                {section.items.map((item, itemIdx) => {
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={itemIdx}
+                      onClick={item.onClick}
+                      className="w-full flex items-center justify-between p-6 hover:bg-white/5 active:bg-white/10 transition-all border-b border-white/5 last:border-b-0 group"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                          <Icon className={item.color} size={20} />
+                        </div>
+                        <span className="text-sm font-bold text-white/80">{item.label}</span>
                       </div>
-                      <span className="text-sm font-bold text-white/80">{item.label}</span>
-                    </div>
-                    <ChevronRight className="text-white/10 group-hover:text-white/40 transition-colors" size={18} />
-                  </button>
-                );
-              })}
+                      <ChevronRight className="text-white/10 group-hover:text-white/40 transition-colors" size={18} />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+
+          {/* Logout Section */}
+          <div className="mb-10">
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-white/20 ml-4 mb-4">Account Actions</h2>
+            <div className="glass-panel rounded-[2.5rem] border-white/5 overflow-hidden">
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center justify-between p-6 hover:bg-red-500/10 active:bg-red-500/15 transition-all group"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-2xl bg-red-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <LogOut className="text-red-500" size={20} />
+                  </div>
+                  <span className="text-sm font-bold text-red-500">Logout</span>
+                </div>
+                <ChevronRight className="text-red-500/20 group-hover:text-red-500/40 transition-colors" size={18} />
+              </button>
             </div>
           </div>
-        ))}
-
-        {/* Logout Section */}
-        <div className="mb-10">
-          <h2 className="text-[10px] font-black uppercase tracking-widest text-white/20 ml-4 mb-4">Account Actions</h2>
-          <div className="glass-panel rounded-[2.5rem] border-white/5 overflow-hidden">
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center justify-between p-6 hover:bg-red-500/10 active:bg-red-500/15 transition-all group"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-2xl bg-red-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <LogOut className="text-red-500" size={20} />
-                </div>
-                <span className="text-sm font-bold text-red-500">Logout</span>
-              </div>
-              <ChevronRight className="text-red-500/20 group-hover:text-red-500/40 transition-colors" size={18} />
-            </button>
-          </div>
         </div>
-      </div>
 
-      <Navbar />
-    </div>
-  );
+        <Navbar />
+      </div>
+      );
 };
 
-export default Settings;
+      export default Settings;

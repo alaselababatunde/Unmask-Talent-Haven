@@ -107,7 +107,7 @@ const Live = () => {
   };
 
   return (
-    <div className="h-[100dvh] w-full bg-primary relative overflow-hidden">
+    <div className="fixed-screen">
       {!isLive ? (
         <div className="h-full flex items-center justify-center p-6 relative">
           {/* Background Glows */}
