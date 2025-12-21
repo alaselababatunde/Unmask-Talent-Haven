@@ -9,9 +9,9 @@ const Navbar = () => {
 
   const navItems = [
     { icon: Home, label: 'Home', path: '/feed' },
-    { icon: Search, label: 'Discover', path: '/search' },
+    { icon: Search, label: 'Search', path: '/search' },
     { icon: Plus, label: 'Create', path: '/upload' },
-    { icon: MessageCircle, label: 'Inbox', path: '/chat' },
+    { icon: MessageCircle, label: 'Chat', path: '/chat' },
     { icon: Bell, label: 'Alerts', isNotification: true },
     { icon: User, label: 'Profile', path: '/profile' },
   ];

@@ -111,6 +111,34 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('join_live', (payload) => {
+    try {
+      const streamId = payload?.streamId;
+      if (streamId) {
+        const room = `live:${streamId}`;
+        socket.join(room);
+        const count = io.sockets.adapter.rooms.get(room)?.size || 0;
+        io.to(room).emit('viewer_count', { count });
+      }
+    } catch (e) {
+      // ignore
+    }
+  });
+
+  socket.on('leave_live', (payload) => {
+    try {
+      const streamId = payload?.streamId;
+      if (streamId) {
+        const room = `live:${streamId}`;
+        socket.leave(room);
+        const count = io.sockets.adapter.rooms.get(room)?.size || 0;
+        io.to(room).emit('viewer_count', { count });
+      }
+    } catch (e) {
+      // ignore
+    }
+  });
+
   socket.on('message', (payload) => {
     // expect { text, userId, username, room? }
     const out = {

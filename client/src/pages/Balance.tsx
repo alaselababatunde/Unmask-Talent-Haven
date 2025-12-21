@@ -79,8 +79,8 @@ const Balance = () => {
               <Wallet className="text-neon-purple" size={24} />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-bold font-display tracking-tighter">${data?.balance.toFixed(2) || '0.00'}</span>
-              <span className="text-neon-blue text-xs font-black uppercase tracking-widest">USD</span>
+              <span className="text-5xl font-bold font-display tracking-tighter">₦{data?.balance.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</span>
+              <span className="text-neon-blue text-xs font-black uppercase tracking-widest">NGN</span>
             </div>
           </div>
         </div>
@@ -92,7 +92,7 @@ const Balance = () => {
               <TrendingUp className="text-neon-blue" size={20} />
               <span className="text-[8px] font-black uppercase tracking-widest text-white/20">Total</span>
             </div>
-            <p className="text-xl font-bold">${data?.totalEarnings.toFixed(2) || '0.00'}</p>
+            <p className="text-xl font-bold">₦{data?.totalEarnings.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</p>
           </div>
           <div className="glass-panel p-6 rounded-[2rem] border-white/5">
             <div className="flex items-center justify-between mb-4">
@@ -133,7 +133,7 @@ const Balance = () => {
                   value={withdrawAmount}
                   onChange={(e) => setWithdrawAmount(e.target.value)}
                   className="w-full p-5 bg-obsidian/40 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-neon-purple transition-all placeholder:text-white/10"
-                  placeholder="0.00"
+                  placeholder="₦0.00"
                   min="0"
                   max={data?.balance || 0}
                   step="0.01"
@@ -192,7 +192,7 @@ const Balance = () => {
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-bold">Received Support</span>
-                        <span className="text-[10px] text-neon-blue font-black uppercase tracking-widest">+{donation.amount.toFixed(2)}</span>
+                        <span className="text-[10px] text-neon-blue font-black uppercase tracking-widest">+₦{donation.amount.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                       </div>
                       <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mt-1">
                         {new Date(donation.createdAt).toLocaleDateString()}

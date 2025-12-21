@@ -3,7 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '../api';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
-import { Trophy, Heart, Video, MoreVertical, Image as ImageIcon, X, Music, Archive, Trash2, Edit, BarChart2, Users, Activity } from 'lucide-react';
+import { Trophy, Heart, Video, MoreVertical, Image as ImageIcon, X, Music, Archive, Trash2, Edit, BarChart2, Users, Activity, ShieldOff } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 interface UserData {
@@ -20,6 +20,9 @@ interface UserData {
     achievements: string[];
     badges: string[];
     isLive?: boolean;
+    settings?: {
+      isPrivate: boolean;
+    };
   };
   posts: Array<{
     _id: string;
@@ -462,87 +465,106 @@ const Profile = () => {
             <h2 className="text-[10px] font-black uppercase tracking-widest text-white/20">Talent Showcase</h2>
             <Video size={14} className="text-white/20" />
           </div>
-          <div className="grid grid-cols-3 gap-2 md:gap-6">
-            {data.posts.map((post) => (
-              <div
-                key={post._id}
-                onClick={() => navigate(`/feed?post=${post._id}`)}
-                className="aspect-[3/4] rounded-3xl overflow-hidden relative group cursor-pointer bg-obsidian/40 border border-white/5"
-              >
-                {post.mediaType === 'text' ? (
-                  <div className="w-full h-full p-6 flex items-center justify-center text-center">
-                    <p className="text-sm font-display line-clamp-6 leading-relaxed">{post.caption}</p>
-                  </div>
-                ) : (
-                  <img src={post.thumbnail || post.mediaUrl} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end p-6">
-                  <div className="flex items-center gap-4 text-white">
-                    <div className="flex items-center gap-1.5">
-                      <Heart size={16} className="fill-neon-purple text-neon-purple" />
-                      <span className="text-xs font-bold">{post.likes?.length || 0}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Video size={16} className="text-neon-blue" />
-                      <span className="text-xs font-bold">{post.views || 0}</span>
-                    </div>
-                  </div>
-                </div>
 
-                {isOwnProfile && (
-                  <div className="absolute top-4 right-4 z-10 post-menu">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setPostMenuOpen(postMenuOpen === post._id ? null : post._id);
-                      }}
-                      className="p-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white hover:bg-black/60 transition-all"
-                    >
-                      <MoreVertical size={16} />
-                    </button>
-
-                    {postMenuOpen === post._id && (
-                      <div className="absolute right-0 top-full mt-2 w-48 glass-panel rounded-2xl border-white/10 shadow-2xl overflow-hidden animate-scale-in origin-top-right z-20">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setIsEditing(post);
-                            setEditCaption(post.caption);
-                            setEditTags(post.tags?.join(', ') || '');
-                            setPostMenuOpen(null);
-                          }}
-                          className="w-full flex items-center gap-3 px-5 py-3 hover:bg-white/5 transition-colors text-white text-sm font-bold"
-                        >
-                          <Edit size={14} className="text-neon-blue" />
-                          <span>Edit</span>
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            archiveMutation.mutate(post._id);
-                          }}
-                          className="w-full flex items-center gap-3 px-5 py-3 hover:bg-white/5 transition-colors text-white text-sm font-bold"
-                        >
-                          <Archive size={14} className="text-neon-purple" />
-                          <span>{post.isArchived ? 'Unarchive' : 'Archive'}</span>
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setIsDeleting(post._id);
-                          }}
-                          className="w-full flex items-center gap-3 px-5 py-3 hover:bg-white/5 transition-colors text-red-500 text-sm font-bold"
-                        >
-                          <Trash2 size={14} />
-                          <span>Delete</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
+          {data.user.settings?.isPrivate && !isOwnProfile && !data.user.followers.some(f => f._id === currentUser?.id) ? (
+            <div className="glass-panel rounded-[3rem] p-20 border-white/5 text-center space-y-6 animate-scale-in">
+              <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto">
+                <ShieldOff size={40} className="text-white/20" />
               </div>
-            ))}
-          </div>
+              <h3 className="text-2xl font-bold">This Account is Private</h3>
+              <p className="text-white/40 max-w-xs mx-auto">Follow this creator to see their talent showcase and exclusive content.</p>
+            </div>
+          ) : data.posts.length === 0 ? (
+            <div className="glass-panel rounded-[3rem] p-20 border-white/5 text-center space-y-6">
+              <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto">
+                <Video size={40} className="text-white/20" />
+              </div>
+              <h3 className="text-2xl font-bold">No Posts Yet</h3>
+              <p className="text-white/40 max-w-xs mx-auto">This creator hasn't unmasked any talent yet. Stay tuned!</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-2 md:gap-6">
+              {data.posts.map((post) => (
+                <div
+                  key={post._id}
+                  onClick={() => navigate(`/feed?post=${post._id}`)}
+                  className="aspect-[3/4] rounded-3xl overflow-hidden relative group cursor-pointer bg-obsidian/40 border border-white/5"
+                >
+                  {post.mediaType === 'text' ? (
+                    <div className="w-full h-full p-6 flex items-center justify-center text-center">
+                      <p className="text-sm font-display line-clamp-6 leading-relaxed">{post.caption}</p>
+                    </div>
+                  ) : (
+                    <img src={post.thumbnail || post.mediaUrl} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end p-6">
+                    <div className="flex items-center gap-4 text-white">
+                      <div className="flex items-center gap-1.5">
+                        <Heart size={16} className="fill-neon-purple text-neon-purple" />
+                        <span className="text-xs font-bold">{post.likes?.length || 0}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Video size={16} className="text-neon-blue" />
+                        <span className="text-xs font-bold">{post.views || 0}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {isOwnProfile && (
+                    <div className="absolute top-4 right-4 z-10 post-menu">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPostMenuOpen(postMenuOpen === post._id ? null : post._id);
+                        }}
+                        className="p-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white hover:bg-black/60 transition-all"
+                      >
+                        <MoreVertical size={16} />
+                      </button>
+
+                      {postMenuOpen === post._id && (
+                        <div className="absolute right-0 top-full mt-2 w-48 glass-panel rounded-2xl border-white/10 shadow-2xl overflow-hidden animate-scale-in origin-top-right z-20">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setIsEditing(post);
+                              setEditCaption(post.caption);
+                              setEditTags(post.tags?.join(', ') || '');
+                              setPostMenuOpen(null);
+                            }}
+                            className="w-full flex items-center gap-3 px-5 py-3 hover:bg-white/5 transition-colors text-white text-sm font-bold"
+                          >
+                            <Edit size={14} className="text-neon-blue" />
+                            <span>Edit</span>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              archiveMutation.mutate(post._id);
+                            }}
+                            className="w-full flex items-center gap-3 px-5 py-3 hover:bg-white/5 transition-colors text-white text-sm font-bold"
+                          >
+                            <Archive size={14} className="text-neon-purple" />
+                            <span>{post.isArchived ? 'Unarchive' : 'Archive'}</span>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setIsDeleting(post._id);
+                            }}
+                            className="w-full flex items-center gap-3 px-5 py-3 hover:bg-white/5 transition-colors text-red-500 text-sm font-bold"
+                          >
+                            <Trash2 size={14} />
+                            <span>Delete</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -712,14 +734,12 @@ const Profile = () => {
                     <span className="text-[10px] font-black uppercase tracking-widest">Total Views</span>
                   </div>
                   <p className="text-3xl font-black">{data.posts.reduce((acc, p) => acc + (p.views || 0), 0).toLocaleString()}</p>
-                  <p className="text-3xl font-black">{data.posts.reduce((acc, p) => acc + (p.views || 0), 0).toLocaleString()}</p>
                 </div>
                 <div className="p-6 glass-panel rounded-3xl border-white/5 bg-white/5">
                   <div className="flex items-center gap-3 text-white/40 mb-2">
                     <Heart size={16} />
                     <span className="text-[10px] font-black uppercase tracking-widest">Total Likes</span>
                   </div>
-                  <p className="text-3xl font-black">{data.posts.reduce((acc, p) => acc + (p.likes?.length || 0), 0).toLocaleString()}</p>
                   <p className="text-3xl font-black">{data.posts.reduce((acc, p) => acc + (p.likes?.length || 0), 0).toLocaleString()}</p>
                 </div>
                 <div className="p-6 glass-panel rounded-3xl border-white/5 bg-white/5">
@@ -732,18 +752,12 @@ const Profile = () => {
                       ? ((data.posts.reduce((acc, p) => acc + (p.likes?.length || 0), 0) / data.posts.reduce((acc, p) => acc + Math.max(1, p.views || 0), 0)) * 100).toFixed(1)
                       : 0}%
                   </p>
-                  <p className="text-3xl font-black">
-                    {data.posts.length > 0
-                      ? ((data.posts.reduce((acc, p) => acc + (p.likes?.length || 0), 0) / data.posts.reduce((acc, p) => acc + Math.max(1, p.views || 0), 0)) * 100).toFixed(1)
-                      : 0}%
-                  </p>
                 </div>
                 <div className="p-6 glass-panel rounded-3xl border-white/5 bg-white/5">
                   <div className="flex items-center gap-3 text-white/40 mb-2">
                     <Users size={16} />
                     <span className="text-[10px] font-black uppercase tracking-widest">Followers</span>
                   </div>
-                  <p className="text-3xl font-black">{data.user.followers.length.toLocaleString()}</p>
                   <p className="text-3xl font-black">{data.user.followers.length.toLocaleString()}</p>
                 </div>
               </div>

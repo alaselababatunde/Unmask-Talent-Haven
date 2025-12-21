@@ -1,23 +1,44 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
-import { Radio, Video, VideoOff, Mic, MicOff, Users, Heart, MessageCircle, Share2, Settings, ArrowLeft, Send } from 'lucide-react';
+import { Radio, Video, VideoOff, Mic, MicOff, Users, ArrowLeft, Send, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
 
 const Live = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, socket } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [isLive, setIsLive] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [viewers, setViewers] = useState(0);
-  const [showSettings, setShowSettings] = useState(false);
   const [error, setError] = useState('');
   const [chatMessages, setChatMessages] = useState<{ user: string, text: string }[]>([]);
   const [chatInput, setChatInput] = useState('');
+
+  useEffect(() => {
+    if (socket && isLive && user?.id) {
+      socket.emit('join_live', { streamId: user.id });
+
+      socket.on('viewer_count', ({ count }) => {
+        setViewers(count);
+      });
+
+      socket.on('message', (msg) => {
+        if (msg.room === `live:${user.id}`) {
+          setChatMessages(prev => [...prev, { user: msg.username, text: msg.text }]);
+        }
+      });
+
+      return () => {
+        socket.emit('leave_live', { streamId: user.id });
+        socket.off('viewer_count');
+        socket.off('message');
+      };
+    }
+  }, [socket, isLive, user?.id]);
 
   useEffect(() => {
     return () => {
@@ -38,7 +59,6 @@ const Live = () => {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       streamRef.current = stream;
       setIsLive(true);
-      setViewers(Math.floor(Math.random() * 10) + 1);
       setError('');
       if (user?.id) {
         await api.put(`/user/${user.id}/live`, { isLive: true });
@@ -129,182 +149,116 @@ const Live = () => {
           </div>
         </div>
       ) : (
-        <div className="h-full w-full flex flex-col md:flex-row">
+        <div className="h-full w-full bg-black relative">
           {/* Main video area */}
-          <div className="flex-1 relative bg-black overflow-hidden">
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted={isMuted}
-              className="w-full h-full object-cover"
-            />
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted={isMuted}
+            className="w-full h-full object-cover"
+          />
 
-            {/* Overlays */}
-            <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-black/40 via-transparent to-black/60" />
+          {/* Overlays */}
+          <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-black/60 via-transparent to-black/80" />
 
-            {/* Top Bar */}
-            <div className="absolute top-8 left-8 right-8 flex items-center justify-between z-20 pointer-events-auto">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 px-4 py-2 bg-red-500 rounded-full shadow-lg">
-                  <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                  <span className="text-white text-xs font-black tracking-widest">LIVE</span>
-                </div>
-                <div className="flex items-center gap-2 px-4 py-2 glass-panel border-white/10 rounded-full">
-                  <Users size={14} className="text-neon-blue" />
-                  <span className="text-white text-xs font-bold">{viewers}</span>
-                </div>
+          {/* Top Bar */}
+          <div className="absolute top-12 left-6 right-6 flex items-center justify-between z-20">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 px-4 py-2 bg-red-500 rounded-full shadow-lg">
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                <span className="text-white text-[10px] font-black tracking-widest">LIVE</span>
               </div>
-
-              <button
-                onClick={() => setShowSettings(!showSettings)}
-                className="p-3 glass-button rounded-full text-white/60 hover:text-white transition-all"
-              >
-                <Settings size={20} />
-              </button>
+              <div className="flex items-center gap-2 px-4 py-2 glass-panel border-white/10 rounded-full">
+                <Users size={14} className="text-neon-blue" />
+                <span className="text-white text-xs font-bold">{viewers}</span>
+              </div>
             </div>
 
-            {/* Bottom Controls */}
-            <div className="absolute bottom-10 left-8 right-8 flex items-center justify-between z-20 pointer-events-auto">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={toggleMute}
-                  className={`p-4 rounded-full transition-all ${isMuted ? 'bg-red-500 text-white' : 'glass-button text-white/60'}`}
-                >
-                  {isMuted ? <MicOff size={24} /> : <Mic size={24} />}
-                </button>
-                <button
-                  onClick={toggleVideo}
-                  className={`p-4 rounded-full transition-all ${isVideoOff ? 'bg-red-500 text-white' : 'glass-button text-white/60'}`}
-                >
-                  {isVideoOff ? <VideoOff size={24} /> : <Video size={24} />}
-                </button>
-              </div>
-
-              <button
-                onClick={stopStream}
-                className="px-8 py-4 bg-red-500 text-white rounded-full font-black text-xs tracking-widest shadow-xl shadow-red-500/20 active:scale-95 transition-all"
-              >
-                END STREAM
-              </button>
-            </div>
-
-            {/* Settings Panel */}
-            {showSettings && (
-              <div className="absolute top-24 right-8 w-64 glass-panel p-6 rounded-3xl border-white/10 z-30 animate-scale-in">
-                <h3 className="text-sm font-black uppercase tracking-widest mb-4 text-neon-purple">Stream Settings</h3>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-white/40 font-bold">Quality</span>
-                    <span className="text-xs font-bold">1080p</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-white/40 font-bold">Bitrate</span>
-                    <span className="text-xs font-bold">4.5 Mbps</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-white/40 font-bold">Latency</span>
-                    <span className="text-xs font-bold text-neon-blue">Ultra Low</span>
-                  </div>
-                </div>
-              </div>
-            )}
+            <button
+              onClick={() => navigate(-1)}
+              className="p-3 glass-button rounded-full text-white/60 hover:text-white transition-all"
+            >
+              <X size={20} />
+            </button>
           </div>
 
-          {/* Side Panel (Chat & Info) */}
-          <div className="w-full md:w-96 bg-obsidian border-l border-white/5 flex flex-col relative z-20">
-            {/* Creator Info */}
-            <div className="p-6 border-b border-white/5">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 rounded-full bg-primary overflow-hidden border border-white/10 p-1">
-                  <div className="w-full h-full rounded-full overflow-hidden">
-                    {user?.profileImage ? (
-                      <img src={user.profileImage} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-obsidian text-neon-purple font-bold text-xl">
-                        {user?.username?.[0].toUpperCase()}
-                      </div>
-                    )}
+          {/* Chat Overlay (Bottom Left) */}
+          <div className="absolute bottom-40 left-6 right-20 z-20 pointer-events-none">
+            <div className="max-h-64 overflow-y-auto no-scrollbar space-y-3 flex flex-col justify-end">
+              {chatMessages.slice(-5).map((msg, i) => (
+                <div key={i} className="flex items-start gap-2 animate-slide-up">
+                  <div className="px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-2xl border border-white/5">
+                    <span className="text-[10px] font-black text-neon-purple mr-2 uppercase tracking-widest">{msg.user}</span>
+                    <span className="text-xs text-white/90 leading-relaxed">{msg.text}</span>
                   </div>
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-lg">{user?.username}</h3>
-                  <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">Streaming Now</p>
-                </div>
-              </div>
+              ))}
+            </div>
+          </div>
 
-              <div className="grid grid-cols-3 gap-3">
-                <button className="flex flex-col items-center gap-2 p-3 glass-button rounded-2xl group">
-                  <Heart size={18} className="text-white/40 group-hover:text-red-500 transition-colors" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Like</span>
-                </button>
+          {/* Bottom Controls - Thumb Zone Optimized */}
+          <div className="absolute bottom-12 left-6 right-6 flex items-end justify-between z-20">
+            {/* Chat Input */}
+            <div className="flex-1 mr-4">
+              <div className="glass-panel p-1 rounded-full border border-white/10 flex items-center gap-2">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && chatInput.trim() && socket && user) {
+                      socket.emit('message', {
+                        text: chatInput,
+                        userId: user.id,
+                        username: user.username,
+                        room: `live:${user.id}`
+                      });
+                      setChatInput('');
+                    }
+                  }}
+                  placeholder="Say something..."
+                  className="flex-1 bg-transparent px-5 py-3 text-sm focus:outline-none placeholder:text-white/20"
+                />
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText(window.location.href);
-                    alert('Stream link copied!');
+                    if (chatInput.trim() && socket && user) {
+                      socket.emit('message', {
+                        text: chatInput,
+                        userId: user.id,
+                        username: user.username,
+                        room: `live:${user.id}`
+                      });
+                      setChatInput('');
+                    }
                   }}
-                  className="flex flex-col items-center gap-2 p-3 glass-button rounded-2xl group"
+                  className="p-3 bg-neon-purple text-black rounded-full shadow-lg shadow-neon-purple/20 active:scale-90 transition-all"
                 >
-                  <Share2 size={18} className="text-white/40 group-hover:text-neon-blue transition-colors" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Share</span>
-                </button>
-                <button className="flex flex-col items-center gap-2 p-3 glass-button rounded-2xl group">
-                  <MessageCircle size={18} className="text-white/40 group-hover:text-neon-purple transition-colors" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Chat</span>
+                  <Send size={18} />
                 </button>
               </div>
             </div>
 
-            {/* Chat Area */}
-            <div className="flex-1 flex flex-col min-h-0">
-              <div className="px-6 py-4 border-b border-white/5">
-                <h4 className="text-xs font-black uppercase tracking-widest text-white/20">Live Chat</h4>
-              </div>
-              <div className="flex-1 overflow-y-auto p-6 space-y-4 no-scrollbar">
-                {chatMessages.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-center opacity-20">
-                    <MessageCircle size={40} className="mb-4" />
-                    <p className="text-sm font-bold">No messages yet</p>
-                  </div>
-                ) : (
-                  chatMessages.map((msg, i) => (
-                    <div key={i} className="animate-slide-up">
-                      <span className="text-xs font-black text-neon-purple mr-2 uppercase tracking-tighter">{msg.user}</span>
-                      <span className="text-sm text-white/70 leading-relaxed">{msg.text}</span>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              {/* Chat Input */}
-              <div className="p-6 pb-10">
-                <div className="glass-panel p-2 rounded-[2rem] border-white/5 flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && chatInput.trim()) {
-                        setChatMessages([...chatMessages, { user: user?.username || 'Me', text: chatInput }]);
-                        setChatInput('');
-                      }
-                    }}
-                    placeholder="Say something..."
-                    className="flex-1 bg-transparent px-4 py-3 text-sm focus:outline-none placeholder:text-white/10"
-                  />
-                  <button
-                    onClick={() => {
-                      if (chatInput.trim()) {
-                        setChatMessages([...chatMessages, { user: user?.username || 'Me', text: chatInput }]);
-                        setChatInput('');
-                      }
-                    }}
-                    className="p-3 bg-neon-purple text-black rounded-full shadow-lg shadow-neon-purple/20 active:scale-90 transition-all"
-                  >
-                    <Send size={18} />
-                  </button>
-                </div>
-              </div>
+            {/* Action Buttons */}
+            <div className="flex flex-col gap-4">
+              <button
+                onClick={toggleMute}
+                className={`p-5 rounded-full transition-all shadow-lg ${isMuted ? 'bg-red-500 text-white' : 'glass-button text-white'}`}
+              >
+                {isMuted ? <MicOff size={24} /> : <Mic size={24} />}
+              </button>
+              <button
+                onClick={toggleVideo}
+                className={`p-5 rounded-full transition-all shadow-lg ${isVideoOff ? 'bg-red-500 text-white' : 'glass-button text-white'}`}
+              >
+                {isVideoOff ? <VideoOff size={24} /> : <Video size={24} />}
+              </button>
+              <button
+                onClick={stopStream}
+                className="p-5 bg-red-500 text-white rounded-full shadow-2xl shadow-red-500/40 active:scale-90 transition-all border-2 border-white/20"
+              >
+                <Radio size={24} />
+              </button>
             </div>
           </div>
         </div>

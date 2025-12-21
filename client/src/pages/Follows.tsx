@@ -4,7 +4,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '../api';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
-import { ArrowLeft, Users, UserPlus, UserMinus, Search, X } from 'lucide-react';
+import { ArrowLeft, Users, UserPlus, UserMinus, Search, X, ShieldOff } from 'lucide-react';
 
 interface FollowUser {
     _id: string;
@@ -166,7 +166,17 @@ const Follows = () => {
 
             {/* List Area */}
             <div className="flex-1 overflow-y-auto px-6 pb-32 no-scrollbar relative z-10">
-                {isLoading ? (
+                {userData?.settings?.isPrivate && userId !== currentUser?.id && !currentUser?.following?.some((f: any) => f._id === userId) ? (
+                    <div className="py-20 text-center space-y-6 animate-scale-in">
+                        <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto">
+                            <ShieldOff size={40} className="text-white/20" />
+                        </div>
+                        <h3 className="text-2xl font-bold">Account is Private</h3>
+                        <p className="text-sm text-white/40 max-w-xs mx-auto">
+                            Follow this creator to see their social network and talent showcase.
+                        </p>
+                    </div>
+                ) : isLoading ? (
                     <div className="py-20 flex flex-col items-center justify-center opacity-20">
                         <div className="w-10 h-10 border-4 border-neon-purple border-t-transparent rounded-full animate-spin mb-4" />
                         <p className="text-sm font-bold">Loading {activeTab}...</p>

@@ -3,7 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '../api';
 import Navbar from '../components/Navbar';
 import ReactPlayer from 'react-player';
-import { Heart, MessageCircle, Share2, Music, MoreVertical, Forward, X, Plus, Check, Archive, Trash2, Edit, AlertCircle, Video as VideoIcon } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Music, MoreVertical, Forward, X, Plus, Check, Archive, Trash2, Edit, AlertCircle, Video as VideoIcon, Search, MoreHorizontal, Send } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -37,11 +37,14 @@ const Feed = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const singlePostId = searchParams.get('post');
-  const { user: currentUser, updateFollowing } = useAuth();
-  const [activeTab, setActiveTab] = useState<'recommended' | 'following'>('recommended');
+  const { user: currentUser, updateFollowing, socket } = useAuth();
+  const [activeTab, setActiveTab] = useState<'following' | 'video' | 'sign-language' | 'audio' | 'text'>('video');
   const [playingIndex, setPlayingIndex] = useState(0);
   const playerRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [openCommentsPostId, setOpenCommentsPostId] = useState<string | null>(null);
+  const [openSharePostId, setOpenSharePostId] = useState<string | null>(null);
+  const [shareSearch, setShareSearch] = useState('');
+  const [shareSuccess, setShareSuccess] = useState(false);
   const [newCommentText, setNewCommentText] = useState('');
   const [postMenuOpen, setPostMenuOpen] = useState<string | null>(null);
   const [isPaused, setIsPaused] = useState(false);
@@ -60,7 +63,11 @@ const Feed = () => {
     queryKey: ['feed', activeTab],
     queryFn: async () => {
       const endpoint = activeTab === 'following' ? '/feed/following' : '/feed/recommended';
-      const response = await api.get(endpoint, { params: { mediaType: 'video' } });
+      const params: any = {};
+      if (activeTab !== 'following') {
+        params.mediaType = activeTab;
+      }
+      const response = await api.get(endpoint, { params });
       return response.data;
     },
     enabled: !singlePostId,
@@ -234,21 +241,32 @@ const Feed = () => {
 
   return (
     <div className="h-[100dvh] w-full bg-primary overflow-hidden relative">
-      {/* Floating Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 flex justify-center items-center py-8 px-6 pointer-events-none">
-        <div className="flex gap-8 pointer-events-auto">
-          <button
-            onClick={() => setActiveTab('recommended')}
-            className={`text-lg font-bold transition-all duration-300 ${activeTab === 'recommended' ? 'text-white scale-110' : 'text-white/40 hover:text-white/60'}`}
-          >
-            For You
-          </button>
-          <button
-            onClick={() => setActiveTab('following')}
-            className={`text-lg font-bold transition-all duration-300 ${activeTab === 'following' ? 'text-white scale-110' : 'text-white/40 hover:text-white/60'}`}
-          >
-            Following
-          </button>
+      {/* Floating Header - Multi-FYP Tabs */}
+      <div className="fixed top-0 left-0 right-0 z-50 flex flex-col items-center pt-8 pb-4 bg-gradient-to-b from-black/80 via-black/40 to-transparent">
+        <div className="w-full overflow-x-auto no-scrollbar px-6">
+          <div className="flex items-center gap-6 min-w-max pb-2">
+            {[
+              { id: 'following', label: 'Following' },
+              { id: 'video', label: 'Video' },
+              { id: 'sign-language', label: 'Sign' },
+              { id: 'audio', label: 'Audio' },
+              { id: 'text', label: 'Poetry' }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`text-sm font-black uppercase tracking-widest transition-all duration-300 relative py-2 ${activeTab === tab.id
+                  ? 'text-white scale-110'
+                  : 'text-white/40 hover:text-white/60'
+                  }`}
+              >
+                {tab.label}
+                {activeTab === tab.id && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neon-purple shadow-[0_0_10px_rgba(176,38,255,0.8)] animate-scale-in" />
+                )}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -271,7 +289,7 @@ const Feed = () => {
             </p>
             {activeTab === 'following' && (
               <button
-                onClick={() => setActiveTab('recommended')}
+                onClick={() => setActiveTab('video')}
                 className="mt-8 px-8 py-3 bg-neon-purple text-black rounded-2xl font-bold shadow-lg shadow-neon-purple/20 active:scale-95 transition-all"
               >
                 Discover Creators
@@ -315,23 +333,55 @@ const Feed = () => {
                   />
                 ) : post.mediaType === 'audio' ? (
                   <div className="w-full h-full bg-obsidian flex flex-col items-center justify-center p-8">
-                    <div className="w-64 h-64 bg-gradient-to-br from-neon-purple to-neon-blue rounded-3xl flex items-center justify-center shadow-[0_0_50px_rgba(176,38,255,0.3)] mb-12 animate-float">
-                      <Music size={80} className="text-black" />
+                    <div className="w-72 h-72 bg-gradient-to-br from-neon-purple/20 to-neon-blue/20 rounded-[3rem] flex items-center justify-center relative group">
+                      <div className="absolute inset-0 bg-gradient-to-br from-neon-purple to-neon-blue opacity-20 blur-3xl group-hover:opacity-40 transition-opacity" />
+                      <div className="w-48 h-48 bg-black/40 backdrop-blur-xl rounded-[2.5rem] flex items-center justify-center border border-white/10 shadow-2xl relative z-10">
+                        <Music size={64} className="text-neon-purple animate-pulse" />
+                      </div>
+                      {/* Animated Waveform Placeholder */}
+                      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-1 items-end h-12">
+                        {[...Array(12)].map((_, i) => (
+                          <div
+                            key={i}
+                            className="w-1 bg-neon-blue/40 rounded-full animate-waveform"
+                            style={{
+                              height: `${Math.random() * 100}%`,
+                              animationDelay: `${i * 0.1}s`
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="mt-12 w-full max-w-xs space-y-4">
+                      <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                        <div className="h-full bg-neon-blue w-1/3 shadow-[0_0_10px_rgba(0,243,255,0.5)]" />
+                      </div>
+                      <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-white/20">
+                        <span>0:45</span>
+                        <span>3:20</span>
+                      </div>
                     </div>
                     <ReactPlayer
                       url={post.mediaUrl}
                       playing={playingIndex === index && !isPaused}
-                      width="100%"
-                      height="4px"
-                      className="max-w-xs"
+                      width="0"
+                      height="0"
                     />
                   </div>
                 ) : (
-                  <div className="w-full h-full bg-obsidian flex items-center justify-center p-6">
-                    <div className="max-w-md w-full glass-panel p-10 rounded-[2.5rem] border-white/5">
-                      <p className="text-2xl md:text-3xl font-display leading-relaxed text-center">
-                        {post.caption}
+                  <div className="w-full h-full bg-obsidian flex items-center justify-center p-8 relative overflow-hidden">
+                    {/* Poetry Background Theme */}
+                    <div className="absolute inset-0 opacity-20">
+                      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(176,38,255,0.1),transparent_70%)]" />
+                      <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_80%_80%,rgba(0,243,255,0.1),transparent_70%)]" />
+                    </div>
+
+                    <div className="max-w-xl w-full glass-panel p-12 rounded-[3.5rem] border-white/5 relative z-10 shadow-2xl">
+                      <div className="w-12 h-1 bg-neon-purple/40 rounded-full mb-10 mx-auto" />
+                      <p className="text-2xl md:text-4xl font-display leading-[1.6] text-center font-medium tracking-tight text-white/90 italic">
+                        "{post.caption}"
                       </p>
+                      <div className="w-12 h-1 bg-neon-blue/40 rounded-full mt-10 mx-auto" />
                     </div>
                   </div>
                 )}
@@ -382,8 +432,8 @@ const Feed = () => {
                         isFollowing: currentUser?.following?.some((f: any) => f._id === post.user._id) || false
                       })}
                       className={`absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full p-1.5 shadow-lg hover:scale-110 active:scale-90 transition-all ${currentUser?.following?.some((f: any) => f._id === post.user._id)
-                          ? 'bg-white text-black'
-                          : 'bg-neon-purple text-black'
+                        ? 'bg-white text-black'
+                        : 'bg-neon-purple text-black'
                         }`}
                     >
                       {currentUser?.following?.some((f: any) => f._id === post.user._id) ? (
@@ -421,13 +471,7 @@ const Feed = () => {
 
                   {/* Share */}
                   <button
-                    onClick={() => {
-                      if (navigator.share) {
-                        navigator.share({ title: post.caption, url: window.location.href });
-                      } else {
-                        navigator.clipboard.writeText(window.location.href);
-                      }
-                    }}
+                    onClick={() => setOpenSharePostId(post._id)}
                     className="flex flex-col items-center gap-1.5 group active:scale-90 transition-transform"
                   >
                     <div className="p-4 rounded-full glass-button text-white">
@@ -528,8 +572,6 @@ const Feed = () => {
         )}
       </div>
 
-      <Navbar />
-
       {/* Modals & Drawers */}
       {openCommentsPostId && (
         <div className="fixed inset-0 z-[60] flex items-end justify-center">
@@ -576,6 +618,130 @@ const Feed = () => {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Share Modal */}
+      {openSharePostId && (
+        <div className="fixed inset-0 z-[60] flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => {
+            setOpenSharePostId(null);
+            setShareSuccess(false);
+            setShareSearch('');
+          }} />
+          <div className="relative w-full max-w-lg bg-obsidian rounded-t-[2.5rem] h-[60vh] flex flex-col animate-slide-up border-t border-white/10">
+            <div className="p-6 flex items-center justify-between border-b border-white/5">
+              <h2 className="text-xl font-bold font-display">Share</h2>
+              <button onClick={() => {
+                setOpenSharePostId(null);
+                setShareSuccess(false);
+                setShareSearch('');
+              }} className="p-2 hover:bg-white/5 rounded-full">
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar">
+              {/* External Share Options */}
+              <div className="grid grid-cols-4 gap-4">
+                {[
+                  {
+                    label: 'Copy Link', icon: <Plus size={20} />, action: () => {
+                      navigator.clipboard.writeText(`${window.location.origin}/feed?post=${openSharePostId}`);
+                      setShareSuccess(true);
+                      setTimeout(() => setShareSuccess(false), 2000);
+                    }
+                  },
+                  {
+                    label: 'WhatsApp', icon: <MessageCircle size={20} />, color: 'bg-[#25D366]', action: () => {
+                      window.open(`https://wa.me/?text=${encodeURIComponent(`Check out this post on UTH: ${window.location.origin}/feed?post=${openSharePostId}`)}`);
+                    }
+                  },
+                  {
+                    label: 'Twitter', icon: <Send size={20} />, color: 'bg-[#1DA1F2]', action: () => {
+                      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out this post on UTH: ${window.location.origin}/feed?post=${openSharePostId}`)}`);
+                    }
+                  },
+                  {
+                    label: 'More', icon: <MoreHorizontal size={20} />, action: () => {
+                      if (navigator.share) {
+                        navigator.share({
+                          title: 'UTH Post',
+                          url: `${window.location.origin}/feed?post=${openSharePostId}`
+                        });
+                      }
+                    }
+                  }
+                ].map((opt, i) => (
+                  <button
+                    key={i}
+                    onClick={opt.action}
+                    className="flex flex-col items-center gap-2 group"
+                  >
+                    <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-all group-active:scale-90 ${opt.color || 'bg-white/5 border border-white/10'}`}>
+                      {opt.icon}
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-white/40">{opt.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Internal Share (Creators) */}
+              <div className="space-y-4">
+                <h3 className="text-xs font-black uppercase tracking-widest text-white/20">Send to Creators</h3>
+                <div className="glass-panel p-1 rounded-full border border-white/5 flex items-center gap-2">
+                  <Search size={16} className="ml-4 text-white/20" />
+                  <input
+                    type="text"
+                    value={shareSearch}
+                    onChange={(e) => setShareSearch(e.target.value)}
+                    placeholder="Search creators..."
+                    className="flex-1 bg-transparent py-3 text-sm focus:outline-none placeholder:text-white/10"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  {currentUser?.following?.filter((f: any) =>
+                    f.username?.toLowerCase().includes(shareSearch.toLowerCase())
+                  ).map((creator: any) => (
+                    <button
+                      key={creator._id}
+                      onClick={() => {
+                        if (socket && currentUser) {
+                          socket.emit('message', {
+                            text: `Shared a post: ${window.location.origin}/feed?post=${openSharePostId}`,
+                            room: creator._id,
+                            userId: currentUser.id,
+                            username: currentUser.username
+                          });
+                          setShareSuccess(true);
+                          setTimeout(() => {
+                            setShareSuccess(false);
+                            setOpenSharePostId(null);
+                          }, 1500);
+                        }
+                      }}
+                      className="w-full flex items-center justify-between p-4 glass-panel rounded-2xl border-white/5 hover:bg-white/5 transition-all"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-neon-purple/20 flex items-center justify-center text-neon-purple font-bold">
+                          {creator.username?.[0].toUpperCase()}
+                        </div>
+                        <span className="font-bold text-sm">{creator.username}</span>
+                      </div>
+                      <div className="px-4 py-1.5 bg-neon-purple text-black text-[10px] font-black uppercase tracking-widest rounded-full">Send</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {shareSuccess && (
+              <div className="absolute top-24 left-1/2 -translate-x-1/2 px-6 py-3 bg-neon-blue text-black font-black uppercase tracking-widest text-xs rounded-full shadow-2xl animate-bounce">
+                Shared Successfully!
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -650,6 +816,7 @@ const Feed = () => {
           </div>
         </div>
       )}
+      <Navbar />
     </div>
   );
 };

@@ -9,8 +9,7 @@ import { Upload as UploadIcon, X } from 'lucide-react';
 
 const Upload = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'upload' | 'live'>('upload');
-  const [mediaType, setMediaType] = useState<'video' | 'audio' | 'text' | 'sign-language'>('video');
+  const [mediaType, setMediaType] = useState<'video' | 'audio' | 'text' | 'sign-language' | 'live'>('video');
   const [file, setFile] = useState<File | null>(null);
   const [caption, setCaption] = useState('');
   const [tags, setTags] = useState('');
@@ -75,40 +74,88 @@ const Upload = () => {
         <button onClick={() => navigate(-1)} className="p-2 glass-button rounded-full">
           <X size={24} />
         </button>
-        <div className="flex bg-obsidian/50 p-1 rounded-full border border-white/5">
-          <button
-            onClick={() => setActiveTab('upload')}
-            className={`px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'upload' ? 'bg-white text-black shadow-lg' : 'text-white/40'}`}
-          >
-            Upload
-          </button>
-          <button
-            onClick={() => setActiveTab('live')}
-            className={`px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'live' ? 'bg-red-500 text-white shadow-lg shadow-red-500/20' : 'text-white/40'}`}
-          >
-            Go Live
-          </button>
-        </div>
+        <h1 className="text-xl font-black uppercase tracking-widest">Create</h1>
         <div className="w-10" />
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 pb-32 no-scrollbar">
-        {activeTab === 'upload' ? (
-          <form onSubmit={handleSubmit} className="space-y-8 max-w-lg mx-auto animate-scale-in">
-            {/* Media Type Tabs */}
-            <div className="flex bg-obsidian/50 p-1.5 rounded-2xl border border-white/5">
-              {(['video', 'audio', 'text', 'sign-language'] as const).map((type) => (
+        {/* Content Class Selection Grid */}
+        <div className="grid grid-cols-3 gap-4 mb-10 animate-scale-in">
+          {[
+            { id: 'video', label: 'Video', icon: '📹', color: 'bg-neon-purple' },
+            { id: 'audio', label: 'Audio', icon: '🎵', color: 'bg-neon-blue' },
+            { id: 'text', label: 'Poetry', icon: '✍️', color: 'bg-white' },
+            { id: 'sign-language', label: 'Sign', icon: '🤟', color: 'bg-neon-purple' },
+            { id: 'live', label: 'Live', icon: '🔴', color: 'bg-red-500' }
+          ].map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setMediaType(item.id as any)}
+              className={`flex flex-col items-center gap-3 p-6 rounded-[2rem] border transition-all duration-300 ${mediaType === item.id
+                  ? `${item.color} text-black border-transparent shadow-lg scale-105`
+                  : 'bg-white/5 border-white/5 text-white/40 hover:bg-white/10'
+                }`}
+            >
+              <span className="text-2xl">{item.icon}</span>
+              <span className="text-[10px] font-black uppercase tracking-widest">{item.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {mediaType === 'live' ? (
+          <div className="space-y-8 animate-scale-in">
+            <div className="glass-panel p-8 rounded-[3rem] border-white/5 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-6">
+                <div className="flex items-center gap-2 px-3 py-1 bg-red-500 rounded-full animate-pulse">
+                  <div className="w-2 h-2 bg-white rounded-full" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-white">Live</span>
+                </div>
+              </div>
+
+              <div className="space-y-8">
+                <div>
+                  <h2 className="text-2xl font-bold mb-2">Go Live Instantly</h2>
+                  <p className="text-sm text-white/40">Connect with your fans in real-time.</p>
+                </div>
+
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-bold text-white/40 uppercase tracking-widest mb-3">Stream Title</label>
+                    <input
+                      type="text"
+                      value={liveTitle}
+                      onChange={(e) => setLiveTitle(e.target.value)}
+                      placeholder="My Talent Showcase..."
+                      className="w-full bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-red-500 transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold text-white/40 uppercase tracking-widest mb-3">Category</label>
+                    <select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      className="w-full bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-red-500 transition-all appearance-none"
+                    >
+                      {['Dance', 'Music', 'Art', 'Acting', 'Poetry', 'Comedy', 'Other'].map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
                 <button
-                  key={type}
-                  type="button"
-                  onClick={() => setMediaType(type)}
-                  className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${mediaType === type ? 'bg-neon-purple text-black shadow-lg shadow-neon-purple/20' : 'text-white/40'
-                    }`}
+                  onClick={() => navigate('/live')}
+                  className="w-full py-5 bg-red-500 text-white rounded-[2rem] font-bold text-lg shadow-xl shadow-red-500/20 active:scale-95 transition-all"
                 >
-                  {type.charAt(0).toUpperCase() + type.slice(1).replace('-', ' ')}
+                  Start Live Stream
                 </button>
-              ))}
+              </div>
             </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-8 animate-scale-in">
 
             {/* Upload Area */}
             <div className="relative group">
@@ -207,72 +254,6 @@ const Upload = () => {
               {uploading ? 'Processing...' : 'Post Now'}
             </button>
           </form>
-        ) : (
-          <div className="space-y-8 max-w-lg mx-auto animate-scale-in">
-            <div className="glass-panel p-8 rounded-[3rem] border-white/5 relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-6">
-                <div className="flex items-center gap-2 px-3 py-1 bg-red-500 rounded-full animate-pulse">
-                  <div className="w-2 h-2 bg-white rounded-full" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-white">Live</span>
-                </div>
-              </div>
-
-              <div className="space-y-8">
-                <div>
-                  <h2 className="text-2xl font-bold mb-2">Go Live Instantly</h2>
-                  <p className="text-sm text-white/40">Connect with your fans in real-time.</p>
-                </div>
-
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-bold text-white/40 uppercase tracking-widest mb-3">Stream Title</label>
-                    <input
-                      type="text"
-                      value={liveTitle}
-                      onChange={(e) => setLiveTitle(e.target.value)}
-                      placeholder="My Talent Showcase..."
-                      className="w-full bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-red-500 transition-all"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-bold text-white/40 uppercase tracking-widest mb-3">Category</label>
-                    <select
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      className="w-full bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-red-500 transition-all appearance-none"
-                    >
-                      {['Dance', 'Music', 'Art', 'Acting', 'Poetry', 'Comedy', 'Other'].map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => navigate('/live')}
-                  className="w-full py-5 bg-red-500 text-white rounded-[2rem] font-bold text-lg shadow-xl shadow-red-500/20 active:scale-95 transition-all"
-                >
-                  Start Live Stream
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="glass-panel p-6 rounded-[2rem] border-white/5 flex flex-col items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center">
-                  <span className="text-lg">⚡</span>
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Low Latency</span>
-              </div>
-              <div className="glass-panel p-6 rounded-[2rem] border-white/5 flex flex-col items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center">
-                  <span className="text-lg">💎</span>
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-white/40">HD Quality</span>
-              </div>
-            </div>
-          </div>
         )}
       </div>
 
