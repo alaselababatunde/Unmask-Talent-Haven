@@ -161,9 +161,10 @@ const Notifications = () => {
                         )}
                     </div>
                 </div>
-                <Navbar />
             </div>
-            );
+            <Navbar />
+        </div>
+    );
 };
 
-            export default Notifications;
+export default Notifications;

@@ -209,11 +209,12 @@ const Balance = () => {
             )}
           </div>
         </div>
-
-        <Navbar />
       </div>
-      );
+
+      <Navbar />
+    </div>
+  );
 };
 
-      export default Balance;
+export default Balance;
 

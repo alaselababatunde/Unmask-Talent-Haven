@@ -129,9 +129,10 @@ const Security = () => {
                         </div>
                     </div>
                 </div>
-                <Navbar />
             </div>
-            );
+            <Navbar />
+        </div>
+    );
 };
 
-            export default Security;
+export default Security;

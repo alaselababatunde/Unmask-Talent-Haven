@@ -159,9 +159,10 @@ const Privacy = () => {
                         )}
                     </div>
                 </div>
-                <Navbar />
             </div>
-            );
+            <Navbar />
+        </div>
+    );
 };
 
-            export default Privacy;
+export default Privacy;

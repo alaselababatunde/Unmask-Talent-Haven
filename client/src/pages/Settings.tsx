@@ -115,10 +115,11 @@ const Settings = () => {
             </div>
           </div>
         </div>
-
-        <Navbar />
       </div>
-      );
+
+      <Navbar />
+    </div>
+  );
 };
 
-      export default Settings;
+export default Settings;
