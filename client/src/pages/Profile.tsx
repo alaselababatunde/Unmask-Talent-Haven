@@ -58,7 +58,7 @@ const Profile = () => {
   const [username, setUsername] = useState('');
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
-  const [postMenuOpen, setPostMenuOpen] = useState<string | null>(null);
+  const [selectedPostForActions, setSelectedPostForActions] = useState<any | null>(null);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState<any | null>(null);
   const [editCaption, setEditCaption] = useState('');
@@ -141,7 +141,6 @@ const Profile = () => {
     onSuccess: () => {
       refetch();
       setIsDeleting(null);
-      setPostMenuOpen(null);
     },
   });
 
@@ -151,7 +150,6 @@ const Profile = () => {
     },
     onSuccess: () => {
       refetch();
-      setPostMenuOpen(null);
     },
   });
 
@@ -163,7 +161,6 @@ const Profile = () => {
     onSuccess: () => {
       refetch();
       setIsEditing(null);
-      setPostMenuOpen(null);
     },
   });
 
@@ -511,54 +508,16 @@ const Profile = () => {
                   </div>
 
                   {isOwnProfile && (
-                    <div className="absolute top-4 right-4 z-10 post-menu">
+                    <div className="absolute top-4 right-4 z-10">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          setPostMenuOpen(postMenuOpen === post._id ? null : post._id);
+                          setSelectedPostForActions(post);
                         }}
                         className="p-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white hover:bg-black/60 transition-all"
                       >
                         <MoreVertical size={16} />
                       </button>
-
-                      {postMenuOpen === post._id && (
-                        <div className="absolute right-0 top-full mt-2 w-48 glass-panel rounded-2xl border-white/10 shadow-2xl overflow-hidden animate-scale-in origin-top-right z-20">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setIsEditing(post);
-                              setEditCaption(post.caption);
-                              setEditTags(post.tags?.join(', ') || '');
-                              setPostMenuOpen(null);
-                            }}
-                            className="w-full flex items-center gap-3 px-5 py-3 hover:bg-white/5 transition-colors text-white text-sm font-bold"
-                          >
-                            <Edit size={14} className="text-neon-blue" />
-                            <span>Edit</span>
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              archiveMutation.mutate(post._id);
-                            }}
-                            className="w-full flex items-center gap-3 px-5 py-3 hover:bg-white/5 transition-colors text-white text-sm font-bold"
-                          >
-                            <Archive size={14} className="text-neon-purple" />
-                            <span>{post.isArchived ? 'Unarchive' : 'Archive'}</span>
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setIsDeleting(post._id);
-                            }}
-                            className="w-full flex items-center gap-3 px-5 py-3 hover:bg-white/5 transition-colors text-red-500 text-sm font-bold"
-                          >
-                            <Trash2 size={14} />
-                            <span>Delete</span>
-                          </button>
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>
@@ -569,6 +528,83 @@ const Profile = () => {
       </div>
 
       <Navbar />
+
+      {/* Post Actions Bottom Sheet */}
+      {selectedPostForActions && (
+        <div className="fixed inset-0 z-[150] flex items-end justify-center">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
+            onClick={() => setSelectedPostForActions(null)}
+          />
+          <div className="relative w-full max-w-lg bg-obsidian rounded-t-[3rem] border-t border-white/10 shadow-2xl animate-slide-up overflow-hidden">
+            <div className="p-6 border-b border-white/5 flex flex-col items-center">
+              <div className="w-12 h-1.5 bg-white/10 rounded-full mb-6" />
+              <h3 className="text-lg font-bold">Post Options</h3>
+            </div>
+            <div className="p-4 space-y-2">
+              <button
+                onClick={() => {
+                  setIsEditing(selectedPostForActions);
+                  setEditCaption(selectedPostForActions.caption);
+                  setEditTags(selectedPostForActions.tags?.join(', ') || '');
+                  setSelectedPostForActions(null);
+                }}
+                className="w-full flex items-center gap-4 p-5 rounded-2xl hover:bg-white/5 transition-all group"
+              >
+                <div className="w-10 h-10 rounded-full bg-neon-blue/10 flex items-center justify-center text-neon-blue group-active:scale-90 transition-transform">
+                  <Edit size={20} />
+                </div>
+                <div className="text-left">
+                  <p className="font-bold">Edit Post</p>
+                  <p className="text-xs text-white/40">Change caption or tags</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => {
+                  archiveMutation.mutate(selectedPostForActions._id);
+                  setSelectedPostForActions(null);
+                }}
+                className="w-full flex items-center gap-4 p-5 rounded-2xl hover:bg-white/5 transition-all group"
+              >
+                <div className="w-10 h-10 rounded-full bg-neon-purple/10 flex items-center justify-center text-neon-purple group-active:scale-90 transition-transform">
+                  <Archive size={20} />
+                </div>
+                <div className="text-left">
+                  <p className="font-bold">{selectedPostForActions.isArchived ? 'Unarchive Post' : 'Archive Post'}</p>
+                  <p className="text-xs text-white/40">{selectedPostForActions.isArchived ? 'Make it visible again' : 'Hide from your profile'}</p>
+                </div>
+              </button>
+
+              <div className="h-px bg-white/5 mx-4 my-2" />
+
+              <button
+                onClick={() => {
+                  setIsDeleting(selectedPostForActions._id);
+                  setSelectedPostForActions(null);
+                }}
+                className="w-full flex items-center gap-4 p-5 rounded-2xl hover:bg-red-500/5 transition-all group"
+              >
+                <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 group-active:scale-90 transition-transform">
+                  <Trash2 size={20} />
+                </div>
+                <div className="text-left">
+                  <p className="font-bold text-red-500">Delete Post</p>
+                  <p className="text-xs text-red-500/40">This action is permanent</p>
+                </div>
+              </button>
+            </div>
+            <div className="p-6 pb-10">
+              <button
+                onClick={() => setSelectedPostForActions(null)}
+                className="w-full py-4 bg-white/5 rounded-2xl font-bold text-white/60 hover:bg-white/10 transition-all"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Customize Modal */}
       {customizeOpen && (

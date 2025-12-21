@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import Navbar from '../components/Navbar';
-import { Send, ArrowLeft, MoreHorizontal, Phone, Video as VideoIcon, Trash2, Edit2, AlertCircle, ShieldOff, X, Mic, Image as ImageIcon } from 'lucide-react';
+import { Send, ArrowLeft, MoreHorizontal, Phone, Video as VideoIcon, Trash2, Edit2, AlertCircle, ShieldOff, X, Mic, Image as ImageIcon, Bell } from 'lucide-react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
@@ -31,12 +31,12 @@ const Chat = () => {
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [activeTab, setActiveTab] = useState<'messages' | 'requests'>('messages');
+  const [activeTab, setActiveTab] = useState<'messages' | 'requests' | 'notifications'>('messages');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
   const [editingMessage, setEditingMessage] = useState<string | null>(null);
   const [contextMenuMessage, setContextMenuMessage] = useState<string | null>(null);
-  const { user } = useAuth();
+  const { user, notifications, fetchNotifications, markNotificationRead } = useAuth();
 
   const SOCKET_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/?api\/?$/i, '');
 
@@ -75,6 +75,12 @@ const Chat = () => {
     };
     fetchConversations();
   }, [user?.id]);
+
+  useEffect(() => {
+    if (activeTab === 'notifications') {
+      fetchNotifications();
+    }
+  }, [activeTab, fetchNotifications]);
 
   useEffect(() => {
     const s = io(SOCKET_BASE, { transports: ['websocket'] });
@@ -184,6 +190,16 @@ const Chat = () => {
               Requests
               {activeTab === 'requests' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neon-purple" />}
             </button>
+            <button
+              onClick={() => setActiveTab('notifications')}
+              className={`pb-4 text-sm font-bold transition-all relative ${activeTab === 'notifications' ? 'text-white' : 'text-white/20'}`}
+            >
+              Notifications
+              {notifications.filter((n: any) => !n.read).length > 0 && (
+                <span className="absolute -top-1 -right-2 w-2 h-2 bg-neon-purple rounded-full shadow-[0_0_8px_rgba(176,38,255,0.8)]" />
+              )}
+              {activeTab === 'notifications' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neon-purple" />}
+            </button>
           </div>
         </div>
 
@@ -224,6 +240,43 @@ const Chat = () => {
             ) : activeTab === 'requests' ? (
               <div className="text-center py-20 glass-panel rounded-[2rem] border-white/5">
                 <p className="text-white/40">No message requests</p>
+              </div>
+            ) : activeTab === 'notifications' ? (
+              <div className="space-y-4">
+                {notifications.length === 0 ? (
+                  <div className="text-center py-20 glass-panel rounded-[2rem] border-white/5">
+                    <p className="text-white/40">No notifications yet</p>
+                  </div>
+                ) : (
+                  notifications.map((n: any) => (
+                    <div
+                      key={n._id}
+                      className={`glass-panel p-6 rounded-[2rem] border-white/5 transition-all ${n.read ? 'opacity-60' : 'bg-white/5 border-neon-purple/20'}`}
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${n.read ? 'bg-white/5 text-white/20' : 'bg-neon-purple/20 text-neon-purple'}`}>
+                          <Bell size={18} />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm text-white/80 leading-relaxed">{n.message}</p>
+                          <div className="flex items-center justify-between mt-4">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-white/20">
+                              {new Date(n.createdAt).toLocaleString()}
+                            </span>
+                            {!n.read && (
+                              <button
+                                onClick={() => markNotificationRead(n._id)}
+                                className="text-[10px] font-black uppercase tracking-widest text-neon-purple hover:text-white transition-colors"
+                              >
+                                Mark as read
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             ) : conversations.length === 0 ? (
               <div className="text-center py-20 glass-panel rounded-[2rem] border-white/5">

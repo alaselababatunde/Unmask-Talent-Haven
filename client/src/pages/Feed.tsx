@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api';
 import Navbar from '../components/Navbar';
 import ReactPlayer from 'react-player';
@@ -57,6 +57,8 @@ const Feed = () => {
   const [isEditing, setIsEditing] = useState<Post | null>(null);
   const [editCaption, setEditCaption] = useState('');
   const [editTags, setEditTags] = useState('');
+  const commentsEndRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
 
 
   const { data: posts = [], refetch, isLoading } = useQuery<Post[]>({
@@ -118,8 +120,64 @@ const Feed = () => {
       const response = await api.post(`/feed/${postId}/comment`, { text });
       return response.data;
     },
-    onSuccess: () => {
-      refetch();
+    onMutate: async ({ postId, text }) => {
+      const queryKey = singlePostId ? ['post', singlePostId] : ['feed', activeTab];
+      await queryClient.cancelQueries({ queryKey });
+      const previousData = queryClient.getQueryData(queryKey);
+
+      if (singlePostId) {
+        queryClient.setQueryData<Post>(queryKey, (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            comments: [
+              ...old.comments,
+              {
+                user: {
+                  username: currentUser?.username || 'You',
+                  profileImage: currentUser?.profileImage
+                },
+                text,
+                createdAt: new Date().toISOString(),
+              }
+            ]
+          };
+        });
+      } else {
+        queryClient.setQueryData<Post[]>(queryKey, (old) => {
+          if (!old) return [];
+          return old.map(post => {
+            if (post._id === postId) {
+              return {
+                ...post,
+                comments: [
+                  ...post.comments,
+                  {
+                    user: {
+                      username: currentUser?.username || 'You',
+                      profileImage: currentUser?.profileImage
+                    },
+                    text,
+                    createdAt: new Date().toISOString(),
+                  }
+                ]
+              };
+            }
+            return post;
+          });
+        });
+      }
+
+      return { previousData, queryKey };
+    },
+    onError: (err, __, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(context.queryKey, context.previousData);
+      }
+      alert('Failed to post comment. Please try again.');
+    },
+    onSettled: (_, __, ___, context) => {
+      queryClient.invalidateQueries({ queryKey: context?.queryKey });
     },
   });
 
@@ -150,6 +208,17 @@ const Feed = () => {
       setPostMenuOpen(null);
     },
   });
+
+  const scrollToBottom = () => {
+    commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    if (openCommentsPostId) {
+      // Small delay to ensure the DOM has updated
+      setTimeout(scrollToBottom, 100);
+    }
+  }, [openCommentsPostId, displayPosts.find(p => p._id === openCommentsPostId)?.comments?.length]);
 
   const updateMutation = useMutation({
     mutationFn: async ({ postId, caption, tags }: { postId: string; caption: string; tags: string }) => {
@@ -446,47 +515,47 @@ const Feed = () => {
                 </div>
 
                 {/* Action Stack with Glass Backdrop */}
-                <div className="flex flex-col items-center gap-6 p-2 rounded-full bg-black/20 backdrop-blur-md border border-white/5">
+                <div className="flex flex-col items-center gap-4 p-1.5 rounded-full bg-black/10 backdrop-blur-md border border-white/5">
                   {/* Like */}
                   <button
                     onClick={() => handleLike(post._id)}
-                    className="flex flex-col items-center gap-1.5 group active:scale-90 transition-transform"
+                    className="flex flex-col items-center gap-1 group active:scale-90 transition-transform"
                   >
-                    <div className={`p-4 rounded-full glass-button ${post.likes.includes(currentUser?.id || '') ? 'text-neon-purple bg-neon-purple/10' : 'text-white'}`}>
-                      <Heart className={`w-8 h-8 ${post.likes.includes(currentUser?.id || '') ? 'fill-current' : ''}`} />
+                    <div className={`p-3 rounded-full glass-button ${post.likes.includes(currentUser?.id || '') ? 'text-neon-purple bg-neon-purple/10' : 'text-white'}`}>
+                      <Heart className={`w-6 h-6 ${post.likes.includes(currentUser?.id || '') ? 'fill-current' : ''}`} />
                     </div>
-                    <span className="text-[10px] font-black uppercase tracking-widest drop-shadow-md">{post.likes.length}</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest drop-shadow-md">{post.likes.length}</span>
                   </button>
 
                   {/* Comment */}
                   <button
                     onClick={() => setOpenCommentsPostId(post._id)}
-                    className="flex flex-col items-center gap-1.5 group active:scale-90 transition-transform"
+                    className="flex flex-col items-center gap-1 group active:scale-90 transition-transform"
                   >
-                    <div className="p-4 rounded-full glass-button text-white">
-                      <MessageCircle className="w-8 h-8" />
+                    <div className="p-3 rounded-full glass-button text-white">
+                      <MessageCircle className="w-6 h-6" />
                     </div>
-                    <span className="text-[10px] font-black uppercase tracking-widest drop-shadow-md">{post.comments.length}</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest drop-shadow-md">{post.comments.length}</span>
                   </button>
 
                   {/* Share */}
                   <button
                     onClick={() => setOpenSharePostId(post._id)}
-                    className="flex flex-col items-center gap-1.5 group active:scale-90 transition-transform"
+                    className="flex flex-col items-center gap-1 group active:scale-90 transition-transform"
                   >
-                    <div className="p-4 rounded-full glass-button text-white">
-                      <Share2 className="w-8 h-8" />
+                    <div className="p-3 rounded-full glass-button text-white">
+                      <Share2 className="w-6 h-6" />
                     </div>
-                    <span className="text-[10px] font-black uppercase tracking-widest drop-shadow-md">Share</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest drop-shadow-md">Share</span>
                   </button>
 
                   {/* More */}
                   <div className="relative post-menu">
                     <button
                       onClick={() => setPostMenuOpen(postMenuOpen === post._id ? null : post._id)}
-                      className="p-4 rounded-full glass-button text-white active:scale-90 transition-transform"
+                      className="p-3 rounded-full glass-button text-white active:scale-90 transition-transform"
                     >
-                      <MoreVertical className="w-8 h-8" />
+                      <MoreVertical className="w-6 h-6" />
                     </button>
 
                     {postMenuOpen === post._id && (
@@ -583,40 +652,51 @@ const Feed = () => {
                 <X size={24} />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              {posts.find(p => p._id === openCommentsPostId)?.comments.map((comment, i) => (
-                <div key={i} className="flex gap-4">
-                  <div className="w-10 h-10 rounded-full bg-neon-purple/20 flex-shrink-0 flex items-center justify-center text-neon-purple font-bold">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar">
+              {displayPosts.find(p => p._id === openCommentsPostId)?.comments.map((comment, i) => (
+                <div key={i} className="flex gap-4 animate-fade-in">
+                  <div className="w-10 h-10 rounded-full bg-neon-purple/20 flex-shrink-0 flex items-center justify-center text-neon-purple font-bold border border-neon-purple/20">
                     {comment.user.username[0].toUpperCase()}
                   </div>
-                  <div>
-                    <span className="font-bold text-sm block mb-1">{comment.user.username}</span>
-                    <p className="text-white/70 text-sm">{comment.text}</p>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-bold text-sm">{comment.user.username}</span>
+                      <span className="text-[10px] text-white/20 font-black uppercase tracking-widest">
+                        {new Date(comment.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="text-white/80 text-sm leading-relaxed">{comment.text}</p>
                   </div>
                 </div>
               ))}
+              <div ref={commentsEndRef} />
             </div>
             <div className="p-6 border-t border-white/5 bg-obsidian/80 backdrop-blur pb-10">
-              <div className="flex gap-3">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (newCommentText.trim()) {
+                    handleComment(openCommentsPostId, newCommentText);
+                  }
+                }}
+                className="flex gap-3"
+              >
                 <input
                   type="text"
                   value={newCommentText}
                   onChange={(e) => setNewCommentText(e.target.value)}
                   placeholder="Add a comment..."
-                  className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-5 py-3 focus:outline-none focus:border-neon-purple transition-all"
+                  className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-neon-purple transition-all placeholder:text-white/20 text-sm"
+                  autoFocus
                 />
                 <button
-                  onClick={() => {
-                    if (newCommentText.trim()) {
-                      handleComment(openCommentsPostId, newCommentText);
-                      setNewCommentText('');
-                    }
-                  }}
-                  className="bg-neon-purple text-black p-3 rounded-2xl font-bold"
+                  type="submit"
+                  disabled={!newCommentText.trim() || commentMutation.isPending}
+                  className="bg-neon-purple text-black p-4 rounded-2xl font-bold shadow-lg shadow-neon-purple/20 active:scale-90 transition-all disabled:opacity-50 disabled:active:scale-100"
                 >
-                  <Forward size={20} />
+                  <Send size={20} />
                 </button>
-              </div>
+              </form>
             </div>
           </div>
         </div>

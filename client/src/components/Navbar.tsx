@@ -1,7 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Plus, MessageCircle, User, Search, Bell } from 'lucide-react';
-import { useState } from 'react';
-import NotificationsPanel from './NotificationsPanel';
+import { Home, Plus, MessageCircle, User, Search } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
@@ -12,24 +10,18 @@ const Navbar = () => {
     { icon: Search, label: 'Search', path: '/search' },
     { icon: Plus, label: 'Create', path: '/upload' },
     { icon: MessageCircle, label: 'Chat', path: '/chat' },
-    { icon: Bell, label: 'Alerts', isNotification: true },
     { icon: User, label: 'Profile', path: '/profile' },
   ];
 
   return (
     <>
       <nav className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[95%] max-w-lg glass-panel rounded-[2.5rem] z-50 px-2 py-2">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-around items-center">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path ||
               (item.path === '/profile' && location.pathname.startsWith('/profile'));
-            const isNotification = item.isNotification;
             const isCreate = item.label === 'Create';
-
-            if (isNotification) {
-              return <BellButton key="alerts" />;
-            }
 
             return (
               <Link
@@ -57,36 +49,6 @@ const Navbar = () => {
         </div>
       </nav>
     </>
-  );
-};
-
-const BellButton = () => {
-  const { notifications } = useAuth();
-  const [open, setOpen] = useState(false);
-
-  const unread = notifications.filter((n: any) => !n.read).length;
-
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className={`flex flex-col items-center justify-center w-12 h-12 transition-all duration-300 relative group ${open ? 'text-white' : 'text-white/40 hover:text-white/70'}`}
-      >
-        <Bell size={22} className={open ? 'drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]' : ''} />
-        {unread > 0 && (
-          <span className="absolute top-2 right-2 flex h-4 w-4">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neon-purple opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-4 w-4 bg-neon-purple text-[10px] text-black items-center justify-center font-black">
-              {unread > 9 ? '9+' : unread}
-            </span>
-          </span>
-        )}
-        {open && (
-          <div className="absolute -bottom-1 w-1 h-1 bg-white rounded-full shadow-[0_0_8px_white]" />
-        )}
-      </button>
-      <NotificationsPanel open={open} onClose={() => setOpen(false)} />
-    </div>
   );
 };
 

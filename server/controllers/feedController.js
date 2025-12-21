@@ -371,45 +371,101 @@ export const searchContent = async (req, res) => {
       return res.json({ users: [], posts: [] });
     }
 
-    // 1. Search for Users (Creators)
+    // Get current user's blocked list and following list
+    let blockedIds = [];
+    let followingIds = [];
+    if (currentUserId) {
+      const currentUser = await User.findById(currentUserId).select('blockedUsers following').lean();
+      if (currentUser) {
+        blockedIds = currentUser.blockedUsers || [];
+        followingIds = currentUser.following || [];
+      }
+    }
+
+    // 1. Search for Users
     let users = [];
     if (!onlyMine) {
       users = await User.find({
-        $or: [
-          { username: { $regex: q, $options: 'i' } },
-          { firstName: { $regex: q, $options: 'i' } },
-          { lastName: { $regex: q, $options: 'i' } }
+        $and: [
+          {
+            $or: [
+              { username: { $regex: q, $options: 'i' } },
+              { firstName: { $regex: q, $options: 'i' } },
+              { lastName: { $regex: q, $options: 'i' } }
+            ]
+          },
+          { _id: { $nin: blockedIds } }, // Exclude users blocked by current user
+          { blockedUsers: { $ne: currentUserId } } // Exclude users who blocked current user
         ]
       })
-        .select('_id username profileImage bio followers isLive')
-        .limit(10)
+        .select('_id username firstName lastName profileImage bio followers isLive settings')
+        .limit(15)
         .lean();
     }
 
-    // 2. Search for Posts (Content)
+    // 2. Search for Posts
     const postFilter = {
-      $or: [
-        { caption: { $regex: q, $options: 'i' } },
-        { tags: { $regex: q, $options: 'i' } }
+      isArchived: false,
+      $and: [
+        {
+          $or: [
+            { caption: { $regex: q, $options: 'i' } },
+            { tags: { $regex: q, $options: 'i' } }
+          ]
+        }
       ]
     };
 
     if (onlyMine && currentUserId) {
       postFilter.user = currentUserId;
     } else {
-      // If not only mine, also include posts from users found by name
+      // If not only mine, filter by privacy and blocks
       const userIds = users.map(u => u._id);
-      postFilter.$or.push({ user: { $in: userIds } });
+
+      // Add users found by name to the search scope
+      postFilter.$and[0].$or.push({ user: { $in: userIds } });
+
+      // Exclude posts from blocked users or users who blocked us
+      postFilter.user = { $nin: blockedIds };
+      postFilter.$and.push({ user: { $nin: blockedIds } }); // Redundant but safe
+
+      // Privacy logic: Only show posts from private accounts if we follow them
+      // This is complex for a single query, so we'll filter after fetching or use a more complex $or
+      // For now, let's fetch and then filter or use a better query
     }
 
-    const posts = await Post.find(postFilter)
-      .populate('user', '_id username profileImage isLive')
+    let posts = await Post.find(postFilter)
+      .populate('user', '_id username profileImage isLive settings followers')
       .sort({ createdAt: -1 })
-      .limit(20)
+      .limit(30)
       .lean();
 
-    res.json({ users, posts });
+    // Final filtering for privacy and blocks (in case query didn't catch everything)
+    posts = posts.filter(post => {
+      if (!post.user) return false;
+
+      // Blocked check
+      if (blockedIds.some(id => id.toString() === post.user._id.toString())) return false;
+      if (post.user.blockedUsers?.some(id => id.toString() === currentUserId?.toString())) return false;
+
+      // Privacy check
+      if (post.user.settings?.isPrivate && post.user._id.toString() !== currentUserId?.toString()) {
+        const isFollowing = followingIds.some(id => id.toString() === post.user._id.toString());
+        if (!isFollowing) return false;
+      }
+
+      return true;
+    });
+
+    res.json({
+      users: users.map(u => ({
+        ...u,
+        isFollowing: followingIds.some(id => id.toString() === u._id.toString())
+      })),
+      posts: posts.slice(0, 20)
+    });
   } catch (error) {
+    console.error('Search error:', error);
     res.status(500).json({ message: error.message });
   }
 };
