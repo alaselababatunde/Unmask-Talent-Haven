@@ -310,13 +310,13 @@ const Feed = () => {
 
   return (
     <div className="fixed-screen">
-      {/* Floating Header - Multi-FYP Tabs */}
-      <div className="fixed top-0 left-0 right-0 z-50 flex flex-col items-center pt-8 pb-4 bg-gradient-to-b from-black/80 via-black/40 to-transparent">
-        <div className="w-full overflow-x-auto no-scrollbar px-6">
-          <div className="flex items-center gap-6 min-w-max pb-2">
+      {/* Floating Header - Minimalist */}
+      <div className="fixed top-0 left-0 right-0 z-50 flex flex-col items-center pt-6 pb-2 bg-gradient-to-b from-black/60 to-transparent pointer-events-none">
+        <div className="w-full overflow-x-auto no-scrollbar px-6 pointer-events-auto">
+          <div className="flex items-center justify-center gap-8 min-w-max pb-2">
             {[
               { id: 'following', label: 'Following' },
-              { id: 'video', label: 'Video' },
+              { id: 'video', label: 'For You' },
               { id: 'sign-language', label: 'Sign' },
               { id: 'audio', label: 'Audio' },
               { id: 'text', label: 'Poetry' }
@@ -324,14 +324,14 @@ const Feed = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`text-sm font-black uppercase tracking-widest transition-all duration-300 relative py-2 ${activeTab === tab.id
-                  ? 'text-white scale-110'
-                  : 'text-white/40 hover:text-white/60'
+                className={`text-[15px] font-bold transition-all duration-300 relative py-1 drop-shadow-md ${activeTab === tab.id
+                  ? 'text-white scale-105'
+                  : 'text-white/60 hover:text-white/80'
                   }`}
               >
                 {tab.label}
                 {activeTab === tab.id && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neon-purple shadow-[0_0_10px_rgba(176,38,255,0.8)] animate-scale-in" />
+                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
                 )}
               </button>
             ))}
@@ -340,7 +340,7 @@ const Feed = () => {
       </div>
 
       {/* Feed Container */}
-      <div className="scrollable-content snap-y snap-mandatory">
+      <div className="scrollable-content snap-y snap-mandatory bg-black">
         {isLoading ? (
           <div className="h-full w-full flex items-center justify-center">
             <div className="w-12 h-12 border-4 border-neon-purple/20 border-t-neon-purple rounded-full animate-spin" />
@@ -447,7 +447,7 @@ const Feed = () => {
 
                     <div className="max-w-xl w-full glass-panel p-12 rounded-[3.5rem] border-white/5 relative z-10 shadow-2xl">
                       <div className="w-12 h-1 bg-neon-purple/40 rounded-full mb-10 mx-auto" />
-                      <p className="text-2xl md:text-4xl font-display leading-[1.6] text-center font-medium tracking-tight text-white/90 italic">
+                      <p className="text-2xl md:text-3xl font-display leading-[1.6] text-center font-medium tracking-tight text-white/90 italic">
                         "{post.caption}"
                       </p>
                       <div className="w-12 h-1 bg-neon-blue/40 rounded-full mt-10 mx-auto" />
@@ -456,7 +456,7 @@ const Feed = () => {
                 )}
 
                 {/* Overlays */}
-                <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
 
                 {/* Double Tap Heart Animation */}
                 {showHeart && (
@@ -470,26 +470,26 @@ const Feed = () => {
 
                 {/* Pause Indicator */}
                 {isPaused && (
-                  <div className="absolute inset-0 flex items-center justify-center z-10 animate-fade-in">
-                    <div className="w-24 h-24 bg-black/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/10">
-                      <div className="w-0 h-0 border-t-[15px] border-t-transparent border-l-[25px] border-l-white border-b-[15px] border-b-transparent ml-2" />
+                  <div className="absolute inset-0 flex items-center justify-center z-10 animate-fade-in pointer-events-none">
+                    <div className="w-20 h-20 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center border border-white/10">
+                      <div className="w-0 h-0 border-t-[12px] border-t-transparent border-l-[20px] border-l-white border-b-[12px] border-b-transparent ml-1" />
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Right Side Actions - Thumb Zone Optimized */}
-              <div className="absolute right-4 bottom-32 flex flex-col items-center gap-8 z-20">
+              {/* Right Side Actions - Clean Floating Icons */}
+              <div className="absolute right-2 bottom-20 flex flex-col items-center gap-6 z-20 pb-4">
                 {/* Creator Avatar & Follow Button */}
-                <div className="relative mb-6">
+                <div className="relative mb-4">
                   <button
                     onClick={() => navigate(`/profile/${post.user._id}`)}
-                    className="w-16 h-16 rounded-full border-2 border-white p-0.5 overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.5)] active:scale-90 transition-transform"
+                    className="w-12 h-12 rounded-full border border-white p-0.5 overflow-hidden shadow-lg active:scale-90 transition-transform"
                   >
                     {post.user.profileImage ? (
                       <img src={post.user.profileImage} alt={post.user.username} className="w-full h-full rounded-full object-cover" />
                     ) : (
-                      <div className="w-full h-full rounded-full bg-gradient-to-br from-neon-purple to-neon-blue flex items-center justify-center text-black font-black text-xl">
+                      <div className="w-full h-full rounded-full bg-gradient-to-br from-neon-purple to-neon-blue flex items-center justify-center text-black font-black text-sm">
                         {post.user.username[0].toUpperCase()}
                       </div>
                     )}
@@ -500,31 +500,33 @@ const Feed = () => {
                         targetId: post.user._id,
                         isFollowing: currentUser?.following?.some((f: any) => f._id === post.user._id) || false
                       })}
-                      className={`absolute -bottom-2 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full flex items-center justify-center shadow-lg hover:scale-110 active:scale-90 transition-all z-30 ${currentUser?.following?.some((f: any) => f._id === post.user._id)
+                      className={`absolute -bottom-2 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full flex items-center justify-center shadow-lg hover:scale-110 active:scale-90 transition-all z-30 ${currentUser?.following?.some((f: any) => f._id === post.user._id)
                         ? 'bg-white text-black'
                         : 'bg-neon-purple text-black'
                         }`}
                     >
                       {currentUser?.following?.some((f: any) => f._id === post.user._id) ? (
-                        <Check size={14} strokeWidth={4} />
+                        <Check size={12} strokeWidth={4} />
                       ) : (
-                        <Plus size={14} strokeWidth={4} />
+                        <Plus size={12} strokeWidth={4} />
                       )}
                     </button>
                   )}
                 </div>
 
-                {/* Action Stack - Fixed Position & Standardized Tap Targets */}
-                <div className="flex flex-col items-center gap-6 p-2 rounded-[2rem] bg-black/10 backdrop-blur-md border border-white/5">
+                {/* Floating Action Icons */}
+                <div className="flex flex-col items-center gap-5">
                   {/* Like */}
                   <button
                     onClick={() => handleLike(post._id)}
                     className="flex flex-col items-center gap-1 group active:scale-90 transition-transform tap-target"
                   >
-                    <div className={`p-3.5 rounded-full glass-button ${post.likes.includes(currentUser?.id || '') ? 'text-neon-purple bg-neon-purple/10' : 'text-white'}`}>
-                      <Heart className={`w-6 h-6 ${post.likes.includes(currentUser?.id || '') ? 'fill-current' : ''}`} />
-                    </div>
-                    <span className="text-[9px] font-black uppercase tracking-widest drop-shadow-md">{post.likes.length}</span>
+                    <Heart
+                      size={32}
+                      className={`drop-shadow-lg transition-colors duration-200 ${post.likes.includes(currentUser?.id || '') ? 'fill-neon-purple text-neon-purple' : 'text-white'}`}
+                      strokeWidth={post.likes.includes(currentUser?.id || '') ? 0 : 2}
+                    />
+                    <span className="text-xs font-bold text-white drop-shadow-md">{post.likes.length}</span>
                   </button>
 
                   {/* Comment */}
@@ -532,10 +534,8 @@ const Feed = () => {
                     onClick={() => setOpenCommentsPostId(post._id)}
                     className="flex flex-col items-center gap-1 group active:scale-90 transition-transform tap-target"
                   >
-                    <div className="p-3.5 rounded-full glass-button text-white">
-                      <MessageCircle className="w-6 h-6" />
-                    </div>
-                    <span className="text-[9px] font-black uppercase tracking-widest drop-shadow-md">{post.comments.length}</span>
+                    <MessageCircle size={32} className="text-white drop-shadow-lg" strokeWidth={2} />
+                    <span className="text-xs font-bold text-white drop-shadow-md">{post.comments.length}</span>
                   </button>
 
                   {/* Share */}
@@ -543,23 +543,21 @@ const Feed = () => {
                     onClick={() => setOpenSharePostId(post._id)}
                     className="flex flex-col items-center gap-1 group active:scale-90 transition-transform tap-target"
                   >
-                    <div className="p-3.5 rounded-full glass-button text-white">
-                      <Share2 className="w-6 h-6" />
-                    </div>
-                    <span className="text-[9px] font-black uppercase tracking-widest drop-shadow-md">Share</span>
+                    <Share2 size={32} className="text-white drop-shadow-lg" strokeWidth={2} />
+                    <span className="text-xs font-bold text-white drop-shadow-md">Share</span>
                   </button>
 
                   {/* More */}
-                  <div className="relative post-menu tap-target">
+                  <div className="relative post-menu tap-target mt-2">
                     <button
                       onClick={() => setPostMenuOpen(postMenuOpen === post._id ? null : post._id)}
-                      className="p-3.5 rounded-full glass-button text-white active:scale-90 transition-transform"
+                      className="text-white active:scale-90 transition-transform"
                     >
-                      <MoreVertical className="w-6 h-6" />
+                      <MoreVertical size={32} className="drop-shadow-lg" strokeWidth={2} />
                     </button>
 
                     {postMenuOpen === post._id && (
-                      <div className="absolute right-0 bottom-full mb-6 w-64 glass-panel rounded-[2.5rem] border-white/10 shadow-2xl overflow-hidden animate-scale-in origin-bottom-right z-[100]">
+                      <div className="absolute right-12 bottom-0 w-56 glass-panel rounded-2xl border-white/10 shadow-2xl overflow-hidden animate-scale-in origin-bottom-right z-[100]">
                         {post.user._id === currentUser?.id ? (
                           <>
                             <button
@@ -569,23 +567,23 @@ const Feed = () => {
                                 setEditTags(post.tags.join(', '));
                                 setPostMenuOpen(null);
                               }}
-                              className="w-full flex items-center gap-4 px-8 py-5 hover:bg-white/5 transition-colors text-white font-bold"
+                              className="w-full flex items-center gap-3 px-5 py-4 hover:bg-white/5 transition-colors text-white font-bold"
                             >
-                              <Edit size={20} className="text-neon-blue" />
-                              <span className="text-sm">Edit Post</span>
+                              <Edit size={18} className="text-neon-blue" />
+                              <span className="text-sm">Edit</span>
                             </button>
                             <button
                               onClick={() => archiveMutation.mutate(post._id)}
-                              className="w-full flex items-center gap-4 px-8 py-5 hover:bg-white/5 transition-colors text-white font-bold"
+                              className="w-full flex items-center gap-3 px-5 py-4 hover:bg-white/5 transition-colors text-white font-bold"
                             >
-                              <Archive size={20} className="text-neon-purple" />
+                              <Archive size={18} className="text-neon-purple" />
                               <span className="text-sm">{post.isArchived ? 'Unarchive' : 'Archive'}</span>
                             </button>
                             <button
                               onClick={() => setIsDeleting(post._id)}
-                              className="w-full flex items-center gap-4 px-8 py-5 hover:bg-white/5 transition-colors text-red-500 font-bold"
+                              className="w-full flex items-center gap-3 px-5 py-4 hover:bg-white/5 transition-colors text-red-500 font-bold"
                             >
-                              <Trash2 size={20} />
+                              <Trash2 size={18} />
                               <span className="text-sm">Delete</span>
                             </button>
                           </>
@@ -593,16 +591,16 @@ const Feed = () => {
                           <>
                             <button
                               onClick={() => handleNotInterested(post._id)}
-                              className="w-full flex items-center gap-4 px-8 py-5 hover:bg-white/5 transition-colors text-white font-bold"
+                              className="w-full flex items-center gap-3 px-5 py-4 hover:bg-white/5 transition-colors text-white font-bold"
                             >
-                              <AlertCircle size={20} className="text-white/40" />
+                              <AlertCircle size={18} className="text-white/40" />
                               <span className="text-sm">Not Interested</span>
                             </button>
                             <button
                               onClick={() => handleReport(post._id)}
-                              className="w-full flex items-center gap-4 px-8 py-5 hover:bg-white/5 transition-colors text-red-500 font-bold"
+                              className="w-full flex items-center gap-3 px-5 py-4 hover:bg-white/5 transition-colors text-red-500 font-bold"
                             >
-                              <AlertCircle size={20} />
+                              <AlertCircle size={18} />
                               <span className="text-sm">Report</span>
                             </button>
                           </>
@@ -613,25 +611,33 @@ const Feed = () => {
                 </div>
               </div>
 
-              {/* Bottom Info */}
-              <div className="absolute left-0 right-20 bottom-0 p-6 pb-32 bg-gradient-to-t from-black/80 via-black/40 to-transparent pt-20">
-                <div className="max-w-xl">
-                  <h3
-                    className="text-xl font-bold mb-2 cursor-pointer hover:text-neon-blue transition-colors"
-                    onClick={() => navigate(`/profile/${post.user._id}`)}
-                  >
-                    @{post.user.username}
-                  </h3>
-                  <p className="text-white/90 text-base leading-relaxed mb-3 line-clamp-3">
+              {/* Bottom Info - Refined & Less Intrusive */}
+              <div className="absolute left-0 right-16 bottom-0 p-4 pb-24 bg-gradient-to-t from-black/80 via-black/20 to-transparent pt-16 pointer-events-none">
+                <div className="max-w-[85%] pointer-events-auto">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3
+                      className="text-lg font-bold text-white text-shadow cursor-pointer hover:underline"
+                      onClick={() => navigate(`/profile/${post.user._id}`)}
+                    >
+                      @{post.user.username}
+                    </h3>
+                  </div>
+                  <p className="text-white/90 text-[15px] leading-snug mb-2 line-clamp-2 text-shadow font-medium">
                     {post.caption}
                   </p>
                   {post.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-x-2 gap-y-1">
                       {post.tags.map((tag, i) => (
-                        <span key={i} className="text-neon-blue font-medium text-sm">
+                        <span key={i} className="text-white font-bold text-xs opacity-90 text-shadow">
                           #{tag}
                         </span>
                       ))}
+                    </div>
+                  )}
+                  {post.mediaType === 'audio' && (
+                    <div className="flex items-center gap-2 mt-3 p-1.5 pl-2 pr-3 bg-black/40 backdrop-blur-sm rounded-full border border-white/10 w-fit">
+                      <Music size={12} className="text-neon-purple" />
+                      <div className="text-[10px] font-bold text-white/80 marquee-text">Original Sound</div>
                     </div>
                   )}
                 </div>
