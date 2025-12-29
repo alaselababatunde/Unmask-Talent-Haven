@@ -4,14 +4,14 @@
 
 @layer base {
   body {
-    @apply bg-primary text-white font-sans antialiased selection:bg-neon-purple selection:text-white overflow-x-hidden min-h-screen w-full;
+    @apply bg-primary text-white font-sans antialiased selection:bg-neon-purple selection:text-white overflow-hidden h-screen w-full;
     background-image:
       radial-gradient(circle at 15% 50%, rgba(176, 38, 255, 0.1) 0%, transparent 25%),
       radial-gradient(circle at 85% 30%, rgba(0, 240, 255, 0.05) 0%, transparent 25%);
   }
 
   #root {
-    @apply min-h-screen w-full flex flex-col;
+    @apply h-screen w-full flex flex-col overflow-hidden;
   }
 }
 

@@ -70,6 +70,7 @@ const Profile = () => {
   const { data, refetch } = useQuery<UserData>({
     queryKey: ['user', userId],
     queryFn: async () => {
+      // Logic: This consumes the same post source as FYP via the user-filtered controller.
       const response = await api.get(`/user/${userId}`);
       return response.data;
     },

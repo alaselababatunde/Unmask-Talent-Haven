@@ -39,15 +39,15 @@ export const getRecommendedFeed = async (req, res) => {
         .slice(0, 5)
         .map(([tag]) => tag);
 
-      // 3. Trending posts with favorite tags (30% weight)
+      // 3. Trending posts with favorite tags (30% weight) - Global source
       const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
       let trendingPosts = [];
       if (favoriteTags.length > 0) {
         trendingPosts = await Post.find({
           ...filter,
           tags: { $in: favoriteTags },
-          createdAt: { $gte: oneDayAgo },
-          user: { $ne: userId }
+          createdAt: { $gte: oneDayAgo }
+          // Removed user: { $ne: userId } to allow own posts on FYP for instant visibility
         })
           .populate('user', '_id username profileImage isLive')
           .lean();
@@ -58,11 +58,11 @@ export const getRecommendedFeed = async (req, res) => {
           .slice(0, 6);
       }
 
-      // 4. Discover new content (10% weight)
+      // 4. Discover new content (10% weight) - Global discovery
       const discoverPosts = await Post.find({
         ...filter,
-        user: { $nin: [...followingIds, userId] },
         createdAt: { $gte: oneDayAgo }
+        // Removed user: { $nin: [...followingIds, userId] } to ensure global source is truly global
       })
         .populate('user', '_id username profileImage isLive')
         .lean();
@@ -72,7 +72,7 @@ export const getRecommendedFeed = async (req, res) => {
         .sort((a, b) => b.score - a.score)
         .slice(0, 2);
 
-      // Merge and remove duplicates
+      // Merge and remove duplicates from the global posts source
       recommendedPosts = [...followedPosts, ...trendingPosts, ...scoredDiscoverPosts];
       const seen = new Set();
       recommendedPosts = recommendedPosts
@@ -85,7 +85,7 @@ export const getRecommendedFeed = async (req, res) => {
         .slice(0, 20);
 
     } else {
-      // Not logged in - show trending
+      // Not logged in - show trending from the global post collection
       const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
       const trendingPosts = await Post.find({ ...filter, createdAt: { $gte: oneDayAgo } })
         .populate('user', '_id username profileImage isLive')
@@ -97,6 +97,8 @@ export const getRecommendedFeed = async (req, res) => {
         .slice(0, 20);
     }
 
+    // Explanation: All feeds (FYP, Following, Profile) consume from the same Post collection.
+    // FYP (recommended) queries all non-archived posts globally, ensuring immediate visibility.
     console.log(`Recommended ${recommendedPosts.length} posts for user ${userId || 'anonymous'}`);
     res.json(recommendedPosts);
   } catch (error) {

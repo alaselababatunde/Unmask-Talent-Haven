@@ -329,8 +329,19 @@ const Feed = () => {
 
   return (
     <MobileLayout header={null}>
+      {/* 
+        UI Shell Locking explanation:
+        1. MobileLayout container has h-[100dvh] and overflow-hidden.
+        2. index.css locks body and #root to h-screen and overflow-hidden.
+        3. Only this specific Feed container owns vertical scrolling.
+      */}
       {HeaderTabs}
 
+      {/* 
+        Snap scroll implementation:
+        snap-y snap-mandatory ensures one video per viewport.
+        h-full matches the MobileLayout flex-1 main area.
+      */}
       <div className="h-full w-full snap-y snap-mandatory overflow-y-scroll no-scrollbar bg-black">
         {isLoading ? (
           <div className="h-full w-full flex items-center justify-center">

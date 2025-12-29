@@ -1,14 +1,16 @@
 import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api';
+import { useNavigate } from 'react-router-dom';
+import { X, Upload as UploadIcon } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import MobileLayout from '../components/MobileLayout';
 
-import { useAuth } from '../context/AuthContext';
-import { Upload as UploadIcon, X } from 'lucide-react';
+interface UploadProps { }
 
-const Upload = () => {
+const Upload = ({ }: UploadProps) => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [mediaType, setMediaType] = useState<'video' | 'audio' | 'text' | 'sign-language' | 'live'>('video');
   const [file, setFile] = useState<File | null>(null);
   const [caption, setCaption] = useState('');
@@ -33,6 +35,12 @@ const Upload = () => {
       return response.data;
     },
     onSuccess: () => {
+      // Invalidate ALL feed queries to ensure new post appears on FYP immediately
+      queryClient.invalidateQueries({ queryKey: ['feed'] });
+      // Also invalidate the current user's profile post cache
+      if (user?.id) {
+        queryClient.invalidateQueries({ queryKey: ['user', user.id] });
+      }
       navigate('/feed');
     },
     onError: (err: any) => {
