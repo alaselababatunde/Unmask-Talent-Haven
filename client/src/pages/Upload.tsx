@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
-import Navbar from '../components/Navbar';
+import MobileLayout from '../components/MobileLayout';
 
 import { useAuth } from '../context/AuthContext';
 import { Upload as UploadIcon, X } from 'lucide-react';
@@ -67,18 +67,19 @@ const Upload = () => {
     uploadMutation.mutate(formData);
   };
 
-  return (
-    <div className="h-[100dvh] w-full bg-primary overflow-hidden relative flex flex-col">
-      {/* Header */}
-      <div className="p-6 flex items-center justify-between z-20">
-        <button onClick={() => navigate(-1)} className="p-2 glass-button rounded-full">
-          <X size={24} />
-        </button>
-        <h1 className="text-xl font-black uppercase tracking-widest">Create</h1>
-        <div className="w-10" />
-      </div>
+  const Header = (
+    <div className="w-full p-6 flex items-center justify-between z-20 bg-primary/40 backdrop-blur-md border-b border-white/5">
+      <button onClick={() => navigate(-1)} className="p-2 glass-button rounded-full">
+        <X size={24} />
+      </button>
+      <h1 className="text-xl font-black uppercase tracking-widest">Create</h1>
+      <div className="w-10" />
+    </div>
+  );
 
-      <div className="flex-1 overflow-y-auto px-6 pb-32 no-scrollbar">
+  return (
+    <MobileLayout header={Header}>
+      <div className="h-full w-full overflow-y-auto no-scrollbar px-6 pb-32">
         {/* Content Class Selection Grid */}
         <div className="grid grid-cols-3 gap-4 mb-10 animate-scale-in">
           {[
@@ -93,8 +94,8 @@ const Upload = () => {
               type="button"
               onClick={() => setMediaType(item.id as any)}
               className={`flex flex-col items-center gap-3 p-6 rounded-[2rem] border transition-all duration-300 ${mediaType === item.id
-                  ? `${item.color} text-black border-transparent shadow-lg scale-105`
-                  : 'bg-white/5 border-white/5 text-white/40 hover:bg-white/10'
+                ? `${item.color} text-black border-transparent shadow-lg scale-105`
+                : 'bg-white/5 border-white/5 text-white/40 hover:bg-white/10'
                 }`}
             >
               <span className="text-2xl">{item.icon}</span>
@@ -256,9 +257,7 @@ const Upload = () => {
           </form>
         )}
       </div>
-
-      <Navbar />
-    </div>
+    </MobileLayout>
   );
 };
 

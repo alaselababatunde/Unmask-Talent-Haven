@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navbar';
+import MobileLayout from '../components/MobileLayout';
 import { Lock, Shield, Share2, Bell, Radio, LogOut, ArrowLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -49,27 +49,25 @@ const Settings = () => {
     },
   ];
 
-  return (
-    <div className="fixed-screen">
-      {/* Background Glows */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-neon-purple/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-neon-blue/10 rounded-full blur-[120px] pointer-events-none" />
 
-      {/* Fixed Glassy Header */}
-      <div className="absolute top-0 left-0 right-0 z-[100] bg-primary/40 backdrop-blur-xl border-b border-white/5 px-6 pt-12 pb-6">
-        <div className="flex items-center gap-4 max-w-4xl mx-auto">
-          <button
-            onClick={() => navigate('/profile')}
-            className="p-3 glass-button rounded-full text-white/40 hover:text-white transition-all active:scale-90"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <h1 className="text-3xl font-bold font-display tracking-tight">Settings</h1>
-        </div>
+  const Header = (
+    <div className="w-full bg-primary/40 backdrop-blur-xl border-b border-white/5 px-6 pt-12 pb-6">
+      <div className="flex items-center gap-4 max-w-4xl mx-auto">
+        <button
+          onClick={() => navigate('/profile')}
+          className="p-3 glass-button rounded-full text-white/40 hover:text-white transition-all active:scale-90"
+        >
+          <ArrowLeft size={20} />
+        </button>
+        <h1 className="text-3xl font-bold font-display tracking-tight">Settings</h1>
       </div>
+    </div>
+  );
 
-      <div className="scrollable-content px-6 pb-32 no-scrollbar">
-        <div className="max-w-4xl mx-auto pt-32">
+  return (
+    <MobileLayout header={Header}>
+      <div className="h-full w-full overflow-y-auto no-scrollbar px-6 pb-32">
+        <div className="max-w-4xl mx-auto pt-6">
           {settingsSections.map((section, idx) => (
             <div key={idx} className="mb-10">
               <h2 className="text-[10px] font-black uppercase tracking-widest text-white/20 ml-4 mb-4">{section.title}</h2>
@@ -116,9 +114,7 @@ const Settings = () => {
           </div>
         </div>
       </div>
-
-      <Navbar />
-    </div>
+    </MobileLayout>
   );
 };
 

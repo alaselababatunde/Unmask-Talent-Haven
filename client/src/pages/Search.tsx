@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Search as SearchIcon, ArrowLeft, TrendingUp, Users, Play, Music, Mic2, Video, User, X } from 'lucide-react';
-import Navbar from '../components/Navbar';
+import MobileLayout from '../components/MobileLayout';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 
@@ -42,71 +42,72 @@ const Search = () => {
 
     const results = data || { users: [], posts: [] };
 
+    const Header = (
+        <div className="w-full z-[100] bg-primary/40 backdrop-blur-xl border-b border-white/5 px-6 pt-12 pb-6">
+            <div className="flex items-center gap-4 max-w-4xl mx-auto">
+                <button
+                    onClick={() => navigate(-1)}
+                    className="p-3 glass-button rounded-full text-white/40 hover:text-white transition-all active:scale-90"
+                >
+                    <ArrowLeft size={20} />
+                </button>
+                <div className="flex-1 relative group">
+                    <SearchIcon className={`absolute left-5 top-1/2 -translate-y-1/2 transition-colors duration-300 ${searchQuery ? 'text-neon-purple' : 'text-white/20'}`} size={18} />
+                    <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search talents, creators..."
+                        className="w-full bg-white/5 border border-white/5 rounded-[1.5rem] py-4 pl-14 pr-12 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-neon-purple/30 focus:bg-white/10 transition-all duration-300"
+                    />
+                    {searchQuery && (
+                        <button
+                            onClick={() => setSearchQuery('')}
+                            className="absolute right-5 top-1/2 -translate-y-1/2 text-white/20 hover:text-white transition-colors p-1"
+                        >
+                            <X size={16} />
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            {/* Search Filters */}
+            {debouncedQuery && (
+                <div className="flex gap-3 mt-6 overflow-x-auto no-scrollbar pb-2 max-w-4xl mx-auto">
+                    {[
+                        { id: 'all', label: 'All' },
+                        { id: 'creators', label: 'Creators' },
+                        { id: 'content', label: 'Content' },
+                        { id: 'mine', label: 'My Uploads', hide: !currentUser }
+                    ].map(f => !f.hide && (
+                        <button
+                            key={f.id}
+                            onClick={() => setActiveFilter(f.id as any)}
+                            className={`px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeFilter === f.id
+                                ? 'bg-neon-purple text-black shadow-[0_0_20px_rgba(176,38,255,0.4)]'
+                                : 'bg-white/5 text-white/40 hover:text-white/60'
+                                }`}
+                        >
+                            {f.label}
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+
     return (
-        <div className="fixed-screen">
+        <MobileLayout header={Header}>
             {/* Background Glows */}
             <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-neon-purple/10 rounded-full blur-[120px] pointer-events-none animate-pulse" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-neon-blue/10 rounded-full blur-[120px] pointer-events-none animate-pulse" />
 
-            {/* Fixed Header / Search Bar */}
-            <div className="absolute top-0 left-0 right-0 z-[100] bg-primary/40 backdrop-blur-xl border-b border-white/5 px-6 pt-12 pb-6">
-                <div className="flex items-center gap-4 max-w-4xl mx-auto">
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="p-3 glass-button rounded-full text-white/40 hover:text-white transition-all active:scale-90"
-                    >
-                        <ArrowLeft size={20} />
-                    </button>
-                    <div className="flex-1 relative group">
-                        <SearchIcon className={`absolute left-5 top-1/2 -translate-y-1/2 transition-colors duration-300 ${searchQuery ? 'text-neon-purple' : 'text-white/20'}`} size={18} />
-                        <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Search talents, creators..."
-                            className="w-full bg-white/5 border border-white/5 rounded-[1.5rem] py-4 pl-14 pr-12 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-neon-purple/30 focus:bg-white/10 transition-all duration-300"
-                        />
-                        {searchQuery && (
-                            <button
-                                onClick={() => setSearchQuery('')}
-                                className="absolute right-5 top-1/2 -translate-y-1/2 text-white/20 hover:text-white transition-colors p-1"
-                            >
-                                <X size={16} />
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-                {/* Search Filters */}
-                {debouncedQuery && (
-                    <div className="flex gap-3 mt-6 overflow-x-auto no-scrollbar pb-2 max-w-4xl mx-auto">
-                        {[
-                            { id: 'all', label: 'All' },
-                            { id: 'creators', label: 'Creators' },
-                            { id: 'content', label: 'Content' },
-                            { id: 'mine', label: 'My Uploads', hide: !currentUser }
-                        ].map(f => !f.hide && (
-                            <button
-                                key={f.id}
-                                onClick={() => setActiveFilter(f.id as any)}
-                                className={`px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeFilter === f.id
-                                    ? 'bg-neon-purple text-black shadow-[0_0_20px_rgba(176,38,255,0.4)]'
-                                    : 'bg-white/5 text-white/40 hover:text-white/60'
-                                    }`}
-                            >
-                                {f.label}
-                            </button>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            <div className="scrollable-content px-6 pb-32 no-scrollbar">
-                <div className="max-w-4xl mx-auto pt-48">
+            <div className="h-full w-full overflow-y-auto no-scrollbar px-6">
+                <div className="max-w-4xl mx-auto pt-6 pb-32">
                     {!debouncedQuery ? (
                         <>
                             {/* Categories Grid */}
-                            <div className="grid grid-cols-2 gap-4 mb-12">
+                            <div className="grid grid-cols-2 gap-4 mb-12 animate-slide-up">
                                 {categories.map((cat, i) => (
                                     <button
                                         key={i}
@@ -120,7 +121,7 @@ const Search = () => {
                                 ))}
                             </div>
 
-                            <div className="text-center py-20">
+                            <div className="text-center py-20 animate-fade-in">
                                 <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
                                     <SearchIcon size={32} className="text-white/10" />
                                 </div>
@@ -134,7 +135,7 @@ const Search = () => {
                             <p className="text-[10px] font-black uppercase tracking-widest text-white/20 animate-pulse">Searching the Haven...</p>
                         </div>
                     ) : (
-                        <div className="space-y-12">
+                        <div className="space-y-12 animate-slide-up">
                             {/* Creators Section */}
                             {(activeFilter === 'all' || activeFilter === 'creators') && results.users.length > 0 && (
                                 <div>
@@ -210,6 +211,7 @@ const Search = () => {
                                                         <Play size={40} className="text-white/5" />
                                                     </div>
                                                 )}
+                                                {/* Overlays ... */}
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent p-6 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                                     <p className="text-xs font-bold text-white line-clamp-2 mb-2">{post.caption}</p>
                                                     <div className="flex items-center gap-2">
@@ -219,7 +221,6 @@ const Search = () => {
                                                         <p className="text-[9px] font-black uppercase tracking-widest text-white/60">@{post.user?.username}</p>
                                                     </div>
                                                 </div>
-                                                {/* Play indicator */}
                                                 <div className="absolute top-4 right-4 p-2 bg-black/20 backdrop-blur-md rounded-full border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <Play size={12} className="text-white fill-white" />
                                                 </div>
@@ -242,9 +243,7 @@ const Search = () => {
                     )}
                 </div>
             </div>
-
-            <Navbar />
-        </div>
+        </MobileLayout>
     );
 };
 

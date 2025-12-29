@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import Navbar from '../components/Navbar';
+import MobileLayout from '../components/MobileLayout';
 import { Send, ArrowLeft, MoreHorizontal, Phone, Video as VideoIcon, Trash2, Edit2, AlertCircle, ShieldOff, X, Mic, Image as ImageIcon, Bell } from 'lucide-react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
@@ -163,48 +163,107 @@ const Chat = () => {
 
   const selectedConversation = conversations.find(c => c.id === selectedChat);
 
+  // Header Logic
+  const InboxHeader = (
+    <div className="w-full px-6 pt-8 pb-4 bg-primary/40 backdrop-blur-xl border-b border-white/5">
+      <h1 className="text-3xl font-bold font-display tracking-tight mb-6">Messages</h1>
+
+      {/* Tab Switcher */}
+      <div className="flex gap-8 border-b border-white/5">
+        <button
+          onClick={() => setActiveTab('messages')}
+          className={`pb-4 text-sm font-bold transition-all relative ${activeTab === 'messages' ? 'text-white' : 'text-white/20'}`}
+        >
+          All Messages
+          {activeTab === 'messages' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neon-purple" />}
+        </button>
+        <button
+          onClick={() => setActiveTab('requests')}
+          className={`pb-4 text-sm font-bold transition-all relative ${activeTab === 'requests' ? 'text-white' : 'text-white/20'}`}
+        >
+          Requests
+          {activeTab === 'requests' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neon-purple" />}
+        </button>
+        <button
+          onClick={() => setActiveTab('notifications')}
+          className={`pb-4 text-sm font-bold transition-all relative ${activeTab === 'notifications' ? 'text-white' : 'text-white/20'}`}
+        >
+          Notifications
+          {notifications.filter((n: any) => !n.read).length > 0 && (
+            <span className="absolute -top-1 -right-2 w-2 h-2 bg-neon-purple rounded-full shadow-[0_0_8px_rgba(176,38,255,0.8)]" />
+          )}
+          {activeTab === 'notifications' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neon-purple" />}
+        </button>
+      </div>
+    </div>
+  );
+
+  const ChatRoomHeader = (
+    <div className="w-full px-6 py-4 glass-panel border-b border-white/5 flex items-center justify-between bg-primary/40 backdrop-blur-md">
+      <div className="flex items-center gap-4">
+        <button onClick={handleBackToInbox} className="p-2 hover:bg-white/5 rounded-full transition-colors order-first">
+          <ArrowLeft size={24} />
+        </button>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full overflow-hidden border bg-obsidian border-white/5">
+            {selectedConversation?.profileImage ? (
+              <img src={selectedConversation.profileImage} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-neon-purple font-bold">
+                {selectedConversation?.username?.[0]?.toUpperCase()}
+              </div>
+            )}
+          </div>
+          <div>
+            <h2 className="font-bold text-sm">{selectedConversation?.username}</h2>
+            <p className="text-[10px] text-neon-blue font-black uppercase tracking-widest leading-none">
+              {selectedConversation?.isOnline ? 'Online' : 'Offline'}
+            </p>
+          </div>
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <button className="p-2 glass-button rounded-full"><Phone size={18} /></button>
+        <button className="p-2 glass-button rounded-full"><VideoIcon size={18} /></button>
+        <div className="relative">
+          <button
+            onClick={() => setContextMenuMessage(contextMenuMessage === 'header' ? null : 'header')}
+            className="p-2 glass-button rounded-full"
+          >
+            <MoreHorizontal size={18} />
+          </button>
+          {contextMenuMessage === 'header' && (
+            <div className="absolute right-0 mt-2 w-48 glass-panel rounded-2xl border-white/10 shadow-2xl overflow-hidden z-[100] animate-scale-in origin-top-right">
+              <button
+                onClick={() => handleReportUser(selectedChat!)}
+                className="w-full flex items-center gap-3 px-5 py-3 hover:bg-white/5 transition-colors text-white text-sm font-bold"
+              >
+                <AlertCircle size={14} className="text-white/40" />
+                <span>Report</span>
+              </button>
+              <button
+                onClick={() => handleBlockUser(selectedChat!)}
+                className="w-full flex items-center gap-3 px-5 py-3 hover:bg-white/5 transition-colors text-red-500 text-sm font-bold"
+              >
+                <ShieldOff size={14} />
+                <span>Block</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   if (!selectedChat) {
     return (
-      <div className="fixed-screen">
+      <MobileLayout header={InboxHeader}>
         {/* Background Glows */}
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-neon-purple/10 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-neon-blue/10 rounded-full blur-[120px] pointer-events-none" />
 
-        {/* Header */}
-        <div className="absolute top-0 left-0 right-0 z-20 px-6 pt-8 pb-4 bg-primary/40 backdrop-blur-xl border-b border-white/5">
-          <h1 className="text-3xl font-bold font-display tracking-tight mb-6">Messages</h1>
-
-          {/* Tab Switcher */}
-          <div className="flex gap-8 border-b border-white/5">
-            <button
-              onClick={() => setActiveTab('messages')}
-              className={`pb-4 text-sm font-bold transition-all relative ${activeTab === 'messages' ? 'text-white' : 'text-white/20'}`}
-            >
-              All Messages
-              {activeTab === 'messages' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neon-purple" />}
-            </button>
-            <button
-              onClick={() => setActiveTab('requests')}
-              className={`pb-4 text-sm font-bold transition-all relative ${activeTab === 'requests' ? 'text-white' : 'text-white/20'}`}
-            >
-              Requests
-              {activeTab === 'requests' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neon-purple" />}
-            </button>
-            <button
-              onClick={() => setActiveTab('notifications')}
-              className={`pb-4 text-sm font-bold transition-all relative ${activeTab === 'notifications' ? 'text-white' : 'text-white/20'}`}
-            >
-              Notifications
-              {notifications.filter((n: any) => !n.read).length > 0 && (
-                <span className="absolute -top-1 -right-2 w-2 h-2 bg-neon-purple rounded-full shadow-[0_0_8px_rgba(176,38,255,0.8)]" />
-              )}
-              {activeTab === 'notifications' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neon-purple" />}
-            </button>
-          </div>
-        </div>
-
-        <div className="scrollable-content px-6 pb-32 no-scrollbar">
-          <div className="pt-48">
+        <div className="h-full w-full overflow-y-auto no-scrollbar px-6 pb-4">
+          <div className="pt-6">
             {/* Active Status Bar */}
             <div className="flex gap-6 mb-10 overflow-x-auto no-scrollbar py-2">
               {conversations
@@ -235,7 +294,7 @@ const Chat = () => {
             </div>
 
             {/* Conversations List */}
-            <div className="space-y-4">
+            <div className="space-y-4 pb-20">
               {loading ? (
                 <div className="text-center py-20 text-white/20 font-bold">Loading...</div>
               ) : activeTab === 'requests' ? (
@@ -323,187 +382,131 @@ const Chat = () => {
             </div>
           </div>
         </div>
-
-        <Navbar />
-      </div>
+      </MobileLayout>
     );
   }
 
   return (
-    <div className="fixed-screen">
-      {/* Chat Header */}
-      <div className="absolute top-0 left-0 right-0 z-30 px-6 py-6 glass-panel border-b border-white/5 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button onClick={handleBackToInbox} className="p-2 hover:bg-white/5 rounded-full transition-colors">
-            <ArrowLeft size={24} />
-          </button>
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full overflow-hidden border bg-obsidian border-white/5">
-              {selectedConversation?.profileImage ? (
-                <img src={selectedConversation.profileImage} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-neon-purple font-bold">
-                  {selectedConversation?.username[0].toUpperCase()}
-                </div>
-              )}
-            </div>
-            <div>
-              <h2 className="font-bold">{selectedConversation?.username}</h2>
-              <p className="text-[10px] text-neon-blue font-black uppercase tracking-widest">
-                {selectedConversation?.isOnline ? 'Online' : 'Offline'}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <button className="p-3 glass-button rounded-full"><Phone size={20} /></button>
-          <button className="p-3 glass-button rounded-full"><VideoIcon size={20} /></button>
-          <div className="relative">
-            <button
-              onClick={() => setContextMenuMessage(contextMenuMessage === 'header' ? null : 'header')}
-              className="p-3 glass-button rounded-full"
-            >
-              <MoreHorizontal size={20} />
-            </button>
-            {contextMenuMessage === 'header' && (
-              <div className="absolute right-0 mt-2 w-48 glass-panel rounded-2xl border-white/10 shadow-2xl overflow-hidden z-[100] animate-scale-in origin-top-right">
-                <button
-                  onClick={() => handleReportUser(selectedChat!)}
-                  className="w-full flex items-center gap-3 px-5 py-3 hover:bg-white/5 transition-colors text-white text-sm font-bold"
-                >
-                  <AlertCircle size={14} className="text-white/40" />
-                  <span>Report</span>
-                </button>
-                <button
-                  onClick={() => handleBlockUser(selectedChat!)}
-                  className="w-full flex items-center gap-3 px-5 py-3 hover:bg-white/5 transition-colors text-red-500 text-sm font-bold"
-                >
-                  <ShieldOff size={14} />
-                  <span>Block</span>
-                </button>
+    <MobileLayout header={ChatRoomHeader} showNav={false}>
+      <div className="flex flex-col h-full bg-black">
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 no-scrollbar">
+          {messages.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-center opacity-20">
+              <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center mb-6">
+                <Send size={40} />
               </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Messages */}
-      <div className="scrollable-content px-6 pt-28 pb-32 space-y-6 no-scrollbar">
-        {messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center opacity-20">
-            <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center mb-6">
-              <Send size={40} />
+              <p className="text-xl font-bold">Start the conversation</p>
             </div>
-            <p className="text-xl font-bold">Start the conversation</p>
-          </div>
-        ) : (
-          messages.map((message) => {
-            const isMe = message.userId === (user?.id || 'me');
-            return (
-              <div key={message.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} animate-scale-in`}>
-                <div
-                  className={`max-w-[80%] ${isMe ? 'bg-neon-purple text-black' : 'bg-white/5 text-white'} px-6 py-4 rounded-[2rem] ${isMe ? 'rounded-tr-none' : 'rounded-tl-none'} shadow-xl relative overflow-hidden group cursor-pointer`}
-                  onClick={() => setContextMenuMessage(contextMenuMessage === message.id ? null : message.id)}
-                >
-                  <p className="text-sm leading-relaxed font-medium">{message.text}</p>
-                  <p className={`text-[8px] font-black uppercase mt-2 opacity-40 ${isMe ? 'text-black' : 'text-white'}`}>
-                    {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
+          ) : (
+            messages.map((message) => {
+              const isMe = message.userId === (user?.id || 'me');
+              return (
+                <div key={message.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} animate-scale-in`}>
+                  <div
+                    className={`max-w-[80%] ${isMe ? 'bg-neon-purple text-black' : 'bg-white/5 text-white'} px-6 py-4 rounded-[2rem] ${isMe ? 'rounded-tr-none' : 'rounded-tl-none'} shadow-xl relative overflow-hidden group cursor-pointer`}
+                    onClick={() => setContextMenuMessage(contextMenuMessage === message.id ? null : message.id)}
+                  >
+                    <p className="text-sm leading-relaxed font-medium">{message.text}</p>
+                    <p className={`text-[8px] font-black uppercase mt-2 opacity-40 ${isMe ? 'text-black' : 'text-white'}`}>
+                      {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
 
-                  {contextMenuMessage === message.id && (
-                    <div className={`absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center gap-4 animate-fade-in`}>
-                      {isMe && (
-                        <>
+                    {contextMenuMessage === message.id && (
+                      <div className={`absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center gap-4 animate-fade-in`}>
+                        {isMe && (
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingMessage(message.id);
+                                setInput(message.text);
+                                setContextMenuMessage(null);
+                              }}
+                              className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                            >
+                              <Edit2 size={16} className="text-neon-blue" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteMessage(message.id);
+                              }}
+                              className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                            >
+                              <Trash2 size={16} className="text-red-500" />
+                            </button>
+                          </>
+                        )}
+                        {!isMe && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              setEditingMessage(message.id);
-                              setInput(message.text);
+                              handleReportUser(message.userId);
                               setContextMenuMessage(null);
                             }}
                             className="p-2 hover:bg-white/10 rounded-full transition-colors"
                           >
-                            <Edit2 size={16} className="text-neon-blue" />
+                            <AlertCircle size={16} className="text-white/40" />
                           </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteMessage(message.id);
-                            }}
-                            className="p-2 hover:bg-white/10 rounded-full transition-colors"
-                          >
-                            <Trash2 size={16} className="text-red-500" />
-                          </button>
-                        </>
-                      )}
-                      {!isMe && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleReportUser(message.userId);
-                            setContextMenuMessage(null);
-                          }}
-                          className="p-2 hover:bg-white/10 rounded-full transition-colors"
-                        >
-                          <AlertCircle size={16} className="text-white/40" />
-                        </button>
-                      )}
-                    </div>
-                  )}
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })
-        )}
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Input Area */}
-      <div className="absolute bottom-0 left-0 right-0 z-30 p-6 pb-10 bg-gradient-to-t from-primary via-primary/80 to-transparent">
-        <form onSubmit={handleSend} className="glass-panel p-2 rounded-[2.5rem] border-white/5 flex items-center gap-2">
-          <div className="flex items-center gap-1 px-2">
-            <button type="button" className="p-3 text-white/20 hover:text-white transition-colors">
-              <ImageIcon size={20} />
-            </button>
-            <button type="button" className="p-3 text-white/20 hover:text-white transition-colors">
-              <Mic size={20} />
-            </button>
-          </div>
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            className="flex-1 bg-transparent px-2 py-4 text-sm focus:outline-none placeholder:text-white/10"
-            placeholder={editingMessage ? "Edit message..." : "Type a message..."}
-          />
-          {editingMessage && (
-            <button
-              type="button"
-              onClick={() => {
-                setEditingMessage(null);
-                setInput('');
-              }}
-              className="p-2 text-white/40 hover:text-white transition-colors"
-            >
-              <X size={20} />
-            </button>
+              );
+            })
           )}
-          <button
-            type="submit"
-            disabled={!input.trim()}
-            className={`p-4 rounded-full transition-all ${input.trim() ? 'bg-neon-purple text-black shadow-lg shadow-neon-purple/20' : 'bg-white/5 text-white/20'}`}
-            onClick={(e) => {
-              if (editingMessage) {
-                e.preventDefault();
-                handleEditMessage(editingMessage, input);
-              }
-            }}
-          >
-            <Send size={20} />
-          </button>
-        </form>
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input Area */}
+        <div className="flex-none p-4 pb-8 bg-black border-t border-white/5">
+          <form onSubmit={handleSend} className="glass-panel p-2 rounded-[2.5rem] border-white/5 flex items-center gap-2">
+            <div className="flex items-center gap-1 px-2">
+              <button type="button" className="p-3 text-white/20 hover:text-white transition-colors">
+                <ImageIcon size={20} />
+              </button>
+              <button type="button" className="p-3 text-white/20 hover:text-white transition-colors">
+                <Mic size={20} />
+              </button>
+            </div>
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              className="flex-1 bg-transparent px-2 py-4 text-sm focus:outline-none placeholder:text-white/10"
+              placeholder={editingMessage ? "Edit message..." : "Type a message..."}
+            />
+            {editingMessage && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingMessage(null);
+                  setInput('');
+                }}
+                className="p-2 text-white/40 hover:text-white transition-colors"
+              >
+                <X size={20} />
+              </button>
+            )}
+            <button
+              type="submit"
+              disabled={!input.trim()}
+              className={`p-4 rounded-full transition-all ${input.trim() ? 'bg-neon-purple text-black shadow-lg shadow-neon-purple/20' : 'bg-white/5 text-white/20'}`}
+              onClick={(e) => {
+                if (editingMessage) {
+                  e.preventDefault();
+                  handleEditMessage(editingMessage, input);
+                }
+              }}
+            >
+              <Send size={20} />
+            </button>
+          </form>
+        </div>
       </div>
-    </div>
+    </MobileLayout>
   );
 };
 

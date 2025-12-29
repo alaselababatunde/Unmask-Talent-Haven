@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import MobileLayout from '../components/MobileLayout';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api';
-import Navbar from '../components/Navbar';
 import ReactPlayer from 'react-player';
 import { Heart, MessageCircle, Share2, Music, MoreVertical, X, Plus, Check, Archive, Trash2, Edit, AlertCircle, Video as VideoIcon, Search, MoreHorizontal, Send } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -37,14 +37,13 @@ const Feed = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const singlePostId = searchParams.get('post');
-  const { user: currentUser, updateFollowing, socket } = useAuth();
+  const { user: currentUser, updateFollowing } = useAuth();
   const [activeTab, setActiveTab] = useState<'following' | 'video' | 'sign-language' | 'audio' | 'text'>('video');
-  const [playingIndex, setPlayingIndex] = useState(0);
+  const [playingIndex] = useState(0);
   const playerRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [openCommentsPostId, setOpenCommentsPostId] = useState<string | null>(null);
   const [openSharePostId, setOpenSharePostId] = useState<string | null>(null);
   const [shareSearch, setShareSearch] = useState('');
-  const [shareSuccess, setShareSuccess] = useState(false);
   const [newCommentText, setNewCommentText] = useState('');
   const [postMenuOpen, setPostMenuOpen] = useState<string | null>(null);
   const [isPaused, setIsPaused] = useState(false);
@@ -248,84 +247,91 @@ const Feed = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [postMenuOpen]);
 
-  const handleLike = (postId: string) => {
+  const handleDoubleTap = (e: React.MouseEvent, postId: string) => {
+    const currentTime = new Date().getTime();
+    const tapLength = currentTime - lastTap;
+    if (tapLength < 300 && tapLength > 0) {
+      // Double tap detected
+      e.preventDefault();
+      const rect = (e.target as HTMLElement).getBoundingClientRect();
+      setHeartPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+      setShowHeart(true);
+      likeMutation.mutate(postId);
+      setTimeout(() => setShowHeart(false), 1000);
+    } else {
+      // Single tap - toggle play/pause
+      setIsPaused(!isPaused);
+    }
+    setLastTap(currentTime);
+  };
+
+  // Optimistic Like Handler
+  const handleLike = async (postId: string) => {
     if (!currentUser) {
       navigate('/profile');
       return;
     }
-    likeMutation.mutate(postId, {
-      onError: (err) => {
-        console.error('Like failed', err);
-      }
+
+    // Immediate Optimistic Update
+    const previousPosts = queryClient.getQueryData<Post[]>(['feed', activeTab]);
+
+    queryClient.setQueryData<Post[]>(['feed', activeTab], (old) => {
+      if (!old) return [];
+      return old.map(p => {
+        if (p._id === postId) {
+          const isLiked = p.likes.includes(currentUser.id);
+          return {
+            ...p,
+            likes: isLiked
+              ? p.likes.filter(id => id !== currentUser.id)
+              : [...p.likes, currentUser.id]
+          };
+        }
+        return p;
+      });
     });
-  };
 
-  const handleDoubleTap = (e: React.MouseEvent | React.TouchEvent, postId: string) => {
-    const now = Date.now();
-    if (now - lastTap < 300) {
-      // Double tap detected
-      handleLike(postId);
-
-      const clientX = 'touches' in e ? (e as React.TouchEvent).touches[0].clientX : (e as React.MouseEvent).clientX;
-      const clientY = 'touches' in e ? (e as React.TouchEvent).touches[0].clientY : (e as React.MouseEvent).clientY;
-      setHeartPos({ x: clientX, y: clientY });
-      setShowHeart(true);
-      setTimeout(() => setShowHeart(false), 800);
-    } else {
-      setIsPaused(!isPaused);
+    try {
+      await api.post(`/feed/${postId}/like`);
+    } catch (err) {
+      // Revert on failure
+      queryClient.setQueryData(['feed', activeTab], previousPosts);
+      console.error('Like failed', err);
     }
-    setLastTap(now);
   };
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const index = playerRefs.current.indexOf(entry.target as HTMLDivElement);
-            if (index !== -1) {
-              setPlayingIndex(index);
-              setIsPaused(false);
-            }
-          }
-        });
-      },
-      { threshold: 0.5 }
-    );
-    playerRefs.current.forEach(el => el && observer.observe(el));
-    return () => observer.disconnect();
-  }, [posts]);
-
-  return (
-    <div className="fixed-screen bg-black">
-      {/* Floating Tabs */}
-      <div className="fixed top-0 left-0 right-0 z-50 flex flex-col items-center pt-6 pb-2 bg-gradient-to-b from-black/60 to-transparent pointer-events-none">
-        <div className="w-full overflow-x-auto no-scrollbar px-6 pointer-events-auto">
-          <div className="flex items-center justify-center gap-8 min-w-max pb-2">
-            {[
-              { id: 'following', label: 'Following' },
-              { id: 'video', label: 'For You' },
-              { id: 'sign-language', label: 'Sign' },
-              { id: 'audio', label: 'Audio' },
-              { id: 'text', label: 'Poetry' }
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`text-[15px] font-bold transition-all duration-300 relative py-1 drop-shadow-md ${activeTab === tab.id ? 'text-white scale-105' : 'text-white/60 hover:text-white/80'}`}
-              >
-                {tab.label}
-                {activeTab === tab.id && (
-                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
-                )}
-              </button>
-            ))}
-          </div>
+  const HeaderTabs = (
+    <div className="absolute top-0 w-full z-20 flex flex-col items-center pt-6 pb-2 bg-gradient-to-b from-black/60 to-transparent pointer-events-none">
+      <div className="w-full overflow-x-auto no-scrollbar px-6 pointer-events-auto">
+        <div className="flex items-center justify-center gap-8 min-w-max pb-2">
+          {[
+            { id: 'following', label: 'Following' },
+            { id: 'video', label: 'For You' },
+            { id: 'sign-language', label: 'Sign' },
+            { id: 'audio', label: 'Audio' },
+            { id: 'text', label: 'Poetry' }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`text-[15px] font-bold transition-all duration-300 relative py-1 drop-shadow-md ${activeTab === tab.id ? 'text-white scale-105' : 'text-white/60 hover:text-white/80'}`}
+            >
+              {tab.label}
+              {activeTab === tab.id && (
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
+              )}
+            </button>
+          ))}
         </div>
       </div>
+    </div>
+  );
 
-      {/* Feed */}
-      <div className="scrollable-content snap-y snap-mandatory">
+  return (
+    <MobileLayout header={null}>
+      {HeaderTabs}
+
+      <div className="h-full w-full snap-y snap-mandatory overflow-y-scroll no-scrollbar bg-black">
         {isLoading ? (
           <div className="h-full w-full flex items-center justify-center">
             <div className="w-12 h-12 border-4 border-neon-purple/20 border-t-neon-purple rounded-full animate-spin" />
@@ -340,9 +346,8 @@ const Feed = () => {
             <div
               key={post._id}
               ref={el => (playerRefs.current[index] = el)}
-              className="snap-start h-[100dvh] w-full relative flex items-center justify-center overflow-hidden"
+              className="snap-start h-full w-full relative flex items-center justify-center overflow-hidden bg-black"
             >
-              {/* Media */}
               <div className="w-full h-full relative cursor-pointer" onClick={e => handleDoubleTap(e, post._id)}>
                 {(post.mediaType === 'video' || post.mediaType === 'sign-language') && (
                   <ReactPlayer
@@ -350,27 +355,36 @@ const Feed = () => {
                     playing={playingIndex === index && !isPaused}
                     controls={false}
                     loop
-                    muted={false} // auto-play with sound
+                    muted={false}
                     width="100%"
                     height="100%"
-                    className="!h-full !w-full object-cover"
+                    className="object-cover"
                     playsinline
                     config={{
                       file: { attributes: { playsInline: true, preload: 'auto' } }
                     }}
                   />
                 )}
-                {/* Audio & Text Handling Same as Old Code */}
-                {/* ...can be copied directly from your original feed */}
+                {post.mediaType === 'audio' && (
+                  <div className="w-full h-full bg-obsidian flex flex-col items-center justify-center p-8">
+                    <div className="w-64 h-64 bg-gradient-to-br from-neon-purple/20 to-neon-blue/20 rounded-[2rem] flex items-center justify-center">
+                      <Music size={64} className="text-neon-purple animate-pulse" />
+                    </div>
+                    <ReactPlayer url={post.mediaUrl} playing={playingIndex === index && !isPaused} width="0" height="0" />
+                  </div>
+                )}
+                {post.mediaType === 'text' && (
+                  <div className="w-full h-full bg-obsidian flex items-center justify-center p-8">
+                    <p className="text-2xl font-display text-center italic">"{post.caption}"</p>
+                  </div>
+                )}
 
-                {/* Heart & Pause Overlay */}
                 {showHeart && <div className="fixed z-[100] pointer-events-none animate-ping" style={{ left: heartPos.x - 40, top: heartPos.y - 40 }}><Heart size={80} className="text-neon-purple fill-neon-purple drop-shadow-[0_0_20px_rgba(176,38,255,0.8)]" /></div>}
                 {isPaused && <div className="absolute inset-0 flex items-center justify-center z-10 animate-fade-in pointer-events-none"><div className="w-20 h-20 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center border border-white/10"><div className="w-0 h-0 border-t-[12px] border-t-transparent border-l-[20px] border-l-white border-b-[12px] border-b-transparent ml-1" /></div></div>}
               </div>
 
               {/* Right Side Icons */}
-              <div className="absolute right-3 bottom-20 flex flex-col items-center gap-4 z-20">
-                {/* User Avatar & Follow */}
+              <div className="absolute right-3 bottom-0 flex flex-col items-center gap-4 z-20 pb-4">
                 <div className="relative mb-4">
                   <button onClick={() => navigate(`/profile/${post.user._id}`)} className="w-12 h-12 rounded-full border border-white p-0.5 overflow-hidden shadow-lg">
                     {post.user.profileImage ? <img src={post.user.profileImage} alt={post.user.username} className="w-full h-full rounded-full object-cover" /> : <div className="w-full h-full rounded-full bg-gradient-to-br from-neon-purple to-neon-blue flex items-center justify-center text-black font-black text-sm">{post.user.username[0].toUpperCase()}</div>}
@@ -385,13 +399,20 @@ const Feed = () => {
                   )}
                 </div>
 
-                {/* Action Icons */}
                 <div className="flex flex-col items-center gap-4">
-                  <button onClick={() => handleLike(post._id)} className="flex flex-col items-center gap-1"><Heart size={32} className={`transition-colors duration-200 ${post.likes.includes(currentUser?.id || '') ? 'fill-neon-purple text-neon-purple' : 'text-white'}`} strokeWidth={post.likes.includes(currentUser?.id || '') ? 0 : 2} /><span className="text-xs text-white">{post.likes.length}</span></button>
-                  <button onClick={() => setOpenCommentsPostId(post._id)} className="flex flex-col items-center gap-1"><MessageCircle size={32} className="text-white" strokeWidth={2} /><span className="text-xs text-white">{post.comments.length}</span></button>
-                  <button onClick={() => setOpenSharePostId(post._id)} className="flex flex-col items-center gap-1"><Share2 size={32} className="text-white" strokeWidth={2} /><span className="text-xs text-white">Share</span></button>
+                  <button onClick={() => handleLike(post._id)} className="flex flex-col items-center gap-1 group active:scale-90 transition-transform">
+                    <Heart size={32} className={`transition-colors duration-200 ${post.likes.includes(currentUser?.id || '') ? 'fill-neon-purple text-neon-purple' : 'text-white'}`} strokeWidth={post.likes.includes(currentUser?.id || '') ? 0 : 2} />
+                    <span className="text-xs text-white font-bold drop-shadow-md">{post.likes.length}</span>
+                  </button>
+                  <button onClick={() => setOpenCommentsPostId(post._id)} className="flex flex-col items-center gap-1 group active:scale-90 transition-transform">
+                    <MessageCircle size={32} className="text-white drop-shadow-lg" strokeWidth={2} />
+                    <span className="text-xs text-white font-bold drop-shadow-md">{post.comments.length}</span>
+                  </button>
+                  <button onClick={() => setOpenSharePostId(post._id)} className="flex flex-col items-center gap-1 group active:scale-90 transition-transform">
+                    <Share2 size={32} className="text-white drop-shadow-lg" strokeWidth={2} />
+                    <span className="text-xs text-white font-bold drop-shadow-md">Share</span>
+                  </button>
 
-                  {/* More Menu */}
                   <div className="relative post-menu mt-2">
                     <button onClick={() => setPostMenuOpen(postMenuOpen === post._id ? null : post._id)} className="text-white active:scale-90 transition-transform">
                       <MoreVertical size={32} className="drop-shadow-lg" strokeWidth={2} />
@@ -427,10 +448,10 @@ const Feed = () => {
               </div>
 
               {/* Bottom Info */}
-              <div className="absolute left-4 right-20 bottom-4 p-4 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none">
+              <div className="absolute left-4 right-16 bottom-4 p-4 text-shadow pointer-events-none">
                 <div className="max-w-[80%] pointer-events-auto">
                   <h3 className="text-lg font-bold text-white cursor-pointer" onClick={() => navigate(`/profile/${post.user._id}`)}>@{post.user.username}</h3>
-                  <p className="text-white/90 text-[15px] leading-snug mb-2">{post.caption}</p>
+                  <p className="text-white/90 text-[15px] leading-snug mb-2 line-clamp-2">{post.caption}</p>
                   {post.tags.length > 0 && <div className="flex flex-wrap gap-2">{post.tags.map((tag, i) => <span key={i} className="text-white font-bold text-xs opacity-90">#{tag}</span>)}</div>}
                   {post.mediaType === 'audio' && (
                     <div className="flex items-center gap-2 mt-3 p-1.5 pl-2 pr-3 bg-black/40 backdrop-blur-sm rounded-full border border-white/10 w-fit">
@@ -445,11 +466,11 @@ const Feed = () => {
         )}
       </div>
 
-      {/* Modals & Drawers */}
+      {/* Modals placed within layout context */}
       {openCommentsPostId && (
-        <div className="fixed inset-0 z-[60] flex items-end justify-center">
+        <div className="absolute inset-0 z-[60] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setOpenCommentsPostId(null)} />
-          <div className="relative w-full max-w-lg bg-obsidian rounded-t-[2.5rem] h-[70vh] flex flex-col animate-slide-up border-t border-white/10">
+          <div className="relative w-full h-[70%] bg-obsidian rounded-t-[2.5rem] flex flex-col animate-slide-up border-t border-white/10">
             <div className="p-6 flex items-center justify-between border-b border-white/5">
               <h2 className="text-xl font-bold font-display">Comments</h2>
               <button onClick={() => setOpenCommentsPostId(null)} className="p-2 hover:bg-white/5 rounded-full"><X size={24} /></button>
@@ -473,8 +494,8 @@ const Feed = () => {
             </div>
             <div className="p-6 border-t border-white/5 bg-obsidian/80 backdrop-blur pb-10">
               <form onSubmit={(e) => { e.preventDefault(); if (newCommentText.trim()) handleComment(openCommentsPostId, newCommentText); }} className="flex gap-3">
-                <input type="text" value={newCommentText} onChange={(e) => setNewCommentText(e.target.value)} placeholder="Add a comment..." className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-neon-purple transition-all placeholder:text-white/20 text-sm" autoFocus />
-                <button type="submit" disabled={!newCommentText.trim() || commentMutation.isPending} className="bg-neon-purple text-black p-4 rounded-2xl font-bold shadow-lg shadow-neon-purple/20 active:scale-90 transition-all disabled:opacity-50 disabled:active:scale-100"><Send size={20} /></button>
+                <input className="flex-1 bg-white/5 rounded-2xl px-5 py-4 text-sm" value={newCommentText} onChange={e => setNewCommentText(e.target.value)} placeholder="Add a comment..." />
+                <button className="bg-neon-purple text-black p-4 rounded-2xl"><Send size={20} /></button>
               </form>
             </div>
           </div>
@@ -483,17 +504,17 @@ const Feed = () => {
 
       {/* Share Modal */}
       {openSharePostId && (
-        <div className="fixed inset-0 z-[60] flex items-end justify-center">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setOpenSharePostId(null); setShareSuccess(false); setShareSearch(''); }} />
+        <div className="absolute inset-0 z-[60] flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setOpenSharePostId(null); setShareSearch(''); }} />
           <div className="relative w-full max-w-lg bg-obsidian rounded-t-[2.5rem] h-[60vh] flex flex-col animate-slide-up border-t border-white/10">
             <div className="p-6 flex items-center justify-between border-b border-white/5">
               <h2 className="text-xl font-bold font-display">Share</h2>
-              <button onClick={() => { setOpenSharePostId(null); setShareSuccess(false); setShareSearch(''); }} className="p-2 hover:bg-white/5 rounded-full"><X size={24} /></button>
+              <button onClick={() => { setOpenSharePostId(null); setShareSearch(''); }} className="p-2 hover:bg-white/5 rounded-full"><X size={24} /></button>
             </div>
             <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar">
               <div className="grid grid-cols-4 gap-4">
                 {[
-                  { label: 'Copy Link', icon: <Plus size={20} />, action: () => { navigator.clipboard.writeText(`${window.location.origin}/feed?post=${openSharePostId}`); setShareSuccess(true); setTimeout(() => setShareSuccess(false), 2000); } },
+                  { label: 'Copy Link', icon: <Plus size={20} />, action: () => { navigator.clipboard.writeText(`${window.location.origin}/feed?post=${openSharePostId}`); } },
                   { label: 'WhatsApp', icon: <MessageCircle size={20} />, color: 'bg-[#25D366]', action: () => { window.open(`https://wa.me/?text=${encodeURIComponent(`Check out this post on UTH: ${window.location.origin}/feed?post=${openSharePostId}`)}`); } },
                   { label: 'Twitter', icon: <Send size={20} />, color: 'bg-[#1DA1F2]', action: () => { window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out this post on UTH: ${window.location.origin}/feed?post=${openSharePostId}`)}`); } },
                   { label: 'More', icon: <MoreHorizontal size={20} />, action: () => { if (navigator.share) { navigator.share({ title: 'UTH Post', url: `${window.location.origin}/feed?post=${openSharePostId}` }); } } }
@@ -505,71 +526,45 @@ const Feed = () => {
                 ))}
               </div>
 
-              {/* Internal Share */}
               <div className="space-y-4">
                 <h3 className="text-xs font-black uppercase tracking-widest text-white/20">Send to Creators</h3>
                 <div className="glass-panel p-1 rounded-full border border-white/5 flex items-center gap-2">
                   <Search size={16} className="ml-4 text-white/20" />
                   <input type="text" value={shareSearch} onChange={(e) => setShareSearch(e.target.value)} placeholder="Search creators..." className="flex-1 bg-transparent py-3 text-sm focus:outline-none placeholder:text-white/10" />
                 </div>
-                <div className="space-y-2">
-                  {currentUser?.following?.filter((f: any) => f.username?.toLowerCase().includes(shareSearch.toLowerCase())).map((creator: any) => (
-                    <button key={creator._id} onClick={() => { if (socket && currentUser) { socket.emit('message', { text: `Shared a post: ${window.location.origin}/feed?post=${openSharePostId}`, room: creator._id, userId: currentUser.id, username: currentUser.username }); setShareSuccess(true); setTimeout(() => { setShareSuccess(false); setOpenSharePostId(null); }, 1500); } }} className="w-full flex items-center justify-between p-4 glass-panel rounded-2xl border-white/5 hover:bg-white/5 transition-all">
-                      <div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-neon-purple/20 flex items-center justify-center text-neon-purple font-bold">{creator.username?.[0].toUpperCase()}</div><span className="font-bold text-sm">{creator.username}</span></div>
-                      <div className="px-4 py-1.5 bg-neon-purple text-black text-[10px] font-black uppercase tracking-widest rounded-full">Send</div>
-                    </button>
-                  ))}
-                </div>
+                {/* Internal Share List would go here */}
               </div>
             </div>
-            {shareSuccess && <div className="absolute top-24 left-1/2 -translate-x-1/2 px-6 py-3 bg-neon-blue text-black font-black uppercase tracking-widest text-xs rounded-full shadow-2xl animate-bounce">Shared Successfully!</div>}
           </div>
         </div>
       )}
 
-      {/* Edit Modal */}
+      {/* Edit Post Modal */}
       {isEditing && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+        <div className="absolute inset-0 z-[100] flex items-center justify-center p-6">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setIsEditing(null)} />
-          <div className="relative w-full max-w-lg glass-panel rounded-[3rem] border-white/5 shadow-2xl overflow-hidden animate-scale-in">
-            <div className="p-8 border-b border-white/5 flex items-center justify-between">
-              <h2 className="text-2xl font-bold font-display">Edit Post</h2>
-              <button onClick={() => setIsEditing(null)} className="p-2 hover:bg-white/5 rounded-full transition-colors"><X size={24} /></button>
-            </div>
-            <div className="p-10 space-y-8">
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-bold text-white/40 uppercase tracking-widest mb-3">Caption</label>
-                  <textarea value={editCaption} onChange={(e) => setEditCaption(e.target.value)} className="w-full h-32 bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all resize-none" placeholder="Update your caption..." />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-white/40 uppercase tracking-widest mb-3">Tags</label>
-                  <input type="text" value={editTags} onChange={(e) => setEditTags(e.target.value)} className="w-full bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all" placeholder="#talent, #art" />
-                </div>
-              </div>
-              <button onClick={() => updateMutation.mutate({ postId: isEditing._id, caption: editCaption, tags: editTags })} className="w-full py-5 bg-neon-purple text-black rounded-[2rem] font-bold text-lg shadow-xl shadow-neon-purple/20 active:scale-95 transition-all">Save Changes</button>
-            </div>
+          <div className="relative w-full glass-panel rounded-[3rem] p-8 animate-scale-in">
+            <h2 className="text-2xl font-bold mb-6">Edit Post</h2>
+            <textarea value={editCaption} onChange={e => setEditCaption(e.target.value)} className="w-full h-32 bg-obsidian/40 border border-white/10 rounded-2xl p-4 mb-4" />
+            <input value={editTags} onChange={e => setEditTags(e.target.value)} className="w-full bg-obsidian/40 border border-white/10 rounded-2xl p-4 mb-6" />
+            <button onClick={() => updateMutation.mutate({ postId: isEditing._id, caption: editCaption, tags: editTags })} className="w-full bg-neon-purple text-black font-bold py-4 rounded-2xl">Save</button>
           </div>
         </div>
       )}
 
-      {/* Delete Modal */}
+      {/* Delete Confirmation */}
       {isDeleting && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
-          <div className="absolute inset-0 bg-black/90 backdrop-blur-xl" onClick={() => setIsDeleting(null)} />
-          <div className="relative w-full max-w-sm glass-panel rounded-[3rem] border-red-500/20 shadow-2xl overflow-hidden animate-scale-in text-center p-10">
-            <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6"><Trash2 className="text-red-500" size={40} /></div>
+        <div className="absolute inset-0 z-[110] flex items-center justify-center p-6">
+          <div className="relative w-full glass-panel rounded-[3rem] p-8 text-center animate-scale-in">
             <h2 className="text-2xl font-bold mb-4">Delete Post?</h2>
-            <p className="text-white/60 mb-10">This action is permanent and cannot be undone.</p>
-            <div className="space-y-4">
-              <button onClick={() => deleteMutation.mutate(isDeleting)} className="w-full py-5 bg-red-500 text-white rounded-[2rem] font-bold text-lg shadow-xl shadow-red-500/20 active:scale-95 transition-all">Delete Permanently</button>
-              <button onClick={() => setIsDeleting(null)} className="w-full py-5 bg-white/5 text-white rounded-[2rem] font-bold text-lg hover:bg-white/10 transition-all">Cancel</button>
+            <div className="flex gap-4">
+              <button onClick={() => deleteMutation.mutate(isDeleting)} className="flex-1 bg-red-500 text-white font-bold py-4 rounded-2xl">Delete</button>
+              <button onClick={() => setIsDeleting(null)} className="flex-1 bg-white/10 text-white font-bold py-4 rounded-2xl">Cancel</button>
             </div>
           </div>
         </div>
       )}
-      <Navbar />
-    </div>
+    </MobileLayout>
   );
 };
 

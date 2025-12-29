@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '../api';
-import Navbar from '../components/Navbar';
+import MobileLayout from '../components/MobileLayout';
 import { useAuth } from '../context/AuthContext';
 import { Trophy, Heart, Video, MoreVertical, Image as ImageIcon, X, Music, Archive, Trash2, Edit, BarChart2, Users, Activity, ShieldOff } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -193,122 +193,125 @@ const Profile = () => {
 
   if (!userId) {
     return (
-      <div className="h-[100dvh] w-full bg-primary flex items-center justify-center p-6 relative overflow-hidden">
-        {/* Background Glows */}
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-neon-purple/20 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-neon-blue/20 rounded-full blur-[120px] animate-pulse" />
+      <MobileLayout>
+        <div className="h-full w-full bg-primary flex items-center justify-center p-6 relative overflow-hidden">
+          {/* Background Glows */}
+          <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-neon-purple/20 rounded-full blur-[120px] animate-pulse" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-neon-blue/20 rounded-full blur-[120px] animate-pulse" />
 
-        <div className="w-full max-w-md glass-panel p-10 rounded-[3rem] border-white/5 relative z-10 animate-scale-in">
-          <div className="text-center mb-10">
-            <h2 className="text-4xl font-bold font-display mb-3 tracking-tight">Unmask</h2>
-            <p className="text-white/40 text-lg">Join the future of talent</p>
-          </div>
+          <div className="w-full max-w-md glass-panel p-10 rounded-[3rem] border-white/5 relative z-10 animate-scale-in">
+            <div className="text-center mb-10">
+              <h2 className="text-4xl font-bold font-display mb-3 tracking-tight">Unmask</h2>
+              <p className="text-white/40 text-lg">Join the future of talent</p>
+            </div>
 
-          <div className="flex bg-obsidian/50 p-1.5 rounded-2xl border border-white/5 mb-8">
-            <button
-              className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${authMode === 'login' ? 'bg-neon-purple text-black shadow-lg shadow-neon-purple/20' : 'text-white/40'}`}
-              onClick={() => setAuthMode('login')}
-            >
-              Login
-            </button>
-            <button
-              className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${authMode === 'signup' ? 'bg-neon-purple text-black shadow-lg shadow-neon-purple/20' : 'text-white/40'}`}
-              onClick={() => setAuthMode('signup')}
-            >
-              Sign Up
-            </button>
-          </div>
-
-          <form onSubmit={handleAuthSubmit} className="space-y-6">
-            {authError && (
-              <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl p-4 text-sm flex items-center gap-3 animate-shake">
-                <X size={18} className="flex-shrink-0" /> {authError}
-              </div>
-            )}
-
-            {authMode === 'signup' && (
-              <div className="space-y-6 animate-slide-up">
-                <div className="grid grid-cols-2 gap-4">
-                  <input
-                    type="text"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    className="w-full bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all"
-                    placeholder="First"
-                    required
-                  />
-                  <input
-                    type="text"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    className="w-full bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all"
-                    placeholder="Last"
-                    required
-                  />
-                </div>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all"
-                  placeholder="Username"
-                  required
-                />
-              </div>
-            )}
-
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all"
-              placeholder="Email"
-              required
-            />
-
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all pr-16"
-                placeholder="Password"
-                required
-              />
+            <div className="flex bg-obsidian/50 p-1.5 rounded-2xl border border-white/5 mb-8">
               <button
-                type="button"
-                className="absolute right-6 top-1/2 -translate-y-1/2 text-white/40 hover:text-white font-bold text-xs uppercase"
-                onClick={() => setShowPassword(!showPassword)}
+                className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${authMode === 'login' ? 'bg-neon-purple text-black shadow-lg shadow-neon-purple/20' : 'text-white/40'}`}
+                onClick={() => setAuthMode('login')}
               >
-                {showPassword ? 'Hide' : 'Show'}
+                Login
+              </button>
+              <button
+                className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${authMode === 'signup' ? 'bg-neon-purple text-black shadow-lg shadow-neon-purple/20' : 'text-white/40'}`}
+                onClick={() => setAuthMode('signup')}
+              >
+                Sign Up
               </button>
             </div>
 
-            <button
-              type="submit"
-              disabled={authLoading}
-              className="w-full py-5 bg-neon-purple text-black rounded-[2rem] font-bold text-lg shadow-xl shadow-neon-purple/20 active:scale-95 transition-all disabled:opacity-50 mt-4"
-            >
-              {authLoading ? 'Processing...' : authMode === 'login' ? 'Login' : 'Create Account'}
-            </button>
-          </form>
+            <form onSubmit={handleAuthSubmit} className="space-y-6">
+              {authError && (
+                <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl p-4 text-sm flex items-center gap-3 animate-shake">
+                  <X size={18} className="flex-shrink-0" /> {authError}
+                </div>
+              )}
+
+              {authMode === 'signup' && (
+                <div className="space-y-6 animate-slide-up">
+                  <div className="grid grid-cols-2 gap-4">
+                    <input
+                      type="text"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      className="w-full bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all"
+                      placeholder="First"
+                      required
+                    />
+                    <input
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      className="w-full bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all"
+                      placeholder="Last"
+                      required
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="w-full bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all"
+                    placeholder="Username"
+                    required
+                  />
+                </div>
+              )}
+
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all"
+                placeholder="Email"
+                required
+              />
+
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all pr-16"
+                  placeholder="Password"
+                  required
+                />
+                <button
+                  type="button"
+                  className="absolute right-6 top-1/2 -translate-y-1/2 text-white/40 hover:text-white font-bold text-xs uppercase"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
+
+              <button
+                type="submit"
+                disabled={authLoading}
+                className="w-full py-5 bg-neon-purple text-black rounded-[2rem] font-bold text-lg shadow-xl shadow-neon-purple/20 active:scale-95 transition-all disabled:opacity-50 mt-4"
+              >
+                {authLoading ? 'Processing...' : authMode === 'login' ? 'Login' : 'Create Account'}
+              </button>
+            </form>
+          </div>
         </div>
-        <Navbar />
-      </div>
+      </MobileLayout>
     );
   }
 
   if (!data) {
     return (
-      <div className="h-[100dvh] bg-primary flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-neon-purple/20 border-t-neon-purple rounded-full animate-spin" />
-      </div>
+      <MobileLayout>
+        <div className="h-full w-full bg-primary flex items-center justify-center">
+          <div className="w-12 h-12 border-4 border-neon-purple/20 border-t-neon-purple rounded-full animate-spin" />
+        </div>
+      </MobileLayout>
     );
   }
 
   return (
-    <div className="fixed-screen">
-      <div className="scrollable-content no-scrollbar">
+    <MobileLayout>
+      <div className="h-full w-full overflow-y-auto no-scrollbar">
         {/* Immersive Header */}
         <div className="h-64 bg-gradient-to-b from-neon-purple/20 to-primary relative overflow-hidden flex-shrink-0">
           <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=2029&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay" />
@@ -334,7 +337,7 @@ const Profile = () => {
           </div>
         </div>
 
-        <div className="px-6 pb-32 -mt-32 relative z-10">
+        <div className="px-6 pb-20 -mt-32 relative z-10">
           <div className="max-w-4xl mx-auto">
             {/* Profile Card */}
             <div className="glass-panel rounded-[3rem] p-10 border-white/5 shadow-2xl mb-10 text-center md:text-left">
@@ -527,291 +530,288 @@ const Profile = () => {
             )}
           </div>
         </div>
-
-        <Navbar />
-
-        {/* Post Actions Bottom Sheet */}
-        {selectedPostForActions && (
-          <div className="fixed inset-0 z-[150] flex items-end justify-center">
-            <div
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
-              onClick={() => setSelectedPostForActions(null)}
-            />
-            <div className="relative w-full max-w-lg bg-obsidian rounded-t-[3rem] border-t border-white/10 shadow-2xl animate-slide-up overflow-hidden">
-              <div className="p-6 border-b border-white/5 flex flex-col items-center">
-                <div className="w-12 h-1.5 bg-white/10 rounded-full mb-6" />
-                <h3 className="text-lg font-bold">Post Options</h3>
-              </div>
-              <div className="p-4 space-y-2">
-                <button
-                  onClick={() => {
-                    setIsEditing(selectedPostForActions);
-                    setEditCaption(selectedPostForActions.caption);
-                    setEditTags(selectedPostForActions.tags?.join(', ') || '');
-                    setSelectedPostForActions(null);
-                  }}
-                  className="w-full flex items-center gap-4 p-5 rounded-2xl hover:bg-white/5 transition-all group"
-                >
-                  <div className="w-10 h-10 rounded-full bg-neon-blue/10 flex items-center justify-center text-neon-blue group-active:scale-90 transition-transform">
-                    <Edit size={20} />
-                  </div>
-                  <div className="text-left">
-                    <p className="font-bold">Edit Post</p>
-                    <p className="text-xs text-white/40">Change caption or tags</p>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => {
-                    archiveMutation.mutate(selectedPostForActions._id);
-                    setSelectedPostForActions(null);
-                  }}
-                  className="w-full flex items-center gap-4 p-5 rounded-2xl hover:bg-white/5 transition-all group"
-                >
-                  <div className="w-10 h-10 rounded-full bg-neon-purple/10 flex items-center justify-center text-neon-purple group-active:scale-90 transition-transform">
-                    <Archive size={20} />
-                  </div>
-                  <div className="text-left">
-                    <p className="font-bold">{selectedPostForActions.isArchived ? 'Unarchive Post' : 'Archive Post'}</p>
-                    <p className="text-xs text-white/40">{selectedPostForActions.isArchived ? 'Make it visible again' : 'Hide from your profile'}</p>
-                  </div>
-                </button>
-
-                <div className="h-px bg-white/5 mx-4 my-2" />
-
-                <button
-                  onClick={() => {
-                    setIsDeleting(selectedPostForActions._id);
-                    setSelectedPostForActions(null);
-                  }}
-                  className="w-full flex items-center gap-4 p-5 rounded-2xl hover:bg-red-500/5 transition-all group"
-                >
-                  <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 group-active:scale-90 transition-transform">
-                    <Trash2 size={20} />
-                  </div>
-                  <div className="text-left">
-                    <p className="font-bold text-red-500">Delete Post</p>
-                    <p className="text-xs text-red-500/40">This action is permanent</p>
-                  </div>
-                </button>
-              </div>
-              <div className="p-6 pb-10">
-                <button
-                  onClick={() => setSelectedPostForActions(null)}
-                  className="w-full py-4 bg-white/5 rounded-2xl font-bold text-white/60 hover:bg-white/10 transition-all"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Customize Modal */}
-        {customizeOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setCustomizeOpen(false)} />
-            <div className="relative w-full max-w-2xl glass-panel rounded-[3rem] border-white/5 shadow-2xl overflow-hidden animate-scale-in">
-              <div className="p-8 border-b border-white/5 flex items-center justify-between">
-                <h2 className="text-2xl font-bold font-display">Edit Profile</h2>
-                <button onClick={() => setCustomizeOpen(false)} className="p-2 hover:bg-white/5 rounded-full transition-colors">
-                  <X size={24} />
-                </button>
-              </div>
-              <div className="p-10 space-y-8 max-h-[70vh] overflow-y-auto no-scrollbar">
-                <div className="flex justify-center">
-                  <div className="relative group cursor-pointer">
-                    <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-neon-purple bg-obsidian">
-                      {avatarFile ? (
-                        <img src={URL.createObjectURL(avatarFile)} className="w-full h-full object-cover" />
-                      ) : (
-                        <img src={data.user.profileImage} className="w-full h-full object-cover" />
-                      )}
-                    </div>
-                    <label className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-all rounded-full cursor-pointer">
-                      <ImageIcon className="text-white" size={32} />
-                      <input type="file" className="hidden" onChange={(e) => e.target.files && setAvatarFile(e.target.files[0])} />
-                    </label>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-6">
-                  <input
-                    value={editFirstName}
-                    onChange={(e) => setEditFirstName(e.target.value)}
-                    className="w-full bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all"
-                    placeholder="First Name"
-                  />
-                  <input
-                    value={editLastName}
-                    onChange={(e) => setEditLastName(e.target.value)}
-                    className="w-full bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all"
-                    placeholder="Last Name"
-                  />
-                </div>
-                <input
-                  value={editUsername}
-                  onChange={(e) => setEditUsername(e.target.value)}
-                  className="w-full bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all"
-                  placeholder="Username"
-                />
-                <textarea
-                  value={editBio}
-                  onChange={(e) => setEditBio(e.target.value)}
-                  className="w-full h-32 bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all resize-none"
-                  placeholder="Bio"
-                />
-
-                <button
-                  onClick={handleCustomizeSave}
-                  disabled={saving}
-                  className="w-full py-5 bg-neon-purple text-black rounded-[2rem] font-bold text-lg shadow-xl shadow-neon-purple/20 active:scale-95 transition-all"
-                >
-                  {saving ? 'Saving...' : 'Save Changes'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-        {/* Edit Post Modal */}
-        {isEditing && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setIsEditing(null)} />
-            <div className="relative w-full max-w-lg glass-panel rounded-[3rem] border-white/5 shadow-2xl overflow-hidden animate-scale-in">
-              <div className="p-8 border-b border-white/5 flex items-center justify-between">
-                <h2 className="text-2xl font-bold font-display">Edit Post</h2>
-                <button onClick={() => setIsEditing(null)} className="p-2 hover:bg-white/5 rounded-full transition-colors">
-                  <X size={24} />
-                </button>
-              </div>
-              <div className="p-10 space-y-8">
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-bold text-white/40 uppercase tracking-widest mb-3">Caption</label>
-                    <textarea
-                      value={editCaption}
-                      onChange={(e) => setEditCaption(e.target.value)}
-                      className="w-full h-32 bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all resize-none"
-                      placeholder="Update your caption..."
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-white/40 uppercase tracking-widest mb-3">Tags</label>
-                    <input
-                      type="text"
-                      value={editTags}
-                      onChange={(e) => setEditTags(e.target.value)}
-                      className="w-full bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all"
-                      placeholder="#talent, #art"
-                    />
-                  </div>
-                </div>
-                <button
-                  onClick={() => updateMutation.mutate({ postId: isEditing._id, caption: editCaption, tags: editTags })}
-                  className="w-full py-5 bg-neon-purple text-black rounded-[2rem] font-bold text-lg shadow-xl shadow-neon-purple/20 active:scale-95 transition-all"
-                >
-                  Save Changes
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Delete Confirmation Modal */}
-        {isDeleting && (
-          <div className="fixed inset-0 z-[120] flex items-center justify-center p-6">
-            <div className="absolute inset-0 bg-black/90 backdrop-blur-xl" onClick={() => setIsDeleting(null)} />
-            <div className="relative w-full max-w-sm glass-panel rounded-[3rem] border-red-500/20 shadow-2xl overflow-hidden animate-scale-in text-center p-10">
-              <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Trash2 className="text-red-500" size={40} />
-              </div>
-              <h2 className="text-2xl font-bold mb-4">Delete Post?</h2>
-              <p className="text-white/60 mb-10">This action is permanent and cannot be undone. Your talent will be unmasked from the world.</p>
-              <div className="space-y-4">
-                <button
-                  onClick={() => deleteMutation.mutate(isDeleting)}
-                  className="w-full py-5 bg-red-500 text-white rounded-[2rem] font-bold text-lg shadow-xl shadow-red-500/20 active:scale-95 transition-all"
-                >
-                  Delete Permanently
-                </button>
-                <button
-                  onClick={() => setIsDeleting(null)}
-                  className="w-full py-5 bg-white/5 text-white rounded-[2rem] font-bold text-lg hover:bg-white/10 transition-all"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Insights Modal */}
-        {insightsOpen && data && (
-          <div className="fixed inset-0 z-[130] flex items-center justify-center p-6">
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setInsightsOpen(false)} />
-            <div className="relative w-full max-w-2xl glass-panel rounded-[3rem] border-white/5 shadow-2xl overflow-hidden animate-scale-in">
-              <div className="p-8 border-b border-white/5 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-neon-blue/10 rounded-xl">
-                    <BarChart2 className="text-neon-blue" size={24} />
-                  </div>
-                  <h2 className="text-2xl font-bold font-display">Creator Insights</h2>
-                </div>
-                <button onClick={() => setInsightsOpen(false)} className="p-2 hover:bg-white/5 rounded-full transition-colors">
-                  <X size={24} />
-                </button>
-              </div>
-
-              <div className="p-10 space-y-10">
-                {/* Stats Grid */}
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="p-6 glass-panel rounded-3xl border-white/5 bg-white/5">
-                    <div className="flex items-center gap-3 text-white/40 mb-2">
-                      <Video size={16} />
-                      <span className="text-[10px] font-black uppercase tracking-widest">Total Views</span>
-                    </div>
-                    <p className="text-3xl font-black">{data.posts.reduce((acc, p) => acc + (p.views || 0), 0).toLocaleString()}</p>
-                  </div>
-                  <div className="p-6 glass-panel rounded-3xl border-white/5 bg-white/5">
-                    <div className="flex items-center gap-3 text-white/40 mb-2">
-                      <Heart size={16} />
-                      <span className="text-[10px] font-black uppercase tracking-widest">Total Likes</span>
-                    </div>
-                    <p className="text-3xl font-black">{data.posts.reduce((acc, p) => acc + (p.likes?.length || 0), 0).toLocaleString()}</p>
-                  </div>
-                  <div className="p-6 glass-panel rounded-3xl border-white/5 bg-white/5">
-                    <div className="flex items-center gap-3 text-white/40 mb-2">
-                      <Activity size={16} />
-                      <span className="text-[10px] font-black uppercase tracking-widest">Engagement</span>
-                    </div>
-                    <p className="text-3xl font-black">
-                      {data.posts.length > 0
-                        ? ((data.posts.reduce((acc, p) => acc + (p.likes?.length || 0), 0) / data.posts.reduce((acc, p) => acc + Math.max(1, p.views || 0), 0)) * 100).toFixed(1)
-                        : 0}%
-                    </p>
-                  </div>
-                  <div className="p-6 glass-panel rounded-3xl border-white/5 bg-white/5">
-                    <div className="flex items-center gap-3 text-white/40 mb-2">
-                      <Users size={16} />
-                      <span className="text-[10px] font-black uppercase tracking-widest">Followers</span>
-                    </div>
-                    <p className="text-3xl font-black">{data.user.followers.length.toLocaleString()}</p>
-                  </div>
-                </div>
-
-
-                <button
-                  onClick={() => setInsightsOpen(false)}
-                  className="w-full py-5 bg-white/5 text-white rounded-[2rem] font-bold text-lg hover:bg-white/10 transition-all"
-                >
-                  Close Insights
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
-    </div>
+      {/* Post Actions Bottom Sheet */}
+      {selectedPostForActions && (
+        <div className="fixed inset-0 z-[150] flex items-end justify-center">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
+            onClick={() => setSelectedPostForActions(null)}
+          />
+          <div className="relative w-full max-w-lg bg-obsidian rounded-t-[3rem] border-t border-white/10 shadow-2xl animate-slide-up overflow-hidden">
+            <div className="p-6 border-b border-white/5 flex flex-col items-center">
+              <div className="w-12 h-1.5 bg-white/10 rounded-full mb-6" />
+              <h3 className="text-lg font-bold">Post Options</h3>
+            </div>
+            <div className="p-4 space-y-2">
+              <button
+                onClick={() => {
+                  setIsEditing(selectedPostForActions);
+                  setEditCaption(selectedPostForActions.caption);
+                  setEditTags(selectedPostForActions.tags?.join(', ') || '');
+                  setSelectedPostForActions(null);
+                }}
+                className="w-full flex items-center gap-4 p-5 rounded-2xl hover:bg-white/5 transition-all group"
+              >
+                <div className="w-10 h-10 rounded-full bg-neon-blue/10 flex items-center justify-center text-neon-blue group-active:scale-90 transition-transform">
+                  <Edit size={20} />
+                </div>
+                <div className="text-left">
+                  <p className="font-bold">Edit Post</p>
+                  <p className="text-xs text-white/40">Change caption or tags</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => {
+                  archiveMutation.mutate(selectedPostForActions._id);
+                  setSelectedPostForActions(null);
+                }}
+                className="w-full flex items-center gap-4 p-5 rounded-2xl hover:bg-white/5 transition-all group"
+              >
+                <div className="w-10 h-10 rounded-full bg-neon-purple/10 flex items-center justify-center text-neon-purple group-active:scale-90 transition-transform">
+                  <Archive size={20} />
+                </div>
+                <div className="text-left">
+                  <p className="font-bold">{selectedPostForActions.isArchived ? 'Unarchive Post' : 'Archive Post'}</p>
+                  <p className="text-xs text-white/40">{selectedPostForActions.isArchived ? 'Make it visible again' : 'Hide from your profile'}</p>
+                </div>
+              </button>
+
+              <div className="h-px bg-white/5 mx-4 my-2" />
+
+              <button
+                onClick={() => {
+                  setIsDeleting(selectedPostForActions._id);
+                  setSelectedPostForActions(null);
+                }}
+                className="w-full flex items-center gap-4 p-5 rounded-2xl hover:bg-red-500/5 transition-all group"
+              >
+                <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 group-active:scale-90 transition-transform">
+                  <Trash2 size={20} />
+                </div>
+                <div className="text-left">
+                  <p className="font-bold text-red-500">Delete Post</p>
+                  <p className="text-xs text-red-500/40">This action is permanent</p>
+                </div>
+              </button>
+            </div>
+            <div className="p-6 pb-10">
+              <button
+                onClick={() => setSelectedPostForActions(null)}
+                className="w-full py-4 bg-white/5 rounded-2xl font-bold text-white/60 hover:bg-white/10 transition-all"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Customize Modal */}
+      {customizeOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setCustomizeOpen(false)} />
+          <div className="relative w-full max-w-2xl glass-panel rounded-[3rem] border-white/5 shadow-2xl overflow-hidden animate-scale-in">
+            <div className="p-8 border-b border-white/5 flex items-center justify-between">
+              <h2 className="text-2xl font-bold font-display">Edit Profile</h2>
+              <button onClick={() => setCustomizeOpen(false)} className="p-2 hover:bg-white/5 rounded-full transition-colors">
+                <X size={24} />
+              </button>
+            </div>
+            <div className="p-10 space-y-8 max-h-[70vh] overflow-y-auto no-scrollbar">
+              <div className="flex justify-center">
+                <div className="relative group cursor-pointer">
+                  <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-neon-purple bg-obsidian">
+                    {avatarFile ? (
+                      <img src={URL.createObjectURL(avatarFile)} className="w-full h-full object-cover" />
+                    ) : (
+                      <img src={data.user.profileImage} className="w-full h-full object-cover" />
+                    )}
+                  </div>
+                  <label className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-all rounded-full cursor-pointer">
+                    <ImageIcon className="text-white" size={32} />
+                    <input type="file" className="hidden" onChange={(e) => e.target.files && setAvatarFile(e.target.files[0])} />
+                  </label>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <input
+                  value={editFirstName}
+                  onChange={(e) => setEditFirstName(e.target.value)}
+                  className="w-full bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all"
+                  placeholder="First Name"
+                />
+                <input
+                  value={editLastName}
+                  onChange={(e) => setEditLastName(e.target.value)}
+                  className="w-full bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all"
+                  placeholder="Last Name"
+                />
+              </div>
+              <input
+                value={editUsername}
+                onChange={(e) => setEditUsername(e.target.value)}
+                className="w-full bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all"
+                placeholder="Username"
+              />
+              <textarea
+                value={editBio}
+                onChange={(e) => setEditBio(e.target.value)}
+                className="w-full h-32 bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all resize-none"
+                placeholder="Bio"
+              />
+
+              <button
+                onClick={handleCustomizeSave}
+                disabled={saving}
+                className="w-full py-5 bg-neon-purple text-black rounded-[2rem] font-bold text-lg shadow-xl shadow-neon-purple/20 active:scale-95 transition-all"
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Edit Post Modal */}
+      {isEditing && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setIsEditing(null)} />
+          <div className="relative w-full max-w-lg glass-panel rounded-[3rem] border-white/5 shadow-2xl overflow-hidden animate-scale-in">
+            <div className="p-8 border-b border-white/5 flex items-center justify-between">
+              <h2 className="text-2xl font-bold font-display">Edit Post</h2>
+              <button onClick={() => setIsEditing(null)} className="p-2 hover:bg-white/5 rounded-full transition-colors">
+                <X size={24} />
+              </button>
+            </div>
+            <div className="p-10 space-y-8">
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-bold text-white/40 uppercase tracking-widest mb-3">Caption</label>
+                  <textarea
+                    value={editCaption}
+                    onChange={(e) => setEditCaption(e.target.value)}
+                    className="w-full h-32 bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all resize-none"
+                    placeholder="Update your caption..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-white/40 uppercase tracking-widest mb-3">Tags</label>
+                  <input
+                    type="text"
+                    value={editTags}
+                    onChange={(e) => setEditTags(e.target.value)}
+                    className="w-full bg-obsidian/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-neon-purple transition-all"
+                    placeholder="#talent, #art"
+                  />
+                </div>
+              </div>
+              <button
+                onClick={() => updateMutation.mutate({ postId: isEditing._id, caption: editCaption, tags: editTags })}
+                className="w-full py-5 bg-neon-purple text-black rounded-[2rem] font-bold text-lg shadow-xl shadow-neon-purple/20 active:scale-95 transition-all"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isDeleting && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-6">
+          <div className="absolute inset-0 bg-black/90 backdrop-blur-xl" onClick={() => setIsDeleting(null)} />
+          <div className="relative w-full max-w-sm glass-panel rounded-[3rem] border-red-500/20 shadow-2xl overflow-hidden animate-scale-in text-center p-10">
+            <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Trash2 className="text-red-500" size={40} />
+            </div>
+            <h2 className="text-2xl font-bold mb-4">Delete Post?</h2>
+            <p className="text-white/60 mb-10">This action is permanent and cannot be undone. Your talent will be unmasked from the world.</p>
+            <div className="space-y-4">
+              <button
+                onClick={() => deleteMutation.mutate(isDeleting)}
+                className="w-full py-5 bg-red-500 text-white rounded-[2rem] font-bold text-lg shadow-xl shadow-red-500/20 active:scale-95 transition-all"
+              >
+                Delete Permanently
+              </button>
+              <button
+                onClick={() => setIsDeleting(null)}
+                className="w-full py-5 bg-white/5 text-white rounded-[2rem] font-bold text-lg hover:bg-white/10 transition-all"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Insights Modal */}
+      {insightsOpen && data && (
+        <div className="fixed inset-0 z-[130] flex items-center justify-center p-6">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setInsightsOpen(false)} />
+          <div className="relative w-full max-w-2xl glass-panel rounded-[3rem] border-white/5 shadow-2xl overflow-hidden animate-scale-in">
+            <div className="p-8 border-b border-white/5 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-neon-blue/10 rounded-xl">
+                  <BarChart2 className="text-neon-blue" size={24} />
+                </div>
+                <h2 className="text-2xl font-bold font-display">Creator Insights</h2>
+              </div>
+              <button onClick={() => setInsightsOpen(false)} className="p-2 hover:bg-white/5 rounded-full transition-colors">
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="p-10 space-y-10">
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 gap-6">
+                <div className="p-6 glass-panel rounded-3xl border-white/5 bg-white/5">
+                  <div className="flex items-center gap-3 text-white/40 mb-2">
+                    <Video size={16} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Total Views</span>
+                  </div>
+                  <p className="text-3xl font-black">{data.posts.reduce((acc, p) => acc + (p.views || 0), 0).toLocaleString()}</p>
+                </div>
+                <div className="p-6 glass-panel rounded-3xl border-white/5 bg-white/5">
+                  <div className="flex items-center gap-3 text-white/40 mb-2">
+                    <Heart size={16} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Total Likes</span>
+                  </div>
+                  <p className="text-3xl font-black">{data.posts.reduce((acc, p) => acc + (p.likes?.length || 0), 0).toLocaleString()}</p>
+                </div>
+                <div className="p-6 glass-panel rounded-3xl border-white/5 bg-white/5">
+                  <div className="flex items-center gap-3 text-white/40 mb-2">
+                    <Activity size={16} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Engagement</span>
+                  </div>
+                  <p className="text-3xl font-black">
+                    {data.posts.length > 0
+                      ? ((data.posts.reduce((acc, p) => acc + (p.likes?.length || 0), 0) / data.posts.reduce((acc, p) => acc + Math.max(1, p.views || 0), 0)) * 100).toFixed(1)
+                      : 0}%
+                  </p>
+                </div>
+                <div className="p-6 glass-panel rounded-3xl border-white/5 bg-white/5">
+                  <div className="flex items-center gap-3 text-white/40 mb-2">
+                    <Users size={16} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Followers</span>
+                  </div>
+                  <p className="text-3xl font-black">{data.user.followers.length.toLocaleString()}</p>
+                </div>
+              </div>
+
+
+              <button
+                onClick={() => setInsightsOpen(false)}
+                className="w-full py-5 bg-white/5 text-white rounded-[2rem] font-bold text-lg hover:bg-white/10 transition-all"
+              >
+                Close Insights
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </MobileLayout>
   );
 };
 
